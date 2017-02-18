@@ -1,0 +1,5 @@
+# For intellij
+.idea/
+
+# For vendering
+vendor/
