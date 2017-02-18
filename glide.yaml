@@ -1,0 +1,4 @@
+package: github.com/ynqa/word-embedding
+import:
+- package: github.com/spf13/cobra
+  verion: ee4055870c2d5f7ce112642377e32c9929c3bbaf
