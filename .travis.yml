@@ -5,7 +5,7 @@ go:
   - tip
 
 install:
-  - go get go get github.com/Masterminds/glide
+  - go get github.com/Masterminds/glide
 
 script:
   - glide install
