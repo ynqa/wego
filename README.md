@@ -1,5 +1,7 @@
 # Word Enbedding in Golang
 
+[![Build Status](https://travis-ci.org/ynqa/word-embedding.svg?branch=master)](https://travis-ci.org/ynqa/word-embedding)
+
 This is an implementation of word embedding (also referred to as word representation) models in Golang.
 
 ## Details
