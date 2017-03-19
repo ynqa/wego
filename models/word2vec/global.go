@@ -24,3 +24,22 @@ var (
 	GlobalWordMap WordMap
 	GlobalNodeMap huffman.NodeMap
 )
+
+var (
+	globalTerms int
+	globalWords int
+)
+
+func GetTerms() int {
+	if globalTerms == 0 {
+		globalTerms = GlobalFreqMap.Terms()
+	}
+	return globalTerms
+}
+
+func GetWords() int {
+	if globalWords == 0 {
+		globalWords = GlobalFreqMap.Words()
+	}
+	return globalWords
+}

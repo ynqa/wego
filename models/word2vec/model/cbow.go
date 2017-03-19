@@ -56,4 +56,5 @@ func (c CBOW) Train(words []string, index int, opt func(target string, contentOr
 		}
 	}
 	f(updateContext)
+	printTrace(word2vec.GetWords())
 }

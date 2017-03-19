@@ -109,8 +109,8 @@ func start() {
 	}
 	fmt.Print("Finish PreTrain\n")
 
-	fmt.Printf("Number of terms: %d\n", word2vec.GlobalFreqMap.Terms())
-	fmt.Printf("Number of words: %d\n", word2vec.GlobalFreqMap.Words())
+	fmt.Printf("Number of terms: %d\n", word2vec.GetTerms())
+	fmt.Printf("Number of words: %d\n", word2vec.GetWords())
 
 	fmt.Print("Start Train...\n")
 	w2v.Run()
