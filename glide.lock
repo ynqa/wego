@@ -1,10 +1,14 @@
-hash: 3bca7350809f95b4b8d43fc9973eb096550bc4f9df49fbde36ad66949a925d65
-updated: 2017-02-18T12:47:22.56510336+09:00
+hash: 49eeff2d7a874a4ff0a732348282edd259f26cfdbc9cfafc6e89aab63e43ba7d
+updated: 2017-03-22T18:33:04.944835069+09:00
 imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/mattn/go-runewidth
+  version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
 - name: github.com/spf13/cobra
   version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
+- name: gopkg.in/cheggaaa/pb.v1
+  version: cdf719fac0dd208251aa828e687c2d5802053b51
 testImports: []

@@ -43,5 +43,4 @@ func (s SkipGram) Train(words []string, index int, opt func(target string, conte
 			word2vec.GlobalWordMap[context].Vector[d] += pool[d]
 		}
 	}
-	printTrace(word2vec.GetWords())
 }

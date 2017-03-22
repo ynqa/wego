@@ -17,6 +17,7 @@ package word2vec
 import (
 	"github.com/ynqa/word-embedding/models"
 	"github.com/ynqa/word-embedding/utils/fileio"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 type Word2Vec struct {
@@ -30,15 +31,20 @@ func (w Word2Vec) PreTrain() error {
 }
 
 func (w Word2Vec) Run() error {
-	if err := fileio.Load(w.Common.InputFile, w.iterator); err != nil {
+	progressor := pb.StartNew(GetWords())
+	if err := fileio.Load(w.Common.InputFile, w.iterator(progressor)); err != nil {
 		return err
 	}
+	progressor.Finish()
 	return nil
 }
 
-func (w Word2Vec) iterator(words []string) {
-	for index := range words {
-		w.Model.Train(words, index, w.Opt.Update)
+func (w Word2Vec) iterator(progressor *pb.ProgressBar) func(words []string) {
+	return func(words []string) {
+		for index := range words {
+			w.Model.Train(words, index, w.Opt.Update)
+			progressor.Increment()
+		}
 	}
 }
 
