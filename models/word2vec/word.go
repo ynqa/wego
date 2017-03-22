@@ -30,8 +30,11 @@ type Word struct {
 }
 type WordMap map[string]*Word
 
+var keys []string
+
 func NewWordMapFrom(s set.String, vectorDim int, neg bool) WordMap {
 	wordMap := make(WordMap)
+	keys = make([]string, len(s))
 
 	f := func(b bool) vector.Vector {
 		if b {
@@ -41,27 +44,23 @@ func NewWordMapFrom(s set.String, vectorDim int, neg bool) WordMap {
 		}
 	}
 
+	i := 0
 	for v := range s {
 		wordMap[v] = &Word{
 			Vector:           vector.NewRandomizedVector(vectorDim),
 			VectorAsNegative: f(neg),
 		}
+		keys[i] = v
+		i++
 	}
 	return wordMap
 }
 
 func (w WordMap) GetRandom() (key string, value *Word) {
 	l := len(w)
-	i := 0
 	index := rand.Intn(l)
-	for k, v := range w {
-		if index == i {
-			key = k
-			value = v
-			break
-		}
-		i += 1
-	}
+	key = keys[index]
+	value = w[key]
 	return
 }
 
