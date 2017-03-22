@@ -1,4 +1,4 @@
-# Word Enbedding in Golang
+# Word Embedding in Golang
 
 [![Build Status](https://travis-ci.org/ynqa/word-embedding.svg?branch=master)](https://travis-ci.org/ynqa/word-embedding)
 
