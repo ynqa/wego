@@ -9,4 +9,4 @@ install:
 
 script:
   - glide install
-  - GO15VENDOREXPERIMENT= go test -v -cover $(glide nv)
+  - GO15VENDOREXPERIMENT=1 go test -v -cover $(glide nv)
