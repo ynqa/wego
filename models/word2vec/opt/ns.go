@@ -28,6 +28,7 @@ type NegativeSampling struct {
 }
 
 func (ns NegativeSampling) PreTrain() error {
+	learningRate = ns.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
 	if err := fileio.Load(ns.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
@@ -57,7 +58,7 @@ func (ns NegativeSampling) Update(target string, contentVectors, poolVector vect
 		}
 
 		f := utils.Sigmoid(negativeVector.Inner(contentVectors))
-		g := (float64(label) - f) * ns.Common.LearningRate
+		g := (float64(label) - f) * learningRate
 
 		for d := 0; d < ns.Common.Dimension; d++ {
 			poolVector[d] += g * negativeVector[d]

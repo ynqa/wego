@@ -29,6 +29,7 @@ type HierarchicalSoftmax struct {
 }
 
 func (hs HierarchicalSoftmax) PreTrain() error {
+	learningRate = hs.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
 	if err := fileio.Load(hs.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
@@ -50,7 +51,7 @@ func (hs HierarchicalSoftmax) Update(target string, contentOrSumVector, poolVect
 		relayPoint := path[p]
 		f := utils.Sigmoid(contentOrSumVector.Inner(relayPoint.Vector))
 		childCode := path[p+1].Code
-		g := (1. - float64(childCode) - f) * hs.Common.LearningRate
+		g := (1.0 - float64(childCode) - f) * learningRate
 
 		for d := 0; d < hs.Common.Dimension; d++ {
 			poolVector[d] += g * relayPoint.Vector[d]
