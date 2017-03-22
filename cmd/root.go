@@ -21,6 +21,7 @@ import (
 
 	"github.com/ynqa/word-embedding/models"
 	"github.com/ynqa/word-embedding/utils"
+	flag "github.com/spf13/pflag"
 )
 
 var (
@@ -34,17 +35,22 @@ var RootCmd = &cobra.Command{
 	Short: "The tools embedding words into vector space",
 	Long:  "The tools embedding words into vector space",
 	Run: func(cmd *cobra.Command, args []string) {
-		utils.Fatal(errors.New("Set sub-command from: word2vec"))
+		utils.Fatal(errors.New("Set sub-command from: distance|word2vec"))
 	},
+}
+
+func GetCommonFlagSet() *flag.FlagSet {
+	fs := flag.NewFlagSet(RootCmd.Name(), flag.ContinueOnError)
+	fs.StringVarP(&inputFile, "input", "i", "example/input.txt", "Input file path for learning")
+	fs.StringVarP(&outputFile, "output", "o", "example/word_vectors.txt", "Output file path for each learned word vector")
+	fs.IntVarP(&dimension, "dimension", "d", 10, "Set word vector dimension size")
+	fs.IntVarP(&window, "window", "w", 5, "Set window size")
+	fs.Float64Var(&learningRate, "lr", 0.025, "Set init learning rate")
+	return fs
 }
 
 func init() {
 	RootCmd.AddCommand(Word2vecCmd)
-	RootCmd.PersistentFlags().StringVarP(&inputFile, "input", "i", "example/input.txt", "Input file path for learning")
-	RootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "example/output.txt", "Output file path for each learned word vector")
-	RootCmd.PersistentFlags().IntVarP(&dimension, "dimension", "d", 10, "Set word vector dimension size")
-	RootCmd.PersistentFlags().IntVarP(&window, "window", "w", 5, "Set window size")
-	RootCmd.PersistentFlags().Float64Var(&learningRate, "lr", 0.25, "Set init learning rate")
 }
 
 func NewCommon() models.Common {

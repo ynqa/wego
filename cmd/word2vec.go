@@ -34,8 +34,8 @@ var (
 
 var Word2vecCmd = &cobra.Command{
 	Use:   "word2vec",
-	Short: "Embedding words using word2vec",
-	Long:  "Embedding words using word2vec",
+	Short: "Embed words using word2vec",
+	Long:  "Embed words using word2vec",
 	Run: func(cmd *cobra.Command, args []string) {
 		if validSubModel := set.New("skip-gram", "cbow"); !validSubModel.Contain(subModel) {
 			utils.Fatal(fmt.Errorf("Set model from: skip-gram|cbow, instead of %s\n", subModel))
@@ -49,6 +49,7 @@ var Word2vecCmd = &cobra.Command{
 }
 
 func init() {
+	Word2vecCmd.Flags().AddFlagSet(GetCommonFlagSet())
 	Word2vecCmd.Flags().StringVar(&subModel, "model", "cbow", "Set model from: skip-gram|cbow")
 	Word2vecCmd.Flags().StringVar(&optimizer, "optimizer", "hs", "Set optimizer from: hs|ns")
 	Word2vecCmd.Flags().IntVar(&maxDepth, "max-depth", 0, "Set number of times to track huffman tree, "+
