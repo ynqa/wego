@@ -19,5 +19,9 @@ import (
 )
 
 func Sigmoid(v float64) float64 {
-	return math.Exp(v) / (1 + math.Exp(v))
+	exp := math.Exp(v)
+	if math.IsInf(exp, 1) {
+		return 1.0
+	}
+	return exp / (1.0 + exp)
 }
