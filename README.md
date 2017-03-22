@@ -43,14 +43,7 @@ Usage:
   word-embedding [command]
 
 Available Commands:
-  word2vec    Embedding words using word2vec
-
-Flags:
-  -d, --dimension int   Set word vector dimension size (default 10)
-  -i, --input string    Input file path for learning (default "example/input.txt")
-      --lr float        Set init learning rate (default 0.25)
-  -o, --output string   Output file path for each learned word vector (default "example/output.txt")
-  -w, --window int      Set window size (default 5)
+  word2vec    Embed words using word2vec
 ```
 
 ## File I/O
