@@ -19,9 +19,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	flag "github.com/spf13/pflag"
 	"github.com/ynqa/word-embedding/models"
 	"github.com/ynqa/word-embedding/utils"
-	flag "github.com/spf13/pflag"
 )
 
 var (
