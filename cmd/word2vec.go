@@ -23,8 +23,6 @@ import (
 	"github.com/ynqa/word-embedding/models/word2vec/model"
 	"github.com/ynqa/word-embedding/models/word2vec/opt"
 	"github.com/ynqa/word-embedding/utils"
-	"github.com/ynqa/word-embedding/utils/fileio"
-	"github.com/ynqa/word-embedding/utils/set"
 )
 
 var (
@@ -37,13 +35,18 @@ var Word2vecCmd = &cobra.Command{
 	Short: "Embed words using word2vec",
 	Long:  "Embed words using word2vec",
 	Run: func(cmd *cobra.Command, args []string) {
-		if validSubModel := set.New("skip-gram", "cbow"); !validSubModel.Contain(subModel) {
-			utils.Fatal(fmt.Errorf("Set model from: skip-gram|cbow, instead of %s\n", subModel))
+		if !inputFileIsExist() {
+			utils.Fatal(fmt.Errorf("InputFile %s is not existed", inputFile))
+		} else if outputFileIsExist() {
+			utils.Fatal(fmt.Errorf("OutputFile %s is already existed", outputFile))
 		}
 
-		if validOptimizer := set.New("ns", "hs"); !validOptimizer.Contain(optimizer) {
-			utils.Fatal(fmt.Errorf("Set approx from: hs|ns, instead of %s\n", optimizer))
+		if err := validateCommonParams(); err != nil {
+			utils.Fatal(err)
+		} else if err := validateWord2vecParams(); err != nil {
+			utils.Fatal(err)
 		}
+
 		start()
 	},
 }
@@ -97,12 +100,6 @@ func NewModel() (m word2vec.Model) {
 
 func start() {
 	w2v := NewWord2Vec()
-
-	if !fileio.FileIsExisted(w2v.InputFile) {
-		utils.Fatal(fmt.Errorf("InputFile %s is not existed", w2v.InputFile))
-	} else if fileio.FileIsExisted(w2v.OutputFile) {
-		utils.Fatal(fmt.Errorf("OutputFile %s is already existed", w2v.OutputFile))
-	}
 
 	fmt.Print("Start PreTrain...\n")
 	if err := w2v.PreTrain(); err != nil {
