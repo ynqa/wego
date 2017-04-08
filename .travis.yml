@@ -6,7 +6,13 @@ go:
 
 install:
   - go get github.com/Masterminds/glide
+  - go get github.com/golang/lint/golint
+  - go get github.com/mattn/goveralls
 
 script:
   - glide install
-  - GO15VENDOREXPERIMENT=1 go test -v -cover $(glide nv)
+  - GO15VENDOREXPERIMENT=1 go test -v $(glide nv)
+  - golint $(glide nv)
+
+after_script:
+  - goveralls -repotoken ${COVERALLS_TOKEN}
