@@ -26,7 +26,7 @@ type Word2Vec struct {
 	// Skip-Gram, or CBOW.
 	Model Model
 	// Hierarchical Softmax, or Negative Sampling.
-	Opt   Optimizer
+	Opt Optimizer
 }
 
 // PreTrain prepares word statistical info for training.
