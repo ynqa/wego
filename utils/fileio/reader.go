@@ -30,6 +30,7 @@ var (
 	rr *bufio.Reader
 )
 
+// Load reads the text in input file.
 func Load(inputFile string, f func(words []string)) error {
 	return loadBatch(inputFile, defaultBatch, toLowerWords(f))
 }

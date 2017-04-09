@@ -18,18 +18,22 @@ import (
 	"github.com/ynqa/word-embedding/utils/set"
 )
 
+// FreqMap is the map composed of <word, frequency>.
 type FreqMap map[string]int
 
+// NewFreqMap creates FreqMap.
 func NewFreqMap() FreqMap {
 	return make(FreqMap)
 }
 
+// Update increments frequency of words.
 func (f FreqMap) Update(words []string) {
 	for _, w := range words {
 		f[w]++
 	}
 }
 
+// Keys returns a set of words.
 func (f FreqMap) Keys() set.String {
 	keys := set.New()
 	for k := range f {
@@ -38,10 +42,12 @@ func (f FreqMap) Keys() set.String {
 	return keys
 }
 
+// Terms returns the number of word types.
 func (f FreqMap) Terms() int {
 	return len(f)
 }
 
+// Words returns the number of words.
 func (f FreqMap) Words() (s int) {
 	for _, v := range f {
 		s += v

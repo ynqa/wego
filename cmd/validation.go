@@ -23,11 +23,11 @@ import (
 )
 
 func inputFileIsExist() bool {
-	return fileio.FileIsExisted(inputFile)
+	return fileio.FileExists(inputFile)
 }
 
 func outputFileIsExist() bool {
-	return fileio.FileIsExisted(outputFile)
+	return fileio.FileExists(outputFile)
 }
 
 func validateCommonParams() error {

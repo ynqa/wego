@@ -22,6 +22,7 @@ import (
 	"strings"
 )
 
+// Save writes the text to output file.
 func Save(outputPath string, s interface{}) error {
 	dir := extractDir(outputPath)
 
@@ -46,7 +47,8 @@ func Save(outputPath string, s interface{}) error {
 	return nil
 }
 
-func FileIsExisted(path string) bool {
+// FileExists returns whether the file exists or not.
+func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }

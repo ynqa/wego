@@ -24,14 +24,20 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// Word stores words' vector.
+// Using the model of negative sampling, it prepares context vector.
 type Word struct {
 	Vector           vector.Vector
 	VectorAsNegative vector.Vector
 }
+
+// WordMap is the map composed of <word, Word>.
 type WordMap map[string]*Word
 
 var keys []string
 
+// NewWordMapFrom creates WordMap, received word list, vector size,
+// and chosen negative sampling or not.
 func NewWordMapFrom(s set.String, vectorDim int, neg bool) WordMap {
 	wordMap := make(WordMap)
 	keys = make([]string, len(s))
@@ -55,6 +61,7 @@ func NewWordMapFrom(s set.String, vectorDim int, neg bool) WordMap {
 	return wordMap
 }
 
+// GetRandom returns word name, and Word at random.
 func (w WordMap) GetRandom() (key string, value *Word) {
 	l := len(w)
 	index := rand.Intn(l)
@@ -63,10 +70,12 @@ func (w WordMap) GetRandom() (key string, value *Word) {
 	return
 }
 
+// Save writes word, and its vector to a file.
 func (w WordMap) Save(outputPath string) error {
 	return fileio.Save(outputPath, w)
 }
 
+// String is like libsvm format on displaying word, and vector.
 func (w WordMap) String() string {
 	vs := bytes.NewBuffer(make([]byte, 0))
 	for k, v := range w {

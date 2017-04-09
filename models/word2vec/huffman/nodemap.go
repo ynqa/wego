@@ -18,8 +18,10 @@ import (
 	"github.com/ynqa/word-embedding/utils"
 )
 
+// NodeMap is the map composed of <word, Node>.
 type NodeMap map[string]*Node
 
+// NewNodeMapFrom creates NodeMap.
 func NewNodeMapFrom(f utils.FreqMap) NodeMap {
 	nodeMap := make(NodeMap)
 	for k, v := range f {
@@ -31,6 +33,7 @@ func NewNodeMapFrom(f utils.FreqMap) NodeMap {
 	return nodeMap
 }
 
+// BuildHuffmanTree constructs huffman tree in node map.
 func (n NodeMap) BuildHuffmanTree(nodeVectorDim int) error {
 	values := func(nm NodeMap) *Nodes {
 		values := make(Nodes, 0)

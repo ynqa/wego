@@ -30,6 +30,7 @@ var (
 	learningRate          float64
 )
 
+// RootCmd is the root command for word embedding.
 var RootCmd = &cobra.Command{
 	Use:   "word-embedding",
 	Short: "The tools embedding words into vector space",
@@ -39,6 +40,7 @@ var RootCmd = &cobra.Command{
 	},
 }
 
+// GetCommonFlagSet sets the common flags for models.
 func GetCommonFlagSet() *flag.FlagSet {
 	fs := flag.NewFlagSet(RootCmd.Name(), flag.ContinueOnError)
 	fs.StringVarP(&inputFile, "input", "i", "example/input.txt", "Input file path for learning")
@@ -50,9 +52,10 @@ func GetCommonFlagSet() *flag.FlagSet {
 }
 
 func init() {
-	RootCmd.AddCommand(Word2vecCmd)
+	RootCmd.AddCommand(Word2VecCmd)
 }
 
+// NewCommon creates the common struct.
 func NewCommon() models.Common {
 	return models.Common{
 		InputFile:    inputFile,

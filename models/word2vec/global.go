@@ -20,8 +20,11 @@ import (
 )
 
 var (
+	// GlobalFreqMap stores the words' frequency in corpus.
 	GlobalFreqMap utils.FreqMap
+	// GlobalWordMap stores the word map.
 	GlobalWordMap WordMap
+	// GlobalNodeMap stores the node map.
 	GlobalNodeMap huffman.NodeMap
 )
 
@@ -30,6 +33,7 @@ var (
 	globalWords int
 )
 
+// GetTerms returns the number of word types.
 func GetTerms() int {
 	if globalTerms == 0 {
 		globalTerms = GlobalFreqMap.Terms()
@@ -37,6 +41,7 @@ func GetTerms() int {
 	return globalTerms
 }
 
+// GetWords returns the number of words.
 func GetWords() int {
 	if globalWords == 0 {
 		globalWords = GlobalFreqMap.Words()

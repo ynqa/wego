@@ -21,6 +21,7 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// Node stores the node info in huffman tree.
 type Node struct {
 	Parent    *Node
 	Code      int
@@ -29,6 +30,7 @@ type Node struct {
 	CachePath Nodes
 }
 
+// Nodes is the list of Node.
 type Nodes []*Node
 
 func (n *Nodes) Len() int           { return len(*n) }
@@ -66,6 +68,7 @@ func (n *Nodes) buildHuffmanTree(nodeVectorDim int) error {
 	return nil
 }
 
+// GetPath returns the nodes from root to word.
 func (n *Node) GetPath() Nodes {
 	// Reverse
 	re := func(n Nodes) {

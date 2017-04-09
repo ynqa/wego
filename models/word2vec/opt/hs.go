@@ -23,11 +23,14 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// HierarchicalSoftmax is a piece of word2vec optimizer.
 type HierarchicalSoftmax struct {
 	models.Common
+	// MaxDepth is the times to dive into huffman tree.
 	MaxDepth int
 }
 
+// PreTrain executes counting words' frequency, and building huffman tree before training.
 func (hs HierarchicalSoftmax) PreTrain() error {
 	learningRate = hs.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
@@ -45,6 +48,7 @@ func (hs HierarchicalSoftmax) PreTrain() error {
 	return nil
 }
 
+// Update words' vector using huffman tree.
 func (hs HierarchicalSoftmax) Update(target string, contentOrSumVector, poolVector vector.Vector) {
 	path := word2vec.GlobalNodeMap[target].GetPath()
 	for p := 0; p < len(path)-1; p++ {

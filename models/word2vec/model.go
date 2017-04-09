@@ -18,6 +18,7 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// Model is the interface for training words' vector in each model.
 type Model interface {
 	Train(terms []string, index int,
 		opt func(target string, contentOrSumVector, poolVector vector.Vector))

@@ -18,8 +18,10 @@ import (
 	"math"
 )
 
-func Sigmoid(v float64) float64 {
-	exp := math.Exp(v)
+// Sigmoid returns f(x) = \frac{1}{1 + e^{-x}}.
+// See: http://en.wikipedia.org/wiki/Sigmoid_function.
+func Sigmoid(x float64) float64 {
+	exp := math.Exp(x)
 	if math.IsInf(exp, 1) {
 		return 1.0
 	}

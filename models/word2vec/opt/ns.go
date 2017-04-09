@@ -22,11 +22,13 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// NegativeSampling is a piece of word2vec optimizer.
 type NegativeSampling struct {
 	models.Common
 	SampleSize int
 }
 
+// PreTrain executes couting words' frequency before training.
 func (ns NegativeSampling) PreTrain() error {
 	learningRate = ns.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
@@ -39,6 +41,7 @@ func (ns NegativeSampling) PreTrain() error {
 	return nil
 }
 
+// Update word's vector using negative sampling.
 func (ns NegativeSampling) Update(target string, contentVectors, poolVector vector.Vector) {
 	var label int
 	var negativeVector vector.Vector

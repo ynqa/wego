@@ -20,10 +20,12 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// SkipGram is a piece of word2vec model.
 type SkipGram struct {
 	models.Common
 }
 
+// Train updates words' vector using SkipGram.
 func (s SkipGram) Train(words []string, index int, opt func(target string, contentOrSumVector, poolVector vector.Vector)) {
 	target := words[index]
 	for a := 0; a < s.Common.Window*2+1; a++ {

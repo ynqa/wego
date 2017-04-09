@@ -14,6 +14,7 @@
 
 package models
 
+// Common stores the common info for models.
 type Common struct {
 	InputFile    string
 	OutputFile   string

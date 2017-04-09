@@ -14,31 +14,37 @@
 
 package set
 
-var NULL = struct{}{}
+var empty = struct{}{}
 
+// String stores string elements in native map.
 type String map[string]struct{}
 
-func New(v ...string) String {
+// New creates a set with items.
+func New(items ...string) String {
 	ss := String{}
-	ss.Add(v...)
+	ss.Add(items...)
 	return ss
 }
 
-func (s String) Add(v ...string) {
-	for _, e := range v {
-		s[e] = NULL
+// Add adds the items (one or more) to the set.
+func (s String) Add(items ...string) {
+	for _, i := range items {
+		s[i] = empty
 	}
 }
 
-func (s String) Contain(v string) bool {
-	_, existed := (s)[v]
+// Contain checks whether an item is present in the set or not.
+func (s String) Contain(item string) bool {
+	_, existed := (s)[item]
 	return existed
 }
 
+// Len returns the number of elements in the set.
 func (s String) Len() int {
 	return len(s)
 }
 
+// Equal checks whether input set is equal to it or not.
 func (s String) Equal(ss String) bool {
 	f := func() bool {
 		for item := range ss {

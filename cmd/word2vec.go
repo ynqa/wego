@@ -30,7 +30,8 @@ var (
 	maxDepth, sampleSize int
 )
 
-var Word2vecCmd = &cobra.Command{
+// Word2VecCmd is the command for word2vec.
+var Word2VecCmd = &cobra.Command{
 	Use:   "word2vec",
 	Short: "Embed words using word2vec",
 	Long:  "Embed words using word2vec",
@@ -52,14 +53,15 @@ var Word2vecCmd = &cobra.Command{
 }
 
 func init() {
-	Word2vecCmd.Flags().AddFlagSet(GetCommonFlagSet())
-	Word2vecCmd.Flags().StringVar(&subModel, "model", "cbow", "Set model from: skip-gram|cbow")
-	Word2vecCmd.Flags().StringVar(&optimizer, "optimizer", "hs", "Set optimizer from: hs|ns")
-	Word2vecCmd.Flags().IntVar(&maxDepth, "max-depth", 0, "Set number of times to track huffman tree, "+
+	Word2VecCmd.Flags().AddFlagSet(GetCommonFlagSet())
+	Word2VecCmd.Flags().StringVar(&subModel, "model", "cbow", "Set model from: skip-gram|cbow")
+	Word2VecCmd.Flags().StringVar(&optimizer, "optimizer", "hs", "Set optimizer from: hs|ns")
+	Word2VecCmd.Flags().IntVar(&maxDepth, "max-depth", 0, "Set number of times to track huffman tree, "+
 		"max-depth=0 means tracking full path (using only hierarchical softmax)")
-	Word2vecCmd.Flags().IntVar(&sampleSize, "negative", 5, "Set number of negative samplings (using only negative sampling)")
+	Word2VecCmd.Flags().IntVar(&sampleSize, "negative", 5, "Set number of negative samplings (using only negative sampling)")
 }
 
+// NewWord2Vec creates the word2vec struct.
 func NewWord2Vec() word2vec.Word2Vec {
 	return word2vec.Word2Vec{
 		Common: NewCommon(),
@@ -68,6 +70,7 @@ func NewWord2Vec() word2vec.Word2Vec {
 	}
 }
 
+// NewOptimizer creates the optimizer of word2vec.
 func NewOptimizer() (o word2vec.Optimizer) {
 	switch optimizer {
 	case "hs":
@@ -84,6 +87,7 @@ func NewOptimizer() (o word2vec.Optimizer) {
 	return
 }
 
+// NewModel creates the model of word2vec.
 func NewModel() (m word2vec.Model) {
 	switch subModel {
 	case "skip-gram":

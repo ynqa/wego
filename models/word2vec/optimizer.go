@@ -18,6 +18,7 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// Optimizer is the interface for pre-train, and updating words' vector in each optimizer.
 type Optimizer interface {
 	PreTrain() error
 	Update(target string, contentOrSumVector, poolVector vector.Vector)

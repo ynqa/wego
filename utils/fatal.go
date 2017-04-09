@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	// DefaultErrorCode is the default code, if this process exits.
 	DefaultErrorCode = 1
 )
 
@@ -28,6 +29,7 @@ func fatal(code int, msg string) {
 	os.Exit(code)
 }
 
+// Fatal let this process exit.
 func Fatal(err error) {
 	fatal(DefaultErrorCode, err.Error())
 }

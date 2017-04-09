@@ -20,16 +20,21 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
+// Word2Vec stores the model, and optimizer.
 type Word2Vec struct {
 	models.Common
+	// Skip-Gram, or CBOW.
 	Model Model
+	// Hierarchical Softmax, or Negative Sampling.
 	Opt   Optimizer
 }
 
+// PreTrain prepares word statistical info for training.
 func (w Word2Vec) PreTrain() error {
 	return w.Opt.PreTrain()
 }
 
+// Run executes training words' vector.
 func (w Word2Vec) Run() error {
 	progressor := pb.StartNew(GetWords())
 	if err := fileio.Load(w.Common.InputFile, w.iterator(progressor)); err != nil {
@@ -48,6 +53,7 @@ func (w Word2Vec) iterator(progressor *pb.ProgressBar) func(words []string) {
 	}
 }
 
+// Save calls word map itself.
 func (w Word2Vec) Save() error {
 	return GlobalWordMap.Save(w.Common.OutputFile)
 }

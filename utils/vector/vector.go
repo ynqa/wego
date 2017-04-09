@@ -20,13 +20,16 @@ import (
 	"math/rand"
 )
 
+// Vector stores vector's elements in native array.
 type Vector []float64
 
+// NewVector creates a vector.
 func NewVector(dim int) Vector {
 	v := make(Vector, dim)
 	return v
 }
 
+// NewRandomizedVector create a vector composed of random value.
 func NewRandomizedVector(dim int) Vector {
 	v := NewVector(dim)
 	for i := 0; i < dim; i++ {
@@ -35,6 +38,7 @@ func NewRandomizedVector(dim int) Vector {
 	return v
 }
 
+// Inner calc the inner production between vectors.
 func (v Vector) Inner(vv Vector) float64 {
 	f := 0.
 	for i := 0; i < len(v); i++ {
@@ -43,6 +47,7 @@ func (v Vector) Inner(vv Vector) float64 {
 	return f
 }
 
+// String is the format on displaying vector.
 func (v Vector) String() string {
 	vs := bytes.NewBuffer(make([]byte, 0))
 	for key, value := range v {

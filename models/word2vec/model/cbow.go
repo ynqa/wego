@@ -20,10 +20,12 @@ import (
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
+// CBOW is a piece of word2vec model.
 type CBOW struct {
 	models.Common
 }
 
+// Train updates words' vector using CBOW.
 func (c CBOW) Train(words []string, index int, opt func(target string, contentOrSumVector, poolVector vector.Vector)) {
 	target := words[index]
 	f := func(g func(context string)) {
