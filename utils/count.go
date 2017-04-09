@@ -26,7 +26,7 @@ func NewFreqMap() FreqMap {
 
 func (f FreqMap) Update(words []string) {
 	for _, w := range words {
-		f[w] += 1
+		f[w]++
 	}
 }
 
