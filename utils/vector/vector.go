@@ -35,10 +35,10 @@ func NewRandomizedVector(dim int) Vector {
 	return v
 }
 
-func (v1 Vector) Inner(v2 Vector) float64 {
+func (v Vector) Inner(vv Vector) float64 {
 	f := 0.
-	for i := 0; i < len(v1); i++ {
-		f += v1[i] * v2[i]
+	for i := 0; i < len(v); i++ {
+		f += v[i] * vv[i]
 	}
 	return f
 }

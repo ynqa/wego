@@ -39,14 +39,14 @@ func (s String) Len() int {
 	return len(s)
 }
 
-func (s1 String) Equal(s2 String) bool {
+func (s String) Equal(ss String) bool {
 	f := func() bool {
-		for item := range s2 {
-			if !s1.Contain(item) {
+		for item := range ss {
+			if !s.Contain(item) {
 				return false
 			}
 		}
 		return true
 	}
-	return len(s1) == len(s2) && f()
+	return len(s) == len(ss) && f()
 }
