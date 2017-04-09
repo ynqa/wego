@@ -39,9 +39,8 @@ func NewWordMapFrom(s set.String, vectorDim int, neg bool) WordMap {
 	f := func(b bool) vector.Vector {
 		if b {
 			return vector.NewVector(vectorDim)
-		} else {
-			return nil
 		}
+		return nil
 	}
 
 	i := 0
