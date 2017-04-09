@@ -49,11 +49,11 @@ func validateWord2vecParams() error {
 	}
 
 	if validSubModel := set.New("skip-gram", "cbow"); !validSubModel.Contain(subModel) {
-		return fmt.Errorf("Set model from: skip-gram|cbow, instead of %s\n", subModel)
+		return fmt.Errorf("Set model from: skip-gram|cbow, instead of %s", subModel)
 	}
 
 	if validOptimizer := set.New("ns", "hs"); !validOptimizer.Contain(optimizer) {
-		return fmt.Errorf("Set approx from: hs|ns, instead of %s\n", optimizer)
+		return fmt.Errorf("Set approx from: hs|ns, instead of %s", optimizer)
 	}
 	return nil
 }
