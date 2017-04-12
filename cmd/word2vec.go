@@ -115,7 +115,9 @@ func start() {
 	fmt.Printf("Number of words: %d\n", word2vec.GetWords())
 
 	fmt.Print("Start Train...\n")
-	w2v.Run()
+	if err := w2v.Run(); err != nil {
+		utils.Fatal(err)
+	}
 	fmt.Print("Finish Train\n")
 
 	if err := w2v.Save(); err != nil {
