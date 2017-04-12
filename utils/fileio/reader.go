@@ -56,7 +56,7 @@ func loadBatch(inputFile string, batch int, f func(sentences []string)) error {
 
 	j := 0
 	for {
-		lines := make([]string, batch)
+		lines := make([]string, 0)
 		for i := 1; i <= batch; i++ {
 			line, err := readLine()
 			if err == io.EOF {
