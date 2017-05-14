@@ -22,7 +22,6 @@ In training, select one `model` and one `optimizer` above. `model` and `optimize
 - [x] Negative Sampling
 - [ ] Subsampling
 - [ ] Decreasing learning rate with training
-  - such as AdaGrad
 
 ## Usage
 

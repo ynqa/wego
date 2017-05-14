@@ -45,6 +45,7 @@ Usage:
   word-embedding [command]
 
 Available Commands:
+  sim         Estimate the similarity between words
   word2vec    Embed words using word2vec
 ```
 
