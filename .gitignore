@@ -1,5 +1,6 @@
-# For intellij
 .idea/
-
-# For vendering
 vendor/
+example/
+
+text8
+text8.zip
