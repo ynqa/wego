@@ -53,6 +53,7 @@ func GetCommonFlagSet() *flag.FlagSet {
 
 func init() {
 	RootCmd.AddCommand(Word2VecCmd)
+	RootCmd.AddCommand(SimilarityCmd)
 }
 
 // NewCommon creates the common struct.
