@@ -42,3 +42,29 @@ func TestInner(t *testing.T) {
 		t.Errorf("Expected '%v dot %v'=11.0: %f", v1, v2, f)
 	}
 }
+
+func TestNorm(t *testing.T) {
+	v := NewVector(2)
+
+	v[0] = 3
+	v[1] = 4
+
+	f := v.Norm()
+
+	if f != 5.0 {
+		t.Errorf("Expected %v norm=5.0: %f", v, f)
+	}
+}
+
+func TestCosine(t *testing.T) {
+	v := NewVector(2)
+
+	v[0] = 3
+	v[1] = 4
+
+	f := v.Cosine(v)
+
+	if f != 1.0 {
+		t.Errorf("Expected cosine=1.0: %f", f)
+	}
+}

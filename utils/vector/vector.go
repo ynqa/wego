@@ -17,6 +17,7 @@ package vector
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -39,12 +40,25 @@ func NewRandomizedVector(dim int) Vector {
 }
 
 // Inner calc the inner production between vectors.
-func (v Vector) Inner(vv Vector) float64 {
-	f := 0.
+func (v Vector) Inner(vv Vector) (f float64) {
 	for i := 0; i < len(v); i++ {
 		f += v[i] * vv[i]
 	}
-	return f
+	return
+}
+
+// Norm calc the norm of vector.
+func (v Vector) Norm() (f float64) {
+	for _, val := range v {
+		f += val * val
+	}
+	f = math.Sqrt(f)
+	return
+}
+
+// Cosine calc the cosine similarity.
+func (v Vector) Cosine(vv Vector) float64 {
+	return v.Inner(vv) / (v.Norm() * vv.Norm())
 }
 
 // String is the format on displaying vector.
