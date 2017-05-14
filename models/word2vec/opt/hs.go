@@ -49,17 +49,17 @@ func (hs HierarchicalSoftmax) PreTrain() error {
 }
 
 // Update words' vector using huffman tree.
-func (hs HierarchicalSoftmax) Update(target string, contentOrSumVector, poolVector vector.Vector) {
+func (hs HierarchicalSoftmax) Update(target string, contentVector, poolVector vector.Vector) {
 	path := word2vec.GlobalNodeMap[target].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
-		f := utils.Sigmoid(contentOrSumVector.Inner(relayPoint.Vector))
+		f := utils.Sigmoid(contentVector.Inner(relayPoint.Vector))
 		childCode := path[p+1].Code
 		g := (1.0 - float64(childCode) - f) * learningRate
 
 		for d := 0; d < hs.Common.Dimension; d++ {
 			poolVector[d] += g * relayPoint.Vector[d]
-			relayPoint.Vector[d] += g * contentOrSumVector[d]
+			relayPoint.Vector[d] += g * contentVector[d]
 		}
 
 		if hs.MaxDepth > 0 && p >= hs.MaxDepth {

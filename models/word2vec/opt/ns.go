@@ -42,7 +42,7 @@ func (ns NegativeSampling) PreTrain() error {
 }
 
 // Update word's vector using negative sampling.
-func (ns NegativeSampling) Update(target string, contentVectors, poolVector vector.Vector) {
+func (ns NegativeSampling) Update(target string, contentVector, poolVector vector.Vector) {
 	var label int
 	var negativeVector vector.Vector
 	var randTerm string
@@ -60,12 +60,12 @@ func (ns NegativeSampling) Update(target string, contentVectors, poolVector vect
 			negativeVector = randWord.VectorAsNegative
 		}
 
-		f := utils.Sigmoid(negativeVector.Inner(contentVectors))
+		f := utils.Sigmoid(negativeVector.Inner(contentVector))
 		g := (float64(label) - f) * learningRate
 
 		for d := 0; d < ns.Common.Dimension; d++ {
 			poolVector[d] += g * negativeVector[d]
-			negativeVector[d] += g * contentVectors[d]
+			negativeVector[d] += g * contentVector[d]
 		}
 
 		if n == -1 {
