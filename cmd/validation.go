@@ -30,6 +30,14 @@ func outputFileIsExist() bool {
 	return fileio.FileExists(outputFile)
 }
 
+func inputVectorFileIsExist() bool {
+	return fileio.FileExists(inputVectorFile)
+}
+
+func outputSimilarityFileIsExist() bool {
+	return fileio.FileExists(outputSimilarityFile)
+}
+
 func validateCommonParams() error {
 	if dimension <= 0 {
 		return errors.New("Set dimension > 0")
