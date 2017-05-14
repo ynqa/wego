@@ -35,6 +35,11 @@ func Load(inputFile string, f func(words []string)) error {
 	return loadBatch(inputFile, defaultBatch, toLowerWords(f))
 }
 
+// LoadVector reads the trained vector file.
+func LoadVector(inputFile string, f func(lines []string)) error {
+	return loadBatch(inputFile, defaultBatch, f)
+}
+
 func toLowerWords(f func(words []string)) func(sentences []string) {
 	return func(lines []string) {
 		for _, l := range lines {
