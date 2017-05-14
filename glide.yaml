@@ -4,3 +4,5 @@ import:
   version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
 - package: gopkg.in/cheggaaa/pb.v1
   version: cdf719fac0dd208251aa828e687c2d5802053b51
+- package: github.com/olekukonko/tablewriter
+  version: febf2d34b54a69ce7530036c7503b1c9fbfdf0bb
