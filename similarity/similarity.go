@@ -29,9 +29,7 @@ import (
 // VectorMap is the map composed of <word, Vector>.
 type VectorMap map[string]vector.Vector
 
-var (
-	vectorMap VectorMap = make(VectorMap, 0)
-)
+var vectorMap VectorMap
 
 // Sim stores word, and cosine similarity value against target.
 type Sim struct {
@@ -45,6 +43,10 @@ type SimList []Sim
 func (p SimList) Len() int           { return len(p) }
 func (p SimList) Less(i, j int) bool { return p[i].cosine < p[j].cosine }
 func (p SimList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func init() {
+	vectorMap = make(VectorMap)
+}
 
 // Load reads trained vector.
 func Load(inputFile string) error {
