@@ -111,7 +111,7 @@ func start() {
 	}
 	fmt.Print("Finish PreTrain\n")
 
-	fmt.Printf("Number of terms: %d\n", word2vec.GetTerms())
+	fmt.Printf("Vocabulary size: %d\n", word2vec.GetVocabulary())
 	fmt.Printf("Number of words: %d\n", word2vec.GetWords())
 
 	fmt.Print("Start Train...\n")

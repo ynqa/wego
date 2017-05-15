@@ -29,16 +29,16 @@ var (
 )
 
 var (
-	globalTerms int
-	globalWords int
+	globalVocabulary int
+	globalWords      int
 )
 
-// GetTerms returns the number of word types.
-func GetTerms() int {
-	if globalTerms == 0 {
-		globalTerms = GlobalFreqMap.Terms()
+// GetVocabulary returns the vocabulary size.
+func GetVocabulary() int {
+	if globalVocabulary == 0 {
+		globalVocabulary = GlobalFreqMap.Vocabulary()
 	}
-	return globalTerms
+	return globalVocabulary
 }
 
 // GetWords returns the number of words.

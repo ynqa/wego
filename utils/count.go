@@ -42,8 +42,8 @@ func (f FreqMap) Keys() set.String {
 	return keys
 }
 
-// Terms returns the number of word types.
-func (f FreqMap) Terms() int {
+// Vocabulary returns the vocabulary size.
+func (f FreqMap) Vocabulary() int {
 	return len(f)
 }
 
