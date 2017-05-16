@@ -30,7 +30,6 @@ type HierarchicalSoftmax struct {
 	MaxDepth int
 }
 
-
 // InitLearningRate initializes the learning rate for training.
 func (hs HierarchicalSoftmax) InitLearningRate(totalWords int) {
 	initLearningRate(hs.LearningRate)
@@ -46,7 +45,7 @@ func (hs HierarchicalSoftmax) UpdateLearningRate(currentWords int) {
 func (hs HierarchicalSoftmax) PreTrain() error {
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
-	if err := fileio.Load(hs.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
+	if err := fileio.Load(hs.Common.InputFile, utils.ToLowerWords(word2vec.GlobalFreqMap.Update)); err != nil {
 		return err
 	}
 

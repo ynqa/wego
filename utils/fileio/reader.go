@@ -18,7 +18,6 @@ import (
 	"bufio"
 	"io"
 	"os"
-	"strings"
 )
 
 const (
@@ -31,22 +30,8 @@ var (
 )
 
 // Load reads the text in input file.
-func Load(inputFile string, f func(words []string)) error {
-	return loadBatch(inputFile, defaultBatch, toLowerWords(f))
-}
-
-// LoadVector reads the trained vector file.
-func LoadVector(inputFile string, f func(lines []string)) error {
+func Load(inputFile string, f func(line []string)) error {
 	return loadBatch(inputFile, defaultBatch, f)
-}
-
-func toLowerWords(f func(words []string)) func(sentences []string) {
-	return func(lines []string) {
-		for _, l := range lines {
-			words := strings.Fields(strings.ToLower(l))
-			f(words)
-		}
-	}
 }
 
 func loadBatch(inputFile string, batch int, f func(sentences []string)) error {

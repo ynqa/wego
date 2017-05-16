@@ -43,7 +43,7 @@ func (ns NegativeSampling) UpdateLearningRate(currentWords int) {
 func (ns NegativeSampling) PreTrain() error {
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
-	if err := fileio.Load(ns.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
+	if err := fileio.Load(ns.Common.InputFile, utils.ToLowerWords(word2vec.GlobalFreqMap.Update)); err != nil {
 		return err
 	}
 

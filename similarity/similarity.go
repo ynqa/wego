@@ -50,7 +50,7 @@ func init() {
 
 // Load reads trained vector.
 func Load(inputFile string) error {
-	fileio.LoadVector(inputFile, func(lines []string) {
+	fileio.Load(inputFile, func(lines []string) {
 		for _, s := range lines {
 			word, vec := parse(s)
 			vectorMap[word] = vec

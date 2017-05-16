@@ -16,6 +16,7 @@ package word2vec
 
 import (
 	"github.com/ynqa/word-embedding/models"
+	"github.com/ynqa/word-embedding/utils"
 	"github.com/ynqa/word-embedding/utils/fileio"
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -41,7 +42,7 @@ func (w Word2Vec) Run() error {
 	w.Opt.InitLearningRate(GetWords())
 	progressor := pb.New(GetWords()).SetWidth(80)
 	progressor.Start()
-	if err := fileio.Load(w.Common.InputFile, w.iterator(progressor)); err != nil {
+	if err := fileio.Load(w.Common.InputFile, utils.ToLowerWords(w.iterator(progressor))); err != nil {
 		return err
 	}
 	progressor.Finish()
