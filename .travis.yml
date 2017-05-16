@@ -12,7 +12,7 @@ install:
 script:
   - glide install
   - make test
-  - golint $(glide nv)
+  - make lint
 
 after_script:
   - goveralls -repotoken ${COVERALLS_TOKEN}
