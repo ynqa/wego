@@ -14,4 +14,26 @@
 
 package opt
 
-var learningRate float64
+const theta = 1.0e-4
+
+var (
+	lr         float64
+	initlr     float64
+	totalWords int
+)
+
+func initLearningRate(v float64) {
+	initlr = v
+}
+
+func initTotal(v int) {
+	totalWords = v
+}
+
+func updateLearningRate(currentWords int) {
+	lr = initlr * (1.0 - float64(currentWords)/float64(totalWords))
+	if lr < initlr*theta {
+		lr = initlr * theta
+	}
+	//fmt.Printf("Learning Rate: %f -> %f in %d/%d\n", initlr, lr, currentWords, totalWords)
+}

@@ -21,5 +21,7 @@ import (
 // Optimizer is the interface for pre-train, and updating words' vector in each optimizer.
 type Optimizer interface {
 	PreTrain() error
+	InitLearningRate(totalWords int)
 	Update(target string, contentVector, poolVector vector.Vector)
+	UpdateLearningRate(currentWords int)
 }

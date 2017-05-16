@@ -28,9 +28,19 @@ type NegativeSampling struct {
 	SampleSize int
 }
 
+// InitLearningRate initializes the learning rate for training.
+func (ns NegativeSampling) InitLearningRate(totalWords int) {
+	initLearningRate(ns.LearningRate)
+	initTotal(totalWords)
+}
+
+// UpdateLearningRate updates the learning rate.
+func (ns NegativeSampling) UpdateLearningRate(currentWords int) {
+	updateLearningRate(currentWords)
+}
+
 // PreTrain executes couting words' frequency before training.
 func (ns NegativeSampling) PreTrain() error {
-	learningRate = ns.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
 	if err := fileio.Load(ns.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
@@ -61,7 +71,7 @@ func (ns NegativeSampling) Update(target string, contentVector, poolVector vecto
 		}
 
 		f := utils.Sigmoid(negativeVector.Inner(contentVector))
-		g := (float64(label) - f) * learningRate
+		g := (float64(label) - f) * lr
 
 		for d := 0; d < ns.Common.Dimension; d++ {
 			poolVector[d] += g * negativeVector[d]

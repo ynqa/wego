@@ -30,9 +30,20 @@ type HierarchicalSoftmax struct {
 	MaxDepth int
 }
 
+
+// InitLearningRate initializes the learning rate for training.
+func (hs HierarchicalSoftmax) InitLearningRate(totalWords int) {
+	initLearningRate(hs.LearningRate)
+	initTotal(totalWords)
+}
+
+// UpdateLearningRate updates the learning rate.
+func (hs HierarchicalSoftmax) UpdateLearningRate(currentWords int) {
+	updateLearningRate(currentWords)
+}
+
 // PreTrain executes counting words' frequency, and building huffman tree before training.
 func (hs HierarchicalSoftmax) PreTrain() error {
-	learningRate = hs.LearningRate
 	word2vec.GlobalFreqMap = utils.NewFreqMap()
 
 	if err := fileio.Load(hs.Common.InputFile, word2vec.GlobalFreqMap.Update); err != nil {
@@ -55,7 +66,7 @@ func (hs HierarchicalSoftmax) Update(target string, contentVector, poolVector ve
 		relayPoint := path[p]
 		f := utils.Sigmoid(contentVector.Inner(relayPoint.Vector))
 		childCode := path[p+1].Code
-		g := (1.0 - float64(childCode) - f) * learningRate
+		g := (1.0 - float64(childCode) - f) * lr
 
 		for d := 0; d < hs.Common.Dimension; d++ {
 			poolVector[d] += g * relayPoint.Vector[d]

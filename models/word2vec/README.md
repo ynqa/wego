@@ -21,7 +21,7 @@ In training, select one `model` and one `optimizer` above. `model` and `optimize
 - [x] Hierarchical Softmax
 - [x] Negative Sampling
 - [ ] Subsampling
-- [ ] Decreasing learning rate with training
+- [x] Update learning rate in training
 
 ## Usage
 

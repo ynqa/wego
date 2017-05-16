@@ -20,6 +20,8 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
+const batchForUpdateLearningRate = 10000
+
 // Word2Vec stores the model, and optimizer.
 type Word2Vec struct {
 	models.Common
@@ -36,7 +38,9 @@ func (w Word2Vec) PreTrain() error {
 
 // Run executes training words' vector.
 func (w Word2Vec) Run() error {
-	progressor := pb.StartNew(GetWords())
+	w.Opt.InitLearningRate(GetWords())
+	progressor := pb.New(GetWords()).SetWidth(80)
+	progressor.Start()
 	if err := fileio.Load(w.Common.InputFile, w.iterator(progressor)); err != nil {
 		return err
 	}
@@ -46,9 +50,14 @@ func (w Word2Vec) Run() error {
 
 func (w Word2Vec) iterator(progressor *pb.ProgressBar) func(words []string) {
 	return func(words []string) {
+		currentWords := 0
 		for index := range words {
 			w.Model.Train(words, index, w.Opt.Update)
 			progressor.Increment()
+			currentWords++
+			if currentWords%batchForUpdateLearningRate == 0 {
+				w.Opt.UpdateLearningRate(currentWords)
+			}
 		}
 	}
 }
