@@ -26,7 +26,7 @@ type SkipGram struct {
 }
 
 // Train updates words' vector using SkipGram.
-func (s SkipGram) Train(words []string, index int, opt func(target string, contentOrSumVector, poolVector vector.Vector)) {
+func (s SkipGram) Train(words []string, index int, opt func(target string, contentVector, poolVector vector.Vector)) {
 	target := words[index]
 	for a := 0; a < s.Common.Window*2+1; a++ {
 		if a == s.Common.Window {

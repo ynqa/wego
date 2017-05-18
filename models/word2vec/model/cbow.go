@@ -26,7 +26,7 @@ type CBOW struct {
 }
 
 // Train updates words' vector using CBOW.
-func (c CBOW) Train(words []string, index int, opt func(target string, contentOrSumVector, poolVector vector.Vector)) {
+func (c CBOW) Train(words []string, index int, opt func(target string, contentVector, poolVector vector.Vector)) {
 	target := words[index]
 	f := func(g func(context string)) {
 		for a := 0; a < c.Common.Window*2+1; a++ {

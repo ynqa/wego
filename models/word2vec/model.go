@@ -21,5 +21,5 @@ import (
 // Model is the interface for training words' vector in each model.
 type Model interface {
 	Train(terms []string, index int,
-		opt func(target string, contentOrSumVector, poolVector vector.Vector))
+		opt func(target string, contentVector, poolVector vector.Vector))
 }
