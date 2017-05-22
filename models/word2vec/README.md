@@ -20,7 +20,7 @@ In training, select one `model` and one `optimizer` above. `model` and `optimize
 - [x] CBOW
 - [x] Hierarchical Softmax
 - [x] Negative Sampling
-- [ ] Subsampling
+- [x] Subsampling
 - [x] Update learning rate in training
 
 ## Usage
@@ -37,8 +37,9 @@ Flags:
       --lr float           Set init learning rate (default 0.025)
       --max-depth int      Set number of times to track huffman tree, max-depth=0 means tracking full path (using only hierarchical softmax)
       --model string       Set model from: skip-gram|cbow (default "cbow")
-      --negative int       Set number of negative samplings (using only negative sampling) (default 5)
+      --negative int       Set number of the samplings as negative instances (using only negative sampling) (default 5)
       --optimizer string   Set optimizer from: hs|ns (default "hs")
   -o, --output string      Output file path for each learned word vector (default "example/word_vectors.txt")
+      --sample float       Set the threshold of subsampling (default 0.001)
   -w, --window int         Set window size (default 5)
 ```

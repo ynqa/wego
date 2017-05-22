@@ -28,6 +28,7 @@ import (
 var (
 	subModel, optimizer  string
 	maxDepth, sampleSize int
+	subsampleThreshold   float64
 )
 
 // Word2VecCmd is the command for word2vec.
@@ -58,15 +59,18 @@ func init() {
 	Word2VecCmd.Flags().StringVar(&optimizer, "optimizer", "hs", "Set optimizer from: hs|ns")
 	Word2VecCmd.Flags().IntVar(&maxDepth, "max-depth", 0, "Set number of times to track huffman tree, "+
 		"max-depth=0 means tracking full path (using only hierarchical softmax)")
-	Word2VecCmd.Flags().IntVar(&sampleSize, "negative", 5, "Set number of negative samplings (using only negative sampling)")
+	Word2VecCmd.Flags().IntVar(&sampleSize, "negative", 5, "Set number of the samplings as negative instances "+
+		"(using only negative sampling)")
+	Word2VecCmd.Flags().Float64Var(&subsampleThreshold, "sample", 1.0e-3, "Set the threshold of subsampling")
 }
 
 // NewWord2Vec creates the word2vec struct.
 func NewWord2Vec() word2vec.Word2Vec {
 	return word2vec.Word2Vec{
-		Common: NewCommon(),
-		Model:  NewModel(),
-		Opt:    NewOptimizer(),
+		Common:             NewCommon(),
+		Model:              NewModel(),
+		Opt:                NewOptimizer(),
+		SubSampleThreshold: subsampleThreshold,
 	}
 }
 

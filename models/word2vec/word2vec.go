@@ -15,13 +15,21 @@
 package word2vec
 
 import (
+	"fmt"
+	"math"
+	"math/rand"
+
 	"github.com/ynqa/word-embedding/models"
 	"github.com/ynqa/word-embedding/utils"
 	"github.com/ynqa/word-embedding/utils/fileio"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-const batchForUpdateLearningRate = 10000
+var ignoredWords int
+
+const (
+	batchForUpdateLearningRate = 10000
+)
 
 // Word2Vec stores the model, and optimizer.
 type Word2Vec struct {
@@ -29,7 +37,8 @@ type Word2Vec struct {
 	// Skip-Gram, or CBOW.
 	Model Model
 	// Hierarchical Softmax, or Negative Sampling.
-	Opt Optimizer
+	Opt                Optimizer
+	SubSampleThreshold float64
 }
 
 // PreTrain prepares word statistical info for training.
@@ -46,15 +55,28 @@ func (w Word2Vec) Run() error {
 		return err
 	}
 	progressor.Finish()
+	fmt.Printf("Ignored words by subsampling: %d / %d\n", ignoredWords, GetWords())
 	return nil
+}
+
+func (w Word2Vec) subSampleRate(word string) float64 {
+	z := float64(GlobalFreqMap[word]) / float64(GetWords())
+	p := (math.Sqrt(z/w.SubSampleThreshold) + 1.0) * w.SubSampleThreshold / z
+	return p
 }
 
 func (w Word2Vec) iterator(progressor *pb.ProgressBar) func(words []string) {
 	return func(words []string) {
 		currentWords := 0
-		for index := range words {
-			w.Model.Train(words, index, w.Opt.Update)
+		for index, word := range words {
 			progressor.Increment()
+			r := rand.Float64()
+			p := w.subSampleRate(word)
+			if p < r {
+				ignoredWords++
+				continue
+			}
+			w.Model.Train(words, index, w.Opt.Update)
 			currentWords++
 			if currentWords%batchForUpdateLearningRate == 0 {
 				w.Opt.UpdateLearningRate(currentWords)
