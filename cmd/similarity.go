@@ -24,21 +24,19 @@ import (
 )
 
 var (
-	rank                 int
-	inputVectorFile      string
-	outputSimilarityFile string
+	rank            int
+	inputVectorFile string
 )
 
 // SimilarityCmd is the command for calculation of similarity.
 var SimilarityCmd = &cobra.Command{
-	Use:   "sim",
-	Short: "Estimate the similarity between words",
-	Long:  "Estimate the similarity between words",
+	Use:     "sim -i FILENAME WORD",
+	Short:   "Estimate the similarity between words",
+	Long:    "Estimate the similarity between words",
+	Example: "word-embedding sim -i example/word_vectors.txt apple",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !inputVectorFileIsExist() {
 			utils.Fatal(fmt.Errorf("InputFile %s is not existed", inputVectorFile))
-		} else if outputSimilarityFileIsExist() {
-			utils.Fatal(fmt.Errorf("OutputFile %s is already existed", outputSimilarityFile))
 		}
 
 		if len(args) == 1 {
@@ -53,8 +51,6 @@ func init() {
 	SimilarityCmd.Flags().IntVarP(&rank, "rank", "r", 10, "Set number of the similar word list displayed")
 	SimilarityCmd.Flags().StringVarP(&inputVectorFile, "input", "i", "example/word_vectors.txt",
 		"Input path of a file written words' vector with libsvm format")
-	SimilarityCmd.Flags().StringVarP(&outputSimilarityFile, "output", "o", "",
-		"Output path of a file written similar word list")
 }
 
 func describe(w string) {
