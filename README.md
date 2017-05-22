@@ -35,6 +35,14 @@ $ go get -u github.com/ynqa/word-embedding
 $ bin/word-embedding -h
 ```
 
+## Demo
+
+Downloading [text8](http://mattmahoney.net/dc/textdata) corpus, and training by Skip-Gram with negative sampling.
+
+```
+$ sh demo.sh
+```
+
 ## Usage
 
 ```
