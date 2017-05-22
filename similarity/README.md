@@ -19,6 +19,7 @@ Flags:
 ```
 
 ## Example
+
 For instance, after running [demo](https://github.com/ynqa/word-embedding#demo):
 
 ```
