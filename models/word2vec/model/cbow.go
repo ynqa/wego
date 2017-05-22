@@ -29,7 +29,8 @@ type CBOW struct {
 func (c CBOW) Train(words []string, index int, opt func(target string, contentVector, poolVector vector.Vector)) {
 	target := words[index]
 	f := func(g func(context string)) {
-		for a := 0; a < c.Common.Window*2+1; a++ {
+		shrinkage := nextRandom(c.Common.Window)
+		for a := shrinkage; a < c.Common.Window*2+1-shrinkage; a++ {
 			if a != c.Common.Window {
 				c := index - c.Common.Window + a
 				if c < 0 || c >= len(words) {
