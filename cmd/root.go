@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 
 	flag "github.com/spf13/pflag"
-	"github.com/ynqa/word-embedding/models"
+	"github.com/ynqa/word-embedding/model"
 	"github.com/ynqa/word-embedding/utils"
 )
 
@@ -57,8 +57,8 @@ func init() {
 }
 
 // NewCommon creates the common struct.
-func NewCommon() models.Common {
-	return models.Common{
+func NewCommon() model.Common {
+	return model.Common{
 		InputFile:    inputFile,
 		OutputFile:   outputFile,
 		Dimension:    dimension,

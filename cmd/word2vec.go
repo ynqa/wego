@@ -19,10 +19,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ynqa/word-embedding/models/word2vec"
-	"github.com/ynqa/word-embedding/models/word2vec/model"
-	"github.com/ynqa/word-embedding/models/word2vec/opt"
+	"github.com/ynqa/word-embedding/model/word2vec"
+	"github.com/ynqa/word-embedding/model/word2vec/opt"
 	"github.com/ynqa/word-embedding/utils"
+	"github.com/ynqa/word-embedding/model/word2vec/submodel"
 )
 
 var (
@@ -95,11 +95,11 @@ func NewOptimizer() (o word2vec.Optimizer) {
 func NewModel() (m word2vec.Model) {
 	switch subModel {
 	case "skip-gram":
-		m = model.SkipGram{
+		m = submodel.SkipGram{
 			Common: NewCommon(),
 		}
 	case "cbow":
-		m = model.CBOW{
+		m = submodel.CBOW{
 			Common: NewCommon(),
 		}
 	}
