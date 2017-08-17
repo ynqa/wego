@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package submodel
 
 import (
-	"github.com/ynqa/word-embedding/models"
-	"github.com/ynqa/word-embedding/models/word2vec"
+	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/word-embedding/model/word2vec"
 	"github.com/ynqa/word-embedding/utils/vector"
 )
 
 // SkipGram is a piece of word2vec model.
 type SkipGram struct {
-	models.Common
+	model.Common
 }
 
 // Train updates words' vector using SkipGram.

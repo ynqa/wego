@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package submodel
 
-// Common stores the common info for models.
-type Common struct {
-	InputFile    string
-	OutputFile   string
-	Dimension    int
-	Window       int
-	LearningRate float64
+var next uint64 = 1
+
+// Linear congruential generator like rand.Intn(window)
+func nextRandom(window int) int {
+	next = next*uint64(25214903917) + 11
+	return int(next % uint64(window))
 }

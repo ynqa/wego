@@ -19,7 +19,7 @@ import (
 	"math"
 	"math/rand"
 
-	"github.com/ynqa/word-embedding/models"
+	"github.com/ynqa/word-embedding/model"
 	"github.com/ynqa/word-embedding/utils"
 	"github.com/ynqa/word-embedding/utils/fileio"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -33,7 +33,7 @@ const (
 
 // Word2Vec stores the model, and optimizer.
 type Word2Vec struct {
-	models.Common
+	model.Common
 	// Skip-Gram, or CBOW.
 	Model Model
 	// Hierarchical Softmax, or Negative Sampling.
