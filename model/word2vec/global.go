@@ -15,7 +15,7 @@
 package word2vec
 
 import (
-	"github.com/ynqa/word-embedding/models/word2vec/huffman"
+	"github.com/ynqa/word-embedding/model/word2vec/huffman"
 	"github.com/ynqa/word-embedding/utils"
 )
 

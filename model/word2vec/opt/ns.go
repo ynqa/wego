@@ -15,8 +15,8 @@
 package opt
 
 import (
-	"github.com/ynqa/word-embedding/models"
-	"github.com/ynqa/word-embedding/models/word2vec"
+	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/word-embedding/model/word2vec"
 	"github.com/ynqa/word-embedding/utils"
 	"github.com/ynqa/word-embedding/utils/fileio"
 	"github.com/ynqa/word-embedding/utils/vector"
@@ -24,7 +24,7 @@ import (
 
 // NegativeSampling is a piece of word2vec optimizer.
 type NegativeSampling struct {
-	models.Common
+	model.Common
 	SampleSize int
 }
 

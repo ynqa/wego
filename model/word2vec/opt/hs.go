@@ -15,9 +15,9 @@
 package opt
 
 import (
-	"github.com/ynqa/word-embedding/models"
-	"github.com/ynqa/word-embedding/models/word2vec"
-	"github.com/ynqa/word-embedding/models/word2vec/huffman"
+	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/word-embedding/model/word2vec"
+	"github.com/ynqa/word-embedding/model/word2vec/huffman"
 	"github.com/ynqa/word-embedding/utils"
 	"github.com/ynqa/word-embedding/utils/fileio"
 	"github.com/ynqa/word-embedding/utils/vector"
@@ -25,7 +25,7 @@ import (
 
 // HierarchicalSoftmax is a piece of word2vec optimizer.
 type HierarchicalSoftmax struct {
-	models.Common
+	model.Common
 	// MaxDepth is the times to dive into huffman tree.
 	MaxDepth int
 }
