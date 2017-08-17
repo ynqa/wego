@@ -14,10 +14,11 @@
 
 package model
 
-var next uint64 = 1
-
-// Linear congruential generator like rand.Intn(window)
-func nextRandom(window int) int {
-	next = next*uint64(25214903917) + 11
-	return int(next % uint64(window))
+// Common stores the common info for models.
+type Common struct {
+	InputFile    string
+	OutputFile   string
+	Dimension    int
+	Window       int
+	LearningRate float64
 }
