@@ -11,7 +11,7 @@ This is an implementation of word embedding (also referred to as word representa
 Word embedding makes words' meaning, structure, and concept mapping into vector space (and low dimension). For representative instance:
 
 ```
-Vector("king") - Vector("Man") + Vector("Woman") = Vector("Queen")
+Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
 ```
 
 Like this example, it could calculate word meaning by arithmetic operations between vectors.
@@ -20,12 +20,12 @@ Like this example, it could calculate word meaning by arithmetic operations betw
 Listed models for word embedding, and checked it already implemented.
 
 ### Models
-- [x] Word2vec
+- [x] Word2Vec
   - Distributed Representations of Words and Phrases
 and their Compositionality [[pdf]](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
 - [ ] GloVe
   - GloVe: Global Vectors for Word Representation [[pdf]](http://nlp.stanford.edu/pubs/glove.pdf)
-- [ ] SPPMI-MF
+- [ ] SPPMI-SVD
   - Neural Word Embedding as Implicit Matrix Factorization [[pdf]](https://papers.nips.cc/paper/5477-neural-word-embedding-as-implicit-matrix-factorization.pdf)
 
 ## Installation
