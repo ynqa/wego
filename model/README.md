@@ -1,4 +1,6 @@
-# Word2Vec
+# Model
+
+## Word2Vec
 
 Word2Vec is the generic term below modules:
 
@@ -14,7 +16,7 @@ optimizer:
 
 In training, select one `model` and one `optimizer` above. `model` and `optimizer` represent architecture of objective and the way of approximating its function respectively.
 
-## Features
+### Features
 
 - [x] Skip-Gram
 - [x] CBOW
@@ -23,7 +25,7 @@ In training, select one `model` and one `optimizer` above. `model` and `optimize
 - [x] Subsampling
 - [x] Update learning rate in training
 
-## Usage
+### Usage
 
 ```
 Embed words using word2vec
