@@ -18,10 +18,11 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/ynqa/word-embedding/utils/vector"
+	"github.com/chewxy/lingo/corpus"
+	"github.com/ynqa/word-embedding/vector"
 )
 
-// Node stores the node info in huffman tree.
+// Node stores the node with vector in huffman tree.
 type Node struct {
 	Parent    *Node
 	Code      int
@@ -37,7 +38,24 @@ func (n *Nodes) Len() int           { return len(*n) }
 func (n *Nodes) Less(i, j int) bool { return (*n)[i].Value < (*n)[j].Value }
 func (n *Nodes) Swap(i, j int)      { (*n)[i], (*n)[j] = (*n)[j], (*n)[i] }
 
-func (n *Nodes) buildHuffmanTree(nodeVectorDim int) error {
+// NewHuffmanTree creates the map of wordID with Node.
+func NewHuffmanTree(c *corpus.Corpus, dimension int) (map[int]*Node, error) {
+	ns := make(Nodes, 0, c.Size())
+	nm := make(map[int]*Node)
+	for i := 0; i < c.Size(); i++ {
+		n := new(Node)
+		n.Value = c.IDFreq(i)
+		nm[i] = n
+		ns = append(ns, n)
+	}
+	err := ns.buildHuffmanTree(dimension)
+	if err != nil {
+		return nil, err
+	}
+	return nm, nil
+}
+
+func (n *Nodes) buildHuffmanTree(dimension int) error {
 	if len(*n) == 0 {
 		return errors.New("The length of Nodes is 0")
 	}
@@ -51,7 +69,7 @@ func (n *Nodes) buildHuffmanTree(nodeVectorDim int) error {
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: vector.NewRandomizedVector(nodeVectorDim),
+			Vector: vector.NewRandomizedVector(dimension),
 		}
 		left.Parent = parent
 		left.Code = 0
@@ -68,7 +86,7 @@ func (n *Nodes) buildHuffmanTree(nodeVectorDim int) error {
 	return nil
 }
 
-// GetPath returns the nodes from root to word.
+// GetPath returns the nodes from root to word on huffman tree.
 func (n *Node) GetPath() Nodes {
 	// Reverse
 	re := func(n Nodes) {
