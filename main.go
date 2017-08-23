@@ -15,12 +15,13 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ynqa/word-embedding/cmd"
-	"github.com/ynqa/word-embedding/utils"
 )
 
 func main() {
 	if err := cmd.RootCmd.Execute(); err != nil {
-		utils.Fatal(err)
+		os.Exit(1)
 	}
 }
