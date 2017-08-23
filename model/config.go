@@ -14,11 +14,20 @@
 
 package model
 
-// Common stores the common info for models.
-type Common struct {
-	InputFile    string
-	OutputFile   string
-	Dimension    int
-	Window       int
-	LearningRate float64
+// Config stores the common config.
+type Config struct {
+	Lower            bool
+	Dimension        int
+	Window           int
+	InitLearningRate float64
+}
+
+// NewConfig creates *Config
+func NewConfig(lower bool, dimension, window int, initlr float64) *Config {
+	return &Config{
+		Lower:            lower,
+		Dimension:        dimension,
+		Window:           window,
+		InitLearningRate: initlr,
+	}
 }
