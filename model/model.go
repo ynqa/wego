@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package model
 
 import (
-	"github.com/ynqa/word-embedding/utils/vector"
+	"io"
 )
 
-// Model is the interface for training words' vector in each model.
+// Model is the interface of Preprocess, Train, Save.
 type Model interface {
-	Train(terms []string, index int,
-		opt func(target string, contentVector, poolVector vector.Vector))
+	Preprocess(f io.ReadSeeker) (io.ReadCloser, error)
+	Train(f io.ReadCloser) error
+	Save(outputFile string) error
 }
