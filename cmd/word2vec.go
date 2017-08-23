@@ -16,116 +16,100 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/model/word2vec"
-	"github.com/ynqa/word-embedding/model/word2vec/opt"
-	"github.com/ynqa/word-embedding/utils"
-	"github.com/ynqa/word-embedding/model/word2vec/submodel"
+	"github.com/ynqa/word-embedding/builder"
+	"github.com/ynqa/word-embedding/config"
+	"github.com/ynqa/word-embedding/validate"
 )
 
-var (
-	subModel, optimizer  string
-	maxDepth, sampleSize int
-	subsampleThreshold   float64
-)
-
-// Word2VecCmd is the command for word2vec.
+// Word2VecCmd is the word2vec command.
 var Word2VecCmd = &cobra.Command{
 	Use:   "word2vec",
 	Short: "Embed words using word2vec",
 	Long:  "Embed words using word2vec",
-	Run: func(cmd *cobra.Command, args []string) {
-		if !inputFileIsExist() {
-			utils.Fatal(fmt.Errorf("InputFile %s is not existed", inputFile))
-		} else if outputFileIsExist() {
-			utils.Fatal(fmt.Errorf("OutputFile %s is already existed", outputFile))
-		}
-
-		if err := validateCommonParams(); err != nil {
-			utils.Fatal(err)
-		} else if err := validateWord2vecParams(); err != nil {
-			utils.Fatal(err)
-		}
-
-		start()
+	PreRun: func(cmd *cobra.Command, args []string) {
+		configBind(cmd)
+		word2vecBind(cmd)
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runWord2Vec()
 	},
 }
 
 func init() {
-	Word2VecCmd.Flags().AddFlagSet(GetCommonFlagSet())
-	Word2VecCmd.Flags().StringVar(&subModel, "model", "cbow", "Set model from: skip-gram|cbow")
-	Word2VecCmd.Flags().StringVar(&optimizer, "optimizer", "hs", "Set optimizer from: hs|ns")
-	Word2VecCmd.Flags().IntVar(&maxDepth, "max-depth", 0, "Set number of times to track huffman tree, "+
-		"max-depth=0 means tracking full path (using only hierarchical softmax)")
-	Word2VecCmd.Flags().IntVar(&sampleSize, "negative", 5, "Set number of the samplings as negative instances "+
-		"(using only negative sampling)")
-	Word2VecCmd.Flags().Float64Var(&subsampleThreshold, "sample", 1.0e-3, "Set the threshold of subsampling")
+	Word2VecCmd.Flags().AddFlagSet(ConfigFlagSet())
+	Word2VecCmd.Flags().String(config.Model.String(), config.DefaultModel,
+		"Set the model of Word2Vec. One of: cbow|skip-gram")
+	Word2VecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer,
+		"Set the optimizer of Word2Vec. One of: hs|ns")
+	Word2VecCmd.Flags().Int(config.MaxDepth.String(), config.DefaultMaxDepth,
+		"Set the number of times to track huffman tree, max-depth=0 means to track full path from root to word (using only hierarchical softmax)")
+	Word2VecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
+		"Set the number of the samples as negative (using only negative sampling)")
+	Word2VecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
+		"Set the lower limit of learning rate (lr >= initlr * theta)")
+	Word2VecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
+		"Set the batch size to update learning rate")
+	Word2VecCmd.Flags().Float64(config.SubsampleThreshold.String(), config.DefaultSubsampleThreshold,
+		"Set the threshold for subsampling")
 }
 
-// NewWord2Vec creates the word2vec struct.
-func NewWord2Vec() word2vec.Word2Vec {
-	return word2vec.Word2Vec{
-		Common:             NewCommon(),
-		Model:              NewModel(),
-		Opt:                NewOptimizer(),
-		SubSampleThreshold: subsampleThreshold,
-	}
+func word2vecBind(cmd *cobra.Command) {
+	viper.BindPFlag(config.Model.String(), cmd.Flags().Lookup(config.Model.String()))
+	viper.BindPFlag(config.Optimizer.String(), cmd.Flags().Lookup(config.Optimizer.String()))
+	viper.BindPFlag(config.MaxDepth.String(), cmd.Flags().Lookup(config.MaxDepth.String()))
+	viper.BindPFlag(config.NegativeSampleSize.String(), cmd.Flags().Lookup(config.NegativeSampleSize.String()))
+	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
+	viper.BindPFlag(config.SubsampleThreshold.String(), cmd.Flags().Lookup(config.SubsampleThreshold.String()))
 }
 
-// NewOptimizer creates the optimizer of word2vec.
-func NewOptimizer() (o word2vec.Optimizer) {
-	switch optimizer {
-	case "hs":
-		o = opt.HierarchicalSoftmax{
-			Common:   NewCommon(),
-			MaxDepth: maxDepth,
-		}
-	case "ns":
-		o = opt.NegativeSampling{
-			Common:     NewCommon(),
-			SampleSize: sampleSize,
-		}
+func runWord2Vec() error {
+	inputFile := viper.GetString(config.InputFile.String())
+
+	if !validate.FileExists(inputFile) {
+		return errors.Errorf("Not such a file %s", inputFile)
 	}
-	return
-}
 
-// NewModel creates the model of word2vec.
-func NewModel() (m word2vec.Model) {
-	switch subModel {
-	case "skip-gram":
-		m = submodel.SkipGram{
-			Common: NewCommon(),
-		}
-	case "cbow":
-		m = submodel.CBOW{
-			Common: NewCommon(),
-		}
+	outputFile := viper.GetString(config.OutputFile.String())
+
+	if validate.FileExists(outputFile) {
+		return errors.Errorf("%s is already existed", outputFile)
 	}
-	return
-}
 
-func start() {
-	w2v := NewWord2Vec()
+	w2v := builder.NewWord2VecBuilderViper()
 
-	fmt.Print("Start PreTrain...\n")
-	if err := w2v.PreTrain(); err != nil {
-		utils.Fatal(err)
+	mod, err := w2v.Build()
+	if err != nil {
+		return err
 	}
-	fmt.Print("Finish PreTrain\n")
 
-	fmt.Printf("Vocabulary size: %d\n", word2vec.GetVocabulary())
-	fmt.Printf("Number of words: %d\n", word2vec.GetWords())
+	fmt.Println("Summary:")
+	fmt.Printf("%v\n", w2v)
 
-	fmt.Print("Start Train...\n")
-	if err := w2v.Run(); err != nil {
-		utils.Fatal(err)
+	file, err := os.Open(inputFile)
+	if err != nil {
+		return err
 	}
-	fmt.Print("Finish Train\n")
 
-	if err := w2v.Save(); err != nil {
-		utils.Fatal(err)
+	f, err := mod.Preprocess(file)
+	if err != nil {
+		return err
 	}
-	fmt.Print("Finish Save!\n")
+	fmt.Println("Finished Preprocess")
+
+	if err := mod.Train(f); err != nil {
+		return err
+	}
+	fmt.Println("Finished Train")
+
+	if err := mod.Save(outputFile); err != nil {
+		return err
+	}
+	fmt.Println("Finished Save")
+	return nil
 }
