@@ -15,13 +15,12 @@
 package word2vec
 
 import (
-	"github.com/ynqa/word-embedding/utils/vector"
+	"github.com/chewxy/lingo/corpus"
+	"github.com/ynqa/word-embedding/vector"
 )
 
-// Optimizer is the interface for pre-train, and updating words' vector in each optimizer.
+// Optimizer is the interface to initialize after scanning corpus once, and update the word vector.
 type Optimizer interface {
-	PreTrain() error
-	InitLearningRate(totalWords int)
-	Update(target string, contentVector, poolVector vector.Vector)
-	UpdateLearningRate(currentWords int)
+	Init(c *corpus.Corpus, dimension int) error
+	Update(targetID int, contextVector, poolVector vector.Vector, learningRate float64) error
 }
