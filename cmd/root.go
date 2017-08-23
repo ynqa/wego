@@ -15,19 +15,12 @@
 package cmd
 
 import (
-	"errors"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 
-	flag "github.com/spf13/pflag"
-	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/utils"
-)
-
-var (
-	inputFile, outputFile string
-	dimension, window     int
-	learningRate          float64
+	"github.com/ynqa/word-embedding/config"
 )
 
 // RootCmd is the root command for word embedding.
@@ -35,34 +28,39 @@ var RootCmd = &cobra.Command{
 	Use:   "word-embedding",
 	Short: "The tools embedding words into vector space",
 	Long:  "The tools embedding words into vector space",
-	Run: func(cmd *cobra.Command, args []string) {
-		utils.Fatal(errors.New("Set sub-command from: distance|word2vec"))
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return errors.New("Set sub-command from: distance|word2vec")
 	},
 }
 
-// GetCommonFlagSet sets the common flags for models.
-func GetCommonFlagSet() *flag.FlagSet {
-	fs := flag.NewFlagSet(RootCmd.Name(), flag.ContinueOnError)
-	fs.StringVarP(&inputFile, "input", "i", "example/input.txt", "Input file path for learning")
-	fs.StringVarP(&outputFile, "output", "o", "example/word_vectors.txt", "Output file path for each learned word vector")
-	fs.IntVarP(&dimension, "dimension", "d", 10, "Set word vector dimension size")
-	fs.IntVarP(&window, "window", "w", 5, "Set window size")
-	fs.Float64Var(&learningRate, "lr", 0.025, "Set init learning rate")
+// ConfigFlagSet creates the common config flags.
+func ConfigFlagSet() *pflag.FlagSet {
+	fs := pflag.NewFlagSet(RootCmd.Name(), pflag.ContinueOnError)
+	fs.StringP(config.InputFile.String(), "i", config.DefaultInputFile,
+		"Set the input file path to load corpus")
+	fs.StringP(config.OutputFile.String(), "o", config.DefaultOutputFile,
+		"Set the output file path to save word vectors")
+	fs.IntP(config.Dimension.String(), "d", config.DefaultDimension,
+		"Set the dimension of word vector")
+	fs.IntP(config.Window.String(), "w", config.DefaultWindow,
+		"Set the context window size")
+	fs.Float64(config.InitLearningRate.String(), config.DefaultInitLearningRate,
+		"Set the initial learning rate")
+	fs.Bool(config.Lower.String(), config.DefaultLower,
+		"Whether the words on corpus convert to lowercase or not")
 	return fs
+}
+
+func configBind(cmd *cobra.Command) {
+	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
+	viper.BindPFlag(config.OutputFile.String(), cmd.Flags().Lookup(config.OutputFile.String()))
+	viper.BindPFlag(config.Dimension.String(), cmd.Flags().Lookup(config.Dimension.String()))
+	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
+	viper.BindPFlag(config.InitLearningRate.String(), cmd.Flags().Lookup(config.InitLearningRate.String()))
+	viper.BindPFlag(config.Lower.String(), cmd.Flags().Lookup(config.Lower.String()))
 }
 
 func init() {
 	RootCmd.AddCommand(Word2VecCmd)
-	RootCmd.AddCommand(SimilarityCmd)
-}
-
-// NewCommon creates the common struct.
-func NewCommon() model.Common {
-	return model.Common{
-		InputFile:    inputFile,
-		OutputFile:   outputFile,
-		Dimension:    dimension,
-		Window:       window,
-		LearningRate: learningRate,
-	}
+	//RootCmd.AddCommand(SimilarityCmd)
 }
