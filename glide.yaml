@@ -1,8 +1,14 @@
 package: github.com/ynqa/word-embedding
 import:
-- package: github.com/spf13/cobra
-  version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
-- package: gopkg.in/cheggaaa/pb.v1
-  version: cdf719fac0dd208251aa828e687c2d5802053b51
+- package: github.com/chewxy/lingo
+  version: 311daca23597e20aea407445a6c8100bfca4e7f7
 - package: github.com/olekukonko/tablewriter
   version: febf2d34b54a69ce7530036c7503b1c9fbfdf0bb
+- package: github.com/pkg/errors
+  version: v0.8.0
+- package: github.com/spf13/cobra
+  version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
+- package: github.com/spf13/viper
+  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+- package: gopkg.in/cheggaaa/pb.v2
+  version: v2.0.4
