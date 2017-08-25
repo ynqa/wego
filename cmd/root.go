@@ -62,5 +62,5 @@ func configBind(cmd *cobra.Command) {
 
 func init() {
 	RootCmd.AddCommand(Word2VecCmd)
-	//RootCmd.AddCommand(SimilarityCmd)
+	RootCmd.AddCommand(SimilarityCmd)
 }
