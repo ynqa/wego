@@ -14,98 +14,117 @@
 
 package similarity
 
-//import (
-//	"fmt"
-//	"os"
-//	"sort"
-//	"strconv"
-//	"strings"
-//
-//	"github.com/olekukonko/tablewriter"
-//	"github.com/ynqa/word-embedding/vector"
-//)
-//
-//// VectorMap is the map composed of <word, Vector>.
-//type VectorMap map[string]vector.Vector
-//
-//var vectorMap VectorMap
-//
-//// Sim stores word, and cosine similarity value against target.
-//type Sim struct {
-//	word   string
-//	cosine float64
-//}
-//
-//// SimList is the list of Sim.
-//type SimList []Sim
-//
-//func (p SimList) Len() int           { return len(p) }
-//func (p SimList) Less(i, j int) bool { return p[i].cosine < p[j].cosine }
-//func (p SimList) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-//
-//func init() {
-//	vectorMap = make(VectorMap)
-//}
-//
-//// Load reads trained vector.
-//func Load(inputFile string) error {
-//	fileio.Load(inputFile, func(lines []string) {
-//		for _, s := range lines {
-//			word, vec := parse(s)
-//			vectorMap[word] = vec
-//		}
-//	})
-//	return nil
-//}
-//
-//func parse(line string) (string, vector.Vector) {
-//	sep := strings.Fields(line)
-//	word := sep[0]
-//	v := sep[1:]
-//	vec := vector.NewVector(len(v))
-//	for k, pair := range v {
-//		val, err := strconv.ParseFloat(strings.Split(pair, ":")[1], 64)
-//		if err != nil {
-//			return "", nil
-//		}
-//		vec[k] = val
-//	}
-//	return word, vec
-//}
-//
-//// Describe shows the similar list against target.
-//func Describe(target string, rank int) error {
-//	targetVector, existed := vectorMap[target]
-//	if !existed {
-//		return fmt.Errorf("%v is not found", target)
-//	}
-//
-//	res := make(SimList, 0)
-//	for word, vec := range vectorMap {
-//		if word == target {
-//			continue
-//		}
-//		res = append(res, Sim{
-//			word:   word,
-//			cosine: targetVector.Cosine(vec),
-//		})
-//	}
-//
-//	sort.Sort(sort.Reverse(res))
-//
-//	table := make([][]string, 100)
-//	for r := 0; r < rank; r++ {
-//		table[r] = []string{
-//			fmt.Sprintf("%d", r+1),
-//			res[r].word,
-//			fmt.Sprintf("%f", res[r].cosine),
-//		}
-//	}
-//
-//	tw := tablewriter.NewWriter(os.Stdout)
-//	tw.SetHeader([]string{"Rank", "Word", "Cosine"})
-//	tw.SetBorder(false)
-//	tw.AppendBulk(table)
-//	tw.Render()
-//	return nil
-//}
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/pkg/errors"
+
+	"github.com/ynqa/word-embedding/vector"
+)
+
+// Estimator stores the elements for cosine similarity.
+type Estimator struct {
+	target string
+	rank   int
+	tensor map[string]vector.Vector
+}
+
+// NewEstimator creates *SimilarityEstimator
+func NewEstimator(target string, rank int) *Estimator {
+	return &Estimator{
+		target: target,
+		rank:   rank,
+		tensor: make(map[string]vector.Vector),
+	}
+}
+
+// Estimate estimates the similarity for target word.
+func (e *Estimator) Estimate(f io.ReadCloser) error {
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.HasPrefix(line, " ") {
+			continue
+		}
+		word, vec, err := parse(line)
+		if err != nil {
+			return err
+		}
+
+		e.tensor[word] = vec
+	}
+
+	if err := scanner.Err(); err != nil && err != io.EOF {
+		return errors.New("Unable to complete scanning")
+	}
+
+	return nil
+}
+
+// Describe shows the similar words list for target word.
+func (e *Estimator) Describe() error {
+	// TODO: Save to the file also.
+	return e.stdout()
+}
+
+func (e *Estimator) stdout() error {
+	tvec, ok := e.tensor[e.target]
+	if !ok {
+		return fmt.Errorf("%v is not found", e.target)
+	}
+
+	res := make(Measures, len(e.tensor))
+
+	for word, vec := range e.tensor {
+		if word == e.target {
+			continue
+		}
+		res = append(res, Measure{
+			word:       word,
+			similarity: tvec.Cosine(vec),
+		})
+	}
+
+	sort.Sort(sort.Reverse(res))
+
+	table := make([][]string, e.rank)
+	for r := 0; r < e.rank; r++ {
+		table[r] = []string{
+			fmt.Sprintf("%d", r+1),
+			res[r].word,
+			fmt.Sprintf("%f", res[r].similarity),
+		}
+	}
+
+	tw := tablewriter.NewWriter(os.Stdout)
+	tw.SetHeader([]string{"Rank", "Word", "Cosine"})
+	tw.SetBorder(false)
+	tw.AppendBulk(table)
+	tw.Render()
+	return nil
+}
+
+func parse(line string) (string, vector.Vector, error) {
+	sep := strings.Fields(line)
+	word := sep[0]
+	v := sep[1:]
+	vec := vector.NewVector(len(v))
+	for k, pair := range v {
+		val, err := strconv.ParseFloat(strings.Split(pair, ":")[1], 64)
+		if err != nil {
+			return "", nil, err
+		}
+		vec[k] = val
+	}
+	return word, vec, nil
+}
