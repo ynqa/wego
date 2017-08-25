@@ -14,46 +14,63 @@
 
 package cmd
 
-//import (
-//	"errors"
-//
-//	"github.com/spf13/cobra"
-//	sim "github.com/ynqa/word-embedding/similarity"
-//	"github.com/ynqa/word-embedding/utils"
-//)
-//
-//var (
-//	rank            int
-//	inputVectorFile string
-//)
-//
-//// SimilarityCmd is the command for calculation of similarity.
-//var SimilarityCmd = &cobra.Command{
-//	Use:     "sim -i FILENAME WORD",
-//	Short:   "Estimate the similarity between words",
-//	Long:    "Estimate the similarity between words",
-//	Example: "word-embedding sim -i example/word_vectors.txt apple",
-//	Run: func(cmd *cobra.Command, args []string) {
-//		if len(args) == 1 {
-//			describe(args[0])
-//		} else {
-//			utils.Fatal(errors.New("Input a single word"))
-//		}
-//	},
-//}
-//
-//func init() {
-//	SimilarityCmd.Flags().IntVarP(&rank, "rank", "r", 10, "Set number of the similar word list displayed")
-//	SimilarityCmd.Flags().StringVarP(&inputVectorFile, "input", "i", "example/word_vectors.txt",
-//		"Input path of a file written words' vector with libsvm format")
-//}
-//
-//func describe(w string) {
-//	if err := sim.Load(inputVectorFile); err != nil {
-//		utils.Fatal(err)
-//	}
-//
-//	if err := sim.Describe(w, rank); err != nil {
-//		utils.Fatal(err)
-//	}
-//}
+import (
+	"os"
+
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"github.com/ynqa/word-embedding/config"
+	"github.com/ynqa/word-embedding/similarity"
+)
+
+// SimilarityCmd is the command for calculation of similarity.
+var SimilarityCmd = &cobra.Command{
+	Use:   "sim -i FILENAME WORD",
+	Short: "Estimate the similarity between words",
+	Long:  "Estimate the similarity between words",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		similarityBind(cmd)
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 1 {
+			return runSimilarity(args[0])
+		}
+		return errors.New("Input a single word")
+	},
+}
+
+func init() {
+	SimilarityCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
+		"Set the input file path to load word vector list")
+	SimilarityCmd.Flags().Int(config.Rank.String(), config.DefaultRank,
+		"How many the most similar words will be displayed")
+}
+
+func similarityBind(cmd *cobra.Command) {
+	viper.BindPFlag(config.Rank.String(), cmd.Flags().Lookup(config.Rank.String()))
+	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
+}
+
+func runSimilarity(target string) error {
+	inputFile := viper.GetString(config.InputFile.String())
+	rank := viper.GetInt(config.Rank.String())
+
+	est := similarity.NewEstimator(target, rank)
+
+	f, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+
+	if err := est.Estimate(f); err != nil {
+		return err
+	}
+
+	if err := est.Describe(); err != nil {
+		return err
+	}
+
+	return nil
+}
