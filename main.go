@@ -15,13 +15,30 @@
 package main
 
 import (
+	"log"
 	"os"
+	"runtime/pprof"
 
-	"github.com/ynqa/word-embedding/cmd"
+	"github.com/chewxy/word-embedding/cmd"
 )
 
 func main() {
+
+	f, err := os.Create("test.prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	if err := cmd.RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
+
+	// f, err := os.Create("mem.prof")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// pprof.WriteHeapProfile(f)
+	// f.Close()
 }

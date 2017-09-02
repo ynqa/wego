@@ -20,9 +20,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/config"
-	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/model/word2vec"
+	"github.com/chewxy/word-embedding/config"
+	"github.com/chewxy/word-embedding/model"
+	"github.com/chewxy/word-embedding/model/word2vec"
 )
 
 // Word2VecBuilder manages the members to build the Model interface.

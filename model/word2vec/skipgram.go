@@ -17,21 +17,21 @@ package word2vec
 import (
 	"io"
 
-	"github.com/ynqa/word-embedding/vector"
+	"github.com/chewxy/gorgonia/tensor"
 )
 
 // SkipGram is a piece of Word2Vec model.
 type SkipGram struct {
 	*State
 
-	pool vector.Vector
+	pool *tensor.Dense
 }
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
 	return &SkipGram{
 		State: s,
-		pool:  vector.NewVector(s.Dimension),
+		pool:  tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
 	}
 }
 
@@ -53,13 +53,13 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int) error {
 		}
 		contextID := wordIDs[c]
 
-		s.pool.Zeros()
-		if err := s.Opt.Update(targetID, s.Tensor[contextID],
+		s.pool.Zero()
+		if err := s.Opt.Update(targetID, s.emb.m[contextID],
 			s.pool, s.currentLearningRate); err != nil {
 			return err
 		}
-
-		s.Tensor[contextID].UnsafeAdd(s.pool)
+		tensor.Add(s.emb.m[contextID], s.pool, tensor.UseUnsafe())
+		// s.emb[contextID].Add(s.pool, tensor.UseUnsafe())
 	}
 	return nil
 }
