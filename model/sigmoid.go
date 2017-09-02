@@ -16,14 +16,25 @@ package model
 
 import (
 	"math"
+
+	"github.com/chewxy/math32"
 )
 
 // Sigmoid returns f(x) = \frac{1}{1 + e^{-x}}.
 // See: http://en.wikipedia.org/wiki/Sigmoid_function.
-func Sigmoid(f float64) float64 {
+func SigmoidF64(f float64) float64 {
 	exp := math.Exp(f)
 	if math.IsInf(exp, 1) {
 		return 1.0
 	}
 	return exp / (1.0 + exp)
+}
+
+func SigmoidF32(f float32) float32 {
+	exp := math32.Exp(f)
+	if math32.IsInf(exp, 1) {
+		return float32(1.0)
+	}
+	return exp / (float32(1.0) + exp)
+
 }

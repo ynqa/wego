@@ -16,18 +16,36 @@ package huffman
 
 import (
 	"errors"
+	"math/rand"
 	"sort"
 
+	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
-	"github.com/ynqa/word-embedding/vector"
 )
+
+func randomTensor(size int, dt tensor.Dtype, eng tensor.Engine) tensor.Tensor {
+	ref := tensor.New(tensor.Of(dt), tensor.WithShape(size), tensor.WithEngine(eng))
+	switch dt {
+	case tensor.Float64:
+		dat := ref.Data().([]float64)
+		for i := range dat {
+			dat[i] = (rand.Float64() - 0.5) / float64(size)
+		}
+	case tensor.Float32:
+		dat := ref.Data().([]float32)
+		for i := range dat {
+			dat[i] = (rand.Float32() - 0.5) / float32(size)
+		}
+	}
+	return ref
+}
 
 // Node stores the node with vector in huffman tree.
 type Node struct {
 	Parent    *Node
 	Code      int
 	Value     int
-	Vector    vector.Vector
+	Vector    tensor.Tensor
 	CachePath Nodes
 }
 
@@ -39,7 +57,7 @@ func (n *Nodes) Less(i, j int) bool { return (*n)[i].Value < (*n)[j].Value }
 func (n *Nodes) Swap(i, j int)      { (*n)[i], (*n)[j] = (*n)[j], (*n)[i] }
 
 // NewHuffmanTree creates the map of wordID with Node.
-func NewHuffmanTree(c *corpus.Corpus, dimension int) (map[int]*Node, error) {
+func NewHuffmanTree(c *corpus.Corpus, dimension int, dt tensor.Dtype, eng tensor.Engine) (map[int]*Node, error) {
 	ns := make(Nodes, 0, c.Size())
 	nm := make(map[int]*Node)
 	for i := 0; i < c.Size(); i++ {
@@ -48,14 +66,14 @@ func NewHuffmanTree(c *corpus.Corpus, dimension int) (map[int]*Node, error) {
 		nm[i] = n
 		ns = append(ns, n)
 	}
-	err := ns.buildHuffmanTree(dimension)
+	err := ns.buildHuffmanTree(dimension, dt, eng)
 	if err != nil {
 		return nil, err
 	}
 	return nm, nil
 }
 
-func (n *Nodes) buildHuffmanTree(dimension int) error {
+func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engine) error {
 	if len(*n) == 0 {
 		return errors.New("The length of Nodes is 0")
 	}
@@ -69,7 +87,7 @@ func (n *Nodes) buildHuffmanTree(dimension int) error {
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: vector.NewRandomizedVector(dimension),
+			Vector: randomTensor(dimension, dt, eng),
 		}
 		left.Parent = parent
 		left.Code = 0

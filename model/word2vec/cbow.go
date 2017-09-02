@@ -17,23 +17,24 @@ package word2vec
 import (
 	"io"
 
-	"github.com/ynqa/word-embedding/vector"
+	"github.com/chewxy/gorgonia/tensor"
 )
 
 // CBOW is a piece of Word2Vec model.
 type CBOW struct {
 	*State
 
-	sum  vector.Vector
-	pool vector.Vector
+	sum, pool tensor.Tensor
+	// sum  vector.Vector
+	// pool vector.Vector
 }
 
 // NewCBOW creates *CBOW
 func NewCBOW(s *State) *CBOW {
 	return &CBOW{
 		State: s,
-		sum:   vector.NewVector(s.Dimension),
-		pool:  vector.NewVector(s.Dimension),
+		sum:   tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
+		pool:  tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
 	}
 }
 
@@ -58,19 +59,21 @@ func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
 		}
 	}
 
-	c.sum.Zeros()
+	c.sum.Zero()
 	initSum := func(contextID int) {
-		c.sum.UnsafeAdd(c.Tensor[contextID])
+		tensor.Add(c.sum, c.emb.m[contextID], tensor.UseUnsafe())
+		// c.sum.UnsafeAdd(c.Tensor[contextID])
 	}
 	f(initSum)
 
-	c.pool.Zeros()
+	c.pool.Zero()
 	if err := c.Opt.Update(targetID, c.sum, c.pool, c.currentLearningRate); err != nil {
 		return err
 	}
 
 	updateContext := func(contextID int) {
-		c.Tensor[contextID].UnsafeAdd(c.pool)
+		tensor.Add(c.emb.m[contextID], c.pool, tensor.UseUnsafe())
+		// c.Tensor[contextID].UnsafeAdd(c.pool)
 	}
 	f(updateContext)
 	return nil
