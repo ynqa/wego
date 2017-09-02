@@ -29,14 +29,15 @@ import (
 	"github.com/pkg/errors"
 	pb "gopkg.in/cheggaaa/pb.v1"
 
-	"github.com/ynqa/word-embedding/model"
+	"github.com/chewxy/word-embedding/model"
 )
 
 // State stores all common configs for Word2Vec models.
 type State struct {
 	*model.Config
 	*corpus.Corpus
-	Tensor
+	emb *Embedding
+
 	Opt                Optimizer
 	SubsampleThreshold float64
 	BatchSize          int
@@ -66,7 +67,7 @@ func NewState(config *model.Config, opt Optimizer,
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
-		s.Tensor = NewTensor(s.Corpus.Size(), s.Dimension)
+		s.emb = NewTensor(s.Corpus.Size(), s.Dimension)
 		s.Opt.Init(s.Corpus, s.Dimension)
 	}()
 
@@ -203,7 +204,7 @@ func (s *State) Save(outputPath string) error {
 	for i := 0; i < s.Size(); i++ {
 		word, _ := s.Word(i)
 		vs.WriteString(fmt.Sprintf("%v ", word))
-		vs.WriteString(fmt.Sprintf("%v\n", s.Tensor[i]))
+		vs.WriteString(fmt.Sprintf("%v\n", s.emb.m[i]))
 	}
 
 	w.WriteString(fmt.Sprintf("%v", vs.String()))

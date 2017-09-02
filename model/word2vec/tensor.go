@@ -15,17 +15,49 @@
 package word2vec
 
 import (
-	"github.com/ynqa/word-embedding/vector"
+	"math/rand"
+
+	"github.com/chewxy/gorgonia/tensor"
 )
 
-// Tensor has the vector for each word.
-type Tensor []vector.Vector
+var dtype tensor.Dtype = tensor.Float32
+var eng tensor.Engine = tensor.Float32Engine{}
 
-// NewTensor creates Tensor with the shape of (vocabulary, dimension).
-func NewTensor(vocabulary, dimension int) Tensor {
-	tensor := make([]vector.Vector, vocabulary)
-	for i := 0; i < vocabulary; i++ {
-		tensor[i] = vector.NewRandomizedVector(dimension)
+type s int
+
+func (a s) Start() int { return int(a) }
+func (a s) End() int   { return int(a + 1) }
+func (a s) Step() int  { return 1 }
+
+type Embedding struct {
+	ref tensor.Tensor // hold a reference
+	m   []tensor.Tensor
+}
+
+func NewTensor(vocabulary, dimension int) *Embedding {
+	ref := tensor.New(tensor.Of(dtype), tensor.WithShape(vocabulary, dimension), tensor.WithEngine(eng))
+	switch dtype {
+	case tensor.Float64:
+		dat := ref.Data().([]float64)
+		for i := range dat {
+			dat[i] = (rand.Float64() - 0.5) / float64(dimension)
+		}
+	case tensor.Float32:
+		dat := ref.Data().([]float32)
+		for i := range dat {
+			dat[i] = (rand.Float32() - 0.5) / float32(dimension)
+		}
 	}
-	return tensor
+
+	// preslice all the things!
+	m := make([]tensor.Tensor, vocabulary)
+	for i := 0; i < vocabulary; i++ {
+		slice, _ := ref.Slice(s(i))
+		m[i] = slice
+	}
+
+	return &Embedding{
+		ref: ref,
+		m:   m,
+	}
 }

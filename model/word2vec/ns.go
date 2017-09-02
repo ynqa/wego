@@ -15,17 +15,17 @@
 package word2vec
 
 import (
+	"errors"
 	"math/rand"
 
+	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
-
-	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/vector"
+	"github.com/chewxy/word-embedding/model"
 )
 
 // NegativeSampling is a piece of Word2Vec optimizer.
 type NegativeSampling struct {
-	negativeTensor     Tensor
+	negativeTensor     *Embedding
 	NegativeSampleSize int
 }
 
@@ -44,38 +44,76 @@ func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
 }
 
 // Update updates the word vector using the negative vector.
-func (ns *NegativeSampling) Update(targetID int,
-	contextVector, poolVector vector.Vector, learningRate float64) error {
+func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
 
-	var label int
+	var label float64
 	var negativeID int
-	var negativeVector vector.Vector
+	var negativeVector tensor.Tensor
 
 	for n := -1; n < ns.NegativeSampleSize; n++ {
 		if n == -1 {
 			label = 1
-			negativeVector = ns.negativeTensor[targetID]
+			negativeVector = ns.negativeTensor.m[targetID]
 		} else {
 			label = 0
-			negativeID := rand.Intn(len(ns.negativeTensor))
-			negativeVector = ns.negativeTensor[negativeID]
+			negativeID := rand.Intn(len(ns.negativeTensor.m))
+			negativeVector = ns.negativeTensor.m[negativeID]
 			if targetID == negativeID {
 				continue
 			}
 		}
 
-		inner := negativeVector.Inner(contextVector)
-		f := model.Sigmoid(inner)
-		g := (float64(label) - f) * learningRate
+		if err := ns.gradUpd(label, learningRate, negativeVector, contextVector, poolVector); err != nil {
+			return err
+		}
+		// inner, _ := tensor.Inner(negativeVector, contextVector)
+		// g := ns.gradUpd(label, learningRate, inner)
+		// f := model.Sigmoid(inner)
+		// g := (float64(label) - f) * learningRate
 
-		poolVector.UnsafeAdd(negativeVector.Mul(g))
-		negativeVector.UnsafeAdd(contextVector.Mul(g))
+		// tensor.FMA(negativeVector, g, poolVector)
+		// tensor.FMA(contextVector, g, negativeVector)
+		// poolVector.UnsafeAdd(negativeVector.Mul(g))
+		// negativeVector.UnsafeAdd(contextVector.Mul(g))
 
 		if n == -1 {
-			ns.negativeTensor[targetID] = negativeVector
+			ns.negativeTensor.m[targetID] = negativeVector
 		} else {
-			ns.negativeTensor[negativeID] = negativeVector
+			ns.negativeTensor.m[negativeID] = negativeVector
 		}
 	}
+	return nil
+}
+
+func (ns *NegativeSampling) gradUpd(label, lr float64, negVec, ctxVec, poolVec tensor.Tensor) (err error) {
+	switch negVec.Dtype() {
+	case tensor.Float64:
+		var inner float64
+		if ip, ok := eng.(tensor.InnerProderF64); ok {
+			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
+				return
+			}
+		} else {
+			return errors.New("Engine does not perform Inner for Float64")
+		}
+		sig := model.SigmoidF64(inner)
+		g := (label - sig) * lr
+		tensor.FMA(negVec, &g, poolVec)
+		tensor.FMA(ctxVec, &g, negVec)
+	case tensor.Float32:
+		var inner float32
+		if ip, ok := eng.(tensor.InnerProderF32); ok {
+			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
+				return
+			}
+		} else {
+			return errors.New("Engine does not perform Inner for Float64")
+		}
+		sig := model.SigmoidF32(inner)
+		g := (float32(label) - sig) * float32(lr)
+		tensor.FMA(negVec, &g, poolVec)
+		tensor.FMA(ctxVec, &g, negVec)
+	}
+
 	return nil
 }

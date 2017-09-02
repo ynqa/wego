@@ -15,11 +15,13 @@
 package word2vec
 
 import (
+	"errors"
+
+	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 
-	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/model/word2vec/huffman"
-	"github.com/ynqa/word-embedding/vector"
+	"github.com/chewxy/word-embedding/model"
+	"github.com/chewxy/word-embedding/model/word2vec/huffman"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
@@ -38,29 +40,71 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 
 // Init initializes the huffman tree.
 func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error) {
-	hs.nodeMap, err = huffman.NewHuffmanTree(c, dimension)
+	hs.nodeMap, err = huffman.NewHuffmanTree(c, dimension, dtype, eng)
 	return
 }
 
 // Update updates the word vector using the huffman tree.
-func (hs *HierarchicalSoftmax) Update(targetID int,
-	contextVector, poolVector vector.Vector, learningRate float64) error {
+func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
 
 	path := hs.nodeMap[targetID].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
 
-		inner := contextVector.Inner(relayPoint.Vector)
-		f := model.Sigmoid(inner)
 		childCode := path[p+1].Code
-		g := (1.0 - float64(childCode) - f) * learningRate
 
-		poolVector.UnsafeAdd(relayPoint.Vector.Mul(g))
-		relayPoint.Vector.UnsafeAdd(contextVector.Mul(g))
+		if err := hs.gradUpd(float64(childCode), learningRate, relayPoint.Vector, poolVector, contextVector); err != nil {
+			return err
+		}
+		// inner, _ := tensor.Inner(contextVector, relayPoint.Vector)
+		// inner := contextVector.Inner(relayPoint.Vector)
+		// g := hs.gradUpd(float64(childCode), learningRate, inner)
+		// f := model.Sigmoid(inner)
+		// g := (1.0 - float64(childCode) - f) * learningRate
+
+		// tensor.FMA(relayPoint.Vector, g, poolVector)
+		// tensor.FMA(contextVector, g, relayPoint.Vector)
+		// poolVector.UnsafeAdd(relayPoint.Vector.Mul(g))
+		// relayPoint.Vector.UnsafeAdd(contextVector.Mul(g))
 
 		if hs.MaxDepth > 0 && p >= hs.MaxDepth {
 			break
 		}
+	}
+	return nil
+}
+
+func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec, poolVec, ctxVec tensor.Tensor) (err error) {
+	switch relayPointVec.Dtype() {
+	case tensor.Float64:
+		var inner float64
+		if ip, ok := eng.(tensor.InnerProderF64); ok {
+			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
+				return
+			}
+		} else {
+			return errors.New("Engine does not perform Inner for Float64")
+		}
+
+		sig := model.SigmoidF64(inner)
+		g := 1.0 - childCode - sig*lr
+		tensor.FMA(relayPointVec, &g, poolVec)
+		tensor.FMA(ctxVec, &g, relayPointVec)
+	case tensor.Float32:
+		var inner float32
+		if ip, ok := eng.(tensor.InnerProderF32); ok {
+			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
+				return
+			}
+		} else {
+			return errors.New("Engine does not perform Inner for Float32")
+		}
+
+		sig := model.SigmoidF32(inner)
+		g := (float32(1) - float32(childCode) - sig) * float32(lr)
+		tensor.FMA(relayPointVec, &g, poolVec)
+		tensor.FMA(ctxVec, &g, relayPointVec)
+
 	}
 	return nil
 }
