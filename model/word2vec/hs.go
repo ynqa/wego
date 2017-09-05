@@ -56,8 +56,9 @@ func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector te
 		if err := hs.gradUpd(float64(childCode), learningRate, relayPoint.Vector, poolVector, contextVector); err != nil {
 			return err
 		}
-		// inner, _ := tensor.Inner(contextVector, relayPoint.Vector)
+
 		// inner := contextVector.Inner(relayPoint.Vector)
+		// inner, _ := tensor.Inner(contextVector, relayPoint.Vector)
 		// g := hs.gradUpd(float64(childCode), learningRate, inner)
 		// f := model.Sigmoid(inner)
 		// g := (1.0 - float64(childCode) - f) * learningRate
@@ -87,7 +88,7 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec, poo
 		}
 
 		sig := model.SigmoidF64(inner)
-		g := 1.0 - childCode - sig*lr
+		g := (1.0 - childCode - sig) * lr
 		tensor.FMA(relayPointVec, &g, poolVec)
 		tensor.FMA(ctxVec, &g, relayPointVec)
 	case tensor.Float32:

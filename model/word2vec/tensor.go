@@ -20,8 +20,8 @@ import (
 	"github.com/chewxy/gorgonia/tensor"
 )
 
-var dtype tensor.Dtype = tensor.Float32
-var eng tensor.Engine = tensor.Float32Engine{}
+var dtype tensor.Dtype = tensor.Float64
+var eng tensor.Engine = tensor.Float64Engine{}
 
 type s int
 
@@ -60,4 +60,13 @@ func NewTensor(vocabulary, dimension int) *Embedding {
 		ref: ref,
 		m:   m,
 	}
+}
+
+func checkNaN(t tensor.Tensor) bool {
+	switch t.Dtype() {
+	case tensor.Float64:
+	case tensor.Float32:
+
+	}
+	return false
 }
