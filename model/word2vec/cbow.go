@@ -45,36 +45,35 @@ func (c *CBOW) Train(f io.ReadCloser) error {
 
 func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
 	targetID := wordIDs[wordIndex]
-	f := func(g func(contextID int)) {
-		shr := nextRandom(c.Window)
-		for a := shr; a < c.Window*2+1-shr; a++ {
-			if a != c.Window {
-				c := wordIndex - c.Window + a
-				if c < 0 || c >= len(wordIDs) {
-					continue
-				}
-				contextID := wordIDs[c]
-				g(contextID)
-			}
-		}
-	}
-
 	c.sum.Zero()
-	initSum := func(contextID int) {
-		tensor.Add(c.sum, c.emb.m[contextID], tensor.UseUnsafe())
-		// c.sum.UnsafeAdd(c.Tensor[contextID])
-	}
-	f(initSum)
+	c.dowith(wordIDs, wordIndex, c.initSum)
 
 	c.pool.Zero()
 	if err := c.Opt.Update(targetID, c.sum, c.pool, c.currentLearningRate); err != nil {
 		return err
 	}
-
-	updateContext := func(contextID int) {
-		tensor.Add(c.emb.m[contextID], c.pool, tensor.UseUnsafe())
-		// c.Tensor[contextID].UnsafeAdd(c.pool)
-	}
-	f(updateContext)
+	c.dowith(wordIDs, wordIndex, c.updateCtx)
 	return nil
+}
+
+func (c *CBOW) dowith(wordIDs []int, wordIndex int, g func(contextID int)) {
+	shr := nextRandom(c.Window)
+	for a := shr; a < c.Window*2+1-shr; a++ {
+		if a != c.Window {
+			c := wordIndex - c.Window + a
+			if c < 0 || c >= len(wordIDs) {
+				continue
+			}
+			contextID := wordIDs[c]
+			g(contextID)
+		}
+	}
+}
+
+func (c *CBOW) initSum(contextID int) {
+	tensor.Add(c.sum, c.emb.m[contextID], tensor.UseUnsafe())
+}
+
+func (c *CBOW) updateCtx(contextID int) {
+	tensor.Add(c.emb.m[contextID], c.pool, tensor.UseUnsafe())
 }

@@ -16,6 +16,7 @@ package word2vec
 
 import (
 	"io"
+	"runtime"
 
 	"github.com/chewxy/gorgonia/tensor"
 )
@@ -24,14 +25,19 @@ import (
 type SkipGram struct {
 	*State
 
-	pool *tensor.Dense
+	poolvecs chan *tensor.Dense
 }
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
+	maxprocs := runtime.GOMAXPROCS(-1)
+	pool := make(chan *tensor.Dense, maxprocs)
+	for i := 0; i < maxprocs; i++ {
+		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
+	}
 	return &SkipGram{
-		State: s,
-		pool:  tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
+		State:    s,
+		poolvecs: pool,
 	}
 }
 
@@ -41,6 +47,8 @@ func (s *SkipGram) Train(f io.ReadCloser) error {
 }
 
 func (s *SkipGram) trainOne(wordIDs []int, wordIndex int) error {
+	// grab poolvector from pool
+	pool := <-s.poolvecs
 	targetID := wordIDs[wordIndex]
 	shr := nextRandom(s.Window)
 	for a := shr; a < s.Window*2+1-shr; a++ {
@@ -53,13 +61,14 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int) error {
 		}
 		contextID := wordIDs[c]
 
-		s.pool.Zero()
+		pool.Zero()
 		if err := s.Opt.Update(targetID, s.emb.m[contextID],
-			s.pool, s.currentLearningRate); err != nil {
+			pool, s.currentLearningRate); err != nil {
 			return err
 		}
-		tensor.Add(s.emb.m[contextID], s.pool, tensor.UseUnsafe())
+		tensor.Add(s.emb.m[contextID], pool, tensor.UseUnsafe())
 		// s.emb[contextID].Add(s.pool, tensor.UseUnsafe())
 	}
+	s.poolvecs <- pool
 	return nil
 }

@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/chewxy/lingo"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -67,7 +68,7 @@ func NewState(config *model.Config, opt Optimizer,
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
-		s.emb = NewTensor(s.Corpus.Size(), s.Dimension)
+		s.emb = newEmbedding(s.Corpus.Size(), s.Dimension)
 		s.Opt.Init(s.Corpus, s.Dimension)
 	}()
 
@@ -166,9 +167,7 @@ func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordInd
 
 		s.currentWordSize++
 		if s.currentWordSize%s.BatchSize == 0 {
-			s.currentLearningRate =
-				updateLearningRate(s.InitLearningRate, s.Theta,
-					s.currentWordSize, s.TotalFreq())
+			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.currentWordSize, s.TotalFreq())
 		}
 	}
 	return nil
@@ -232,4 +231,8 @@ func (s *State) toIDs(words []string) []int {
 		retVal[i], _ = s.Id(w)
 	}
 	return retVal
+}
+
+func readCorpus(f io.ReadCloser, p Tracker, c lingo.Corpus, ch chan []int, ok chan bool, err chan error) error {
+
 }

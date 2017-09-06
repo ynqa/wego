@@ -39,7 +39,7 @@ func NewNegativeSampling(negativeSampleSize int) *NegativeSampling {
 
 // Init initializes the negative vector.
 func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
-	ns.negativeTensor = NewTensor(c.Size(), dimension)
+	ns.negativeTensor = newEmbedding(c.Size(), dimension)
 	return
 }
 

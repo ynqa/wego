@@ -34,7 +34,7 @@ type Embedding struct {
 	m   []tensor.Tensor
 }
 
-func NewTensor(vocabulary, dimension int) *Embedding {
+func newEmbedding(vocabulary, dimension int) *Embedding {
 	ref := tensor.New(tensor.Of(dtype), tensor.WithShape(vocabulary, dimension), tensor.WithEngine(eng))
 	switch dtype {
 	case tensor.Float64:
@@ -60,13 +60,4 @@ func NewTensor(vocabulary, dimension int) *Embedding {
 		ref: ref,
 		m:   m,
 	}
-}
-
-func checkNaN(t tensor.Tensor) bool {
-	switch t.Dtype() {
-	case tensor.Float64:
-	case tensor.Float32:
-
-	}
-	return false
 }
