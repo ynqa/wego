@@ -12,7 +12,7 @@ imports:
 - name: github.com/chewxy/cu
   version: 12e8b106ce46d83d03d2b597f8f180dd59e0ae6b
 - name: github.com/chewxy/gorgonia
-  version: 0e82df56708012ea20e3135f078cb86cf5f463d8
+  version: 6fb52724c661201223d7b22b417d220e81f8ff75
   subpackages:
   - tensor
 - name: github.com/chewxy/hm
