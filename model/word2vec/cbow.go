@@ -61,9 +61,9 @@ func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
 
 	targetID := wordIDs[wordIndex]
 	sum.Zero()
+	pool.Zero()
 	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
 
-	pool.Zero()
 	if err := c.Opt.Update(targetID, sum, pool, c.currentLearningRate); err != nil {
 		c.sums <- sum
 		c.pools <- pool

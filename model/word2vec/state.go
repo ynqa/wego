@@ -132,10 +132,6 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 		wg.Add(1)
 		wordIDs := s.toIDs(line)
 		go s.trainOneBatch(wordIDs, &wg, sema, errChan, trainOne)
-		// if err := s.trainOneLine(wordIDs, trainOne); err != nil {
-		// 	return err
-		// }
-
 		current = 0
 		line = line[:0]
 	}
@@ -256,7 +252,7 @@ func (s *State) Save(outputPath string) error {
 	for i := 0; i < s.Size(); i++ {
 		word, _ := s.Word(i)
 		vs.WriteString(fmt.Sprintf("%v ", word))
-		vs.WriteString(fmt.Sprintf("%v\n", s.emb.m[i]))
+		vs.WriteString(fmt.Sprintf("%v\n", format(s.emb.m[i])))
 	}
 
 	w.WriteString(fmt.Sprintf("%v", vs.String()))

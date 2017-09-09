@@ -15,13 +15,16 @@
 package word2vec
 
 import (
+	"bytes"
+	"fmt"
 	"math/rand"
 
 	"github.com/chewxy/gorgonia/tensor"
+	"github.com/chewxy/word-embedding/model"
 )
 
-var dtype tensor.Dtype = tensor.Float64
-var eng tensor.Engine = tensor.Float64Engine{}
+var dtype tensor.Dtype = tensor.Float32
+var eng tensor.Engine = tensor.Float32Engine{}
 
 type s int
 
@@ -31,7 +34,7 @@ func (a s) Step() int  { return 1 }
 
 type Embedding struct {
 	ref tensor.Tensor // hold a reference
-	m   []tensor.Tensor
+	m   []*model.SyncTensor
 }
 
 func newEmbedding(vocabulary, dimension int) *Embedding {
@@ -50,14 +53,30 @@ func newEmbedding(vocabulary, dimension int) *Embedding {
 	}
 
 	// preslice all the things!
-	m := make([]tensor.Tensor, vocabulary)
+	// m := make([]tensor.Tensor, vocabulary)
+	m := make([]*model.SyncTensor, vocabulary)
 	for i := 0; i < vocabulary; i++ {
 		slice, _ := ref.Slice(s(i))
-		m[i] = slice
+		m[i] = &model.SyncTensor{Tensor: slice}
 	}
 
 	return &Embedding{
 		ref: ref,
 		m:   m,
 	}
+}
+
+func format(t tensor.Tensor) string {
+	var buf bytes.Buffer
+	switch data := t.Data().(type) {
+	case []float64:
+		for i, v := range data {
+			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		}
+	case []float32:
+		for i, v := range data {
+			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		}
+	}
+	return buf.String()
 }

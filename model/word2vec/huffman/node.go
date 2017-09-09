@@ -21,6 +21,7 @@ import (
 
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
+	"github.com/chewxy/word-embedding/model"
 )
 
 func randomTensor(size int, dt tensor.Dtype, eng tensor.Engine) tensor.Tensor {
@@ -45,7 +46,7 @@ type Node struct {
 	Parent    *Node
 	Code      int
 	Value     int
-	Vector    tensor.Tensor
+	Vector    *model.SyncTensor
 	CachePath Nodes
 }
 
@@ -87,7 +88,7 @@ func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engi
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: randomTensor(dimension, dt, eng),
+			Vector: &model.SyncTensor{Tensor: randomTensor(dimension, dt, eng)},
 		}
 		left.Parent = parent
 		left.Code = 0
