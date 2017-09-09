@@ -20,8 +20,8 @@ import (
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 
-	"github.com/chewxy/word-embedding/model"
-	"github.com/chewxy/word-embedding/model/word2vec/huffman"
+	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/word-embedding/model/word2vec/huffman"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
