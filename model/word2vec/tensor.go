@@ -20,7 +20,7 @@ import (
 	"math/rand"
 
 	"github.com/chewxy/gorgonia/tensor"
-	"github.com/chewxy/word-embedding/model"
+	"github.com/ynqa/word-embedding/model"
 )
 
 var dtype tensor.Dtype = tensor.Float64

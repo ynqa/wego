@@ -21,7 +21,7 @@ import (
 
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
-	"github.com/chewxy/word-embedding/model"
+	"github.com/ynqa/word-embedding/model"
 )
 
 func randomTensor(size int, dt tensor.Dtype, eng tensor.Engine) tensor.Tensor {
