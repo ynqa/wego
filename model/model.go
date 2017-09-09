@@ -16,6 +16,9 @@ package model
 
 import (
 	"io"
+	"sync"
+	
+	"gitub.com/chewxy/gorgonia/tensor"
 )
 
 // Model is the interface of Preprocess, Train, Save.
@@ -23,4 +26,9 @@ type Model interface {
 	Preprocess(f io.ReadSeeker) (io.ReadCloser, error)
 	Train(f io.ReadCloser) error
 	Save(outputFile string) error
+}
+
+type SyncTensor struct {
+	sync.RWmutex
+	tensor.Tensor
 }
