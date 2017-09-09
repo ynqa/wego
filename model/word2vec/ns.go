@@ -66,15 +66,6 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 		if err := ns.gradUpd(label, learningRate, negativeVector, contextVector, poolVector); err != nil {
 			return errors.Wrap(err, "gradUpdate failed for NS")
 		}
-		// inner, _ := tensor.Inner(negativeVector, contextVector)
-		// g := ns.gradUpd(label, learningRate, inner)
-		// f := model.Sigmoid(inner)
-		// g := (float64(label) - f) * learningRate
-
-		// tensor.FMA(negativeVector, g, poolVector)
-		// tensor.FMA(contextVector, g, negativeVector)
-		// poolVector.UnsafeAdd(negativeVector.Mul(g))
-		// negativeVector.UnsafeAdd(contextVector.Mul(g))
 
 		if n == -1 {
 			ns.negativeTensor.m[targetID] = negativeVector

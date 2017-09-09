@@ -48,8 +48,11 @@ type State struct {
 	ignoreWord          int
 	currentWordSize     int
 	currentLearningRate float64
-	cwsCh               chan struct{}
 	progress            *pb.ProgressBar
+
+	// concurrency stuff
+	cwsCh   chan struct{}
+	lrMutex sync.Mutex
 }
 
 // NewState creates *NewState.
@@ -100,7 +103,7 @@ func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 }
 
 // Trainer trains a corpus. It assumes that Preprocess() has already been called
-func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex int) error) error {
+func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
 	s.startTraining()
 	defer func() {
 		s.endTraining()
@@ -160,7 +163,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	return nil
 }
 
-func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{}, errCh chan error, trainOne func(wordIDs []int, wordIndex int) error) {
+func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{}, errCh chan error, trainOne func(wordIDs []int, wordIndex int, lr float64) error) {
 	defer wg.Done()
 	sema <- struct{}{} // get lock
 	for i, w := range wordIDs {
@@ -174,7 +177,11 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 			continue
 		}
 
-		if err := trainOne(wordIDs, i); err != nil {
+		s.lrMutex.Lock()
+		lr := s.currentLearningRate
+		s.lrMutex.Unlock()
+
+		if err := trainOne(wordIDs, i, lr); err != nil {
 			select {
 			case errCh <- err:
 			default:
@@ -189,7 +196,7 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 	<-sema // release
 }
 
-func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int) error) error {
+func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
 	for i, w := range wordIDs {
 		s.progress.Increment()
 
@@ -201,7 +208,11 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 			continue
 		}
 
-		if err := trainOne(wordIDs, i); err != nil {
+		s.lrMutex.Lock()
+		lr := s.currentLearningRate
+		s.lrMutex.Unlock()
+
+		if err := trainOne(wordIDs, i, lr); err != nil {
 			return err
 		}
 		s.cwsCh <- struct{}{} // increment wordsize
@@ -213,7 +224,9 @@ func (s *State) incrementDoneWord() {
 	for range s.cwsCh {
 		s.currentWordSize++
 		if s.currentWordSize%s.BatchSize == 0 {
+			s.lrMutex.Lock()
 			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.currentWordSize, s.TotalFreq())
+			s.lrMutex.Unlock()
 		}
 	}
 }
