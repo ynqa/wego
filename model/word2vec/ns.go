@@ -15,12 +15,12 @@
 package word2vec
 
 import (
-	"errors"
 	"math/rand"
 
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/chewxy/word-embedding/model"
+	"github.com/pkg/errors"
 )
 
 // NegativeSampling is a piece of Word2Vec optimizer.
@@ -48,7 +48,7 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 
 	var label float64
 	var negativeID int
-	var negativeVector tensor.Tensor
+	var negativeVector *model.SyncTensor
 
 	for n := -1; n < ns.NegativeSampleSize; n++ {
 		if n == -1 {
@@ -64,7 +64,7 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 		}
 
 		if err := ns.gradUpd(label, learningRate, negativeVector, contextVector, poolVector); err != nil {
-			return err
+			return errors.Wrap(err, "gradUpdate failed for NS")
 		}
 		// inner, _ := tensor.Inner(negativeVector, contextVector)
 		// g := ns.gradUpd(label, learningRate, inner)
@@ -85,13 +85,16 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 	return nil
 }
 
-func (ns *NegativeSampling) gradUpd(label, lr float64, negVec, ctxVec, poolVec tensor.Tensor) (err error) {
+func (ns *NegativeSampling) gradUpd(label, lr float64, negVec *model.SyncTensor, ctxVec, poolVec tensor.Tensor) (err error) {
+	negVec.Lock()
+	defer negVec.Unlock()
+
 	switch negVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
 		if ip, ok := eng.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
-				return
+			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
+				return errors.Wrap(err, "Inner failed")
 			}
 		} else {
 			return errors.New("Engine does not perform Inner for Float64")
@@ -103,8 +106,8 @@ func (ns *NegativeSampling) gradUpd(label, lr float64, negVec, ctxVec, poolVec t
 	case tensor.Float32:
 		var inner float32
 		if ip, ok := eng.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
-				return
+			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
+				return errors.Wrap(err, "Inner failed")
 			}
 		} else {
 			return errors.New("Engine does not perform Inner for Float64")
