@@ -15,7 +15,7 @@
 package word2vec
 
 import (
-	"errors"
+	"github.com/pkg/errors"
 
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
@@ -46,7 +46,6 @@ func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error)
 
 // Update updates the word vector using the huffman tree.
 func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
-
 	path := hs.nodeMap[targetID].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
@@ -75,13 +74,16 @@ func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector te
 	return nil
 }
 
-func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec, poolVec, ctxVec tensor.Tensor) (err error) {
+func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec *model.SyncTensor, poolVec, ctxVec tensor.Tensor) (err error) {
+	relayPointVec.Lock()
+	defer relayPointVec.Unlock()
+
 	switch relayPointVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
 		if ip, ok := eng.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
-				return
+			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
+				return errors.Wrap(err, "Inner failed for HS")
 			}
 		} else {
 			return errors.New("Engine does not perform Inner for Float64")
@@ -95,7 +97,7 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec, poo
 		var inner float32
 		if ip, ok := eng.(tensor.InnerProderF32); ok {
 			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
-				return
+				return errors.Wrap(err, "Inner failed for HS")
 			}
 		} else {
 			return errors.New("Engine does not perform Inner for Float32")
