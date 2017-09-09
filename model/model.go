@@ -18,7 +18,7 @@ import (
 	"io"
 	"sync"
 	
-	"gitub.com/chewxy/gorgonia/tensor"
+	"github.com/chewxy/gorgonia/tensor"
 )
 
 // Model is the interface of Preprocess, Train, Save.
