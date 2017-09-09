@@ -46,7 +46,7 @@ func (s *SkipGram) Train(f io.ReadCloser) error {
 	return s.Trainer(f, s.trainOne)
 }
 
-func (s *SkipGram) trainOne(wordIDs []int, wordIndex int) error {
+func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 	// grab poolvector from pool
 	pool := <-s.poolvecs
 	targetID := wordIDs[wordIndex]
@@ -62,12 +62,10 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int) error {
 		contextID := wordIDs[c]
 
 		pool.Zero()
-		if err := s.Opt.Update(targetID, s.emb.m[contextID],
-			pool, s.currentLearningRate); err != nil {
+		if err := s.Opt.Update(targetID, s.emb.m[contextID], pool, lr); err != nil {
 			return err
 		}
 		tensor.Add(s.emb.m[contextID], pool, tensor.UseUnsafe())
-		// s.emb[contextID].Add(s.pool, tensor.UseUnsafe())
 	}
 	s.poolvecs <- pool
 	return nil
