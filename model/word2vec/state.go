@@ -138,7 +138,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	wg.Wait()
 	close(errChan)
 	if err := <-errChan; err != nil {
-		return errors.Wrapf(err, "Unable to complete training.")
+		return errors.Wrap(err, "Unable to complete training.")
 	}
 
 	// Leftover processing
@@ -148,7 +148,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 		}
 
 		wordIDs := s.toIDs(line)
-		if err := s.trainOneLine(wordIDs, trainOne); err != nil {
+		if err := s.trainRemainderBatch(wordIDs, trainOne); err != nil {
 			return err
 		}
 	}
@@ -189,7 +189,7 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 	<-sema // release
 }
 
-func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordIndex int) error) error {
+func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int) error) error {
 	for i, w := range wordIDs {
 		s.progress.Increment()
 
@@ -204,11 +204,7 @@ func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordInd
 		if err := trainOne(wordIDs, i); err != nil {
 			return err
 		}
-
-		s.currentWordSize++
-		if s.currentWordSize%s.BatchSize == 0 {
-			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.currentWordSize, s.TotalFreq())
-		}
+		s.cwsCh <- struct{}{} // increment wordsize
 	}
 	return nil
 }
