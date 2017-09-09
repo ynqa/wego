@@ -25,9 +25,9 @@ imports:
 - name: github.com/chewxy/math32
   version: d1e7b22839c693f54edf7811dd9487623abf2cd2
 - name: github.com/chewxy/vecf32
-  version: 5335e3d8a33adf327773c608457a27989e772a94
+  version: 1f59516136c1a7f1c19871d3dc5f0d9928ffbd7c
 - name: github.com/chewxy/vecf64
-  version: 231ecae139f45a3baa4314eb15a99914f0c7a501
+  version: a97a4d31b6c9343b1860ef8ce583069671265b81
 - name: github.com/fsnotify/fsnotify
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/gonum/blas
