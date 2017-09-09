@@ -25,13 +25,13 @@ import (
 type SkipGram struct {
 	*State
 
-	poolvecs chan *tensor.Dense
+	poolvecs chan tensor.Tensor
 }
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
 	maxprocs := runtime.GOMAXPROCS(-1)
-	pool := make(chan *tensor.Dense, maxprocs)
+	pool := make(chan tensor.Tensor, maxprocs)
 	for i := 0; i < maxprocs; i++ {
 		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
 	}
