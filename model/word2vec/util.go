@@ -14,6 +14,8 @@
 
 package word2vec
 
+import "strings"
+
 var next uint64 = 1
 
 // Linear congruential generator like rand.Intn(window)
@@ -28,4 +30,9 @@ func updateLearningRate(initlr, theta float64, currentWords, totalWords int) flo
 		lr = initlr * theta
 	}
 	return lr
+}
+func lower(a []string) {
+	for i := range a {
+		a[i] = strings.ToLower(a[i])
+	}
 }

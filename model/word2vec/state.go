@@ -23,9 +23,10 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 
-	"github.com/chewxy/lingo"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
 	pb "gopkg.in/cheggaaa/pb.v1"
@@ -47,6 +48,7 @@ type State struct {
 	ignoreWord          int
 	currentWordSize     int
 	currentLearningRate float64
+	cwsCh               chan struct{}
 	progress            *pb.ProgressBar
 }
 
@@ -62,6 +64,7 @@ func NewState(config *model.Config, opt Optimizer,
 		Theta:              theta,
 
 		currentLearningRate: config.InitLearningRate,
+		cwsCh:               make(chan struct{}),
 	}
 }
 
@@ -104,41 +107,51 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 		f.Close()
 	}()
 
+	go s.incrementDoneWord()
+
+	errChan := make(chan error, 1)
+	sema := make(chan struct{}, runtime.GOMAXPROCS(-1))
+	var wg sync.WaitGroup
+
 	var current int
-	var line string
+	line := make([]string, 0, s.BatchSize)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
 		if current < s.BatchSize {
-			line += scanner.Text()
-			line += " "
+			line = append(line, scanner.Text())
 			current++
 			continue
 		}
 
 		if s.Lower {
-			line = strings.ToLower(line)
+			lower(line)
 		}
 
-		words := strings.Fields(line)
-		wordIDs := s.toIDs(words)
-		if err := s.trainOneLine(wordIDs, trainOne); err != nil {
-			return err
-		}
+		wg.Add(1)
+		wordIDs := s.toIDs(line)
+		go s.trainOneBatch(wordIDs, &wg, sema, errChan, trainOne)
+		// if err := s.trainOneLine(wordIDs, trainOne); err != nil {
+		// 	return err
+		// }
 
 		current = 0
-		line = ""
+		line = line[:0]
+	}
+	wg.Wait()
+	close(errChan)
+	if err := <-errChan; err != nil {
+		return errors.Wrapf(err, "Unable to complete training.")
 	}
 
 	// Leftover processing
 	if current > 0 {
 		if s.Lower {
-			line = strings.ToLower(line)
+			lower(line)
 		}
 
-		words := strings.Fields(line)
-		wordIDs := s.toIDs(words)
+		wordIDs := s.toIDs(line)
 		if err := s.trainOneLine(wordIDs, trainOne); err != nil {
 			return err
 		}
@@ -149,6 +162,35 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	}
 
 	return nil
+}
+
+func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{}, errCh chan error, trainOne func(wordIDs []int, wordIndex int) error) {
+	defer wg.Done()
+	sema <- struct{}{} // get lock
+	for i, w := range wordIDs {
+		s.progress.Increment()
+
+		r := rand.Float64()
+		p := s.subsampleRate(w)
+
+		if p < r {
+			s.ignoreWord++
+			continue
+		}
+
+		if err := trainOne(wordIDs, i); err != nil {
+			select {
+			case errCh <- err:
+			default:
+				// dies silent death
+			}
+			<-sema // release
+			return
+		}
+		s.cwsCh <- struct{}{} // increment wordsize
+
+	}
+	<-sema // release
 }
 
 func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordIndex int) error) error {
@@ -163,7 +205,9 @@ func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordInd
 			continue
 		}
 
-		trainOne(wordIDs, i)
+		if err := trainOne(wordIDs, i); err != nil {
+			return err
+		}
 
 		s.currentWordSize++
 		if s.currentWordSize%s.BatchSize == 0 {
@@ -171,6 +215,15 @@ func (s *State) trainOneLine(wordIDs []int, trainOne func(wordIDs []int, wordInd
 		}
 	}
 	return nil
+}
+
+func (s *State) incrementDoneWord() {
+	for range s.cwsCh {
+		s.currentWordSize++
+		if s.currentWordSize%s.BatchSize == 0 {
+			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.currentWordSize, s.TotalFreq())
+		}
+	}
 }
 
 // Save saves the word vector to outputFile.
@@ -231,8 +284,4 @@ func (s *State) toIDs(words []string) []int {
 		retVal[i], _ = s.Id(w)
 	}
 	return retVal
-}
-
-func readCorpus(f io.ReadCloser, p Tracker, c lingo.Corpus, ch chan []int, ok chan bool, err chan error) error {
-
 }
