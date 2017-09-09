@@ -16,6 +16,7 @@ package word2vec
 
 import (
 	"io"
+	"runtime"
 
 	"github.com/chewxy/gorgonia/tensor"
 )
@@ -24,17 +25,28 @@ import (
 type CBOW struct {
 	*State
 
-	sum, pool tensor.Tensor
+	// sum, pool tensor.Tensor
+	sums, pools chan tensor.Tensor
+
 	// sum  vector.Vector
 	// pool vector.Vector
 }
 
 // NewCBOW creates *CBOW
 func NewCBOW(s *State) *CBOW {
+	maxprocs := runtime.GOMAXPROCS(-1)
+	pools := make(chan tensor.Tensor, maxprocs)
+	sums := make(chan tensor.Tensor, maxprocs)
+
+	for i := 0; i < maxprocs; i++ {
+		pools <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
+		sums <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
+	}
+
 	return &CBOW{
 		State: s,
-		sum:   tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
-		pool:  tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng)),
+		sums:  sums,
+		pools: pools,
 	}
 }
 
@@ -44,19 +56,27 @@ func (c *CBOW) Train(f io.ReadCloser) error {
 }
 
 func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
-	targetID := wordIDs[wordIndex]
-	c.sum.Zero()
-	c.dowith(wordIDs, wordIndex, c.initSum)
+	sum := <-c.sums
+	pool := <-c.pools
 
-	c.pool.Zero()
-	if err := c.Opt.Update(targetID, c.sum, c.pool, c.currentLearningRate); err != nil {
+	targetID := wordIDs[wordIndex]
+	sum.Zero()
+	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
+
+	pool.Zero()
+	if err := c.Opt.Update(targetID, sum, pool, c.currentLearningRate); err != nil {
+		c.sums <- sum
+		c.pools <- pool
 		return err
 	}
-	c.dowith(wordIDs, wordIndex, c.updateCtx)
+	c.dowith(wordIDs, wordIndex, sum, pool, c.updateCtx)
+
+	c.sums <- sum
+	c.pools <- pool
 	return nil
 }
 
-func (c *CBOW) dowith(wordIDs []int, wordIndex int, g func(contextID int)) {
+func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool tensor.Tensor, g func(contextID int, sum, pool tensor.Tensor)) {
 	shr := nextRandom(c.Window)
 	for a := shr; a < c.Window*2+1-shr; a++ {
 		if a != c.Window {
@@ -65,15 +85,15 @@ func (c *CBOW) dowith(wordIDs []int, wordIndex int, g func(contextID int)) {
 				continue
 			}
 			contextID := wordIDs[c]
-			g(contextID)
+			g(contextID, sum, pool)
 		}
 	}
 }
 
-func (c *CBOW) initSum(contextID int) {
-	tensor.Add(c.sum, c.emb.m[contextID], tensor.UseUnsafe())
+func (c *CBOW) initSum(contextID int, sum, pool tensor.Tensor) {
+	tensor.Add(sum, c.emb.m[contextID], tensor.UseUnsafe())
 }
 
-func (c *CBOW) updateCtx(contextID int) {
-	tensor.Add(c.emb.m[contextID], c.pool, tensor.UseUnsafe())
+func (c *CBOW) updateCtx(contextID int, sum, pool tensor.Tensor) {
+	tensor.Add(c.emb.m[contextID], pool, tensor.UseUnsafe())
 }
