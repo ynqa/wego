@@ -29,6 +29,6 @@ type Model interface {
 }
 
 type SyncTensor struct {
-	sync.RWmutex
+	sync.RWMutex
 	tensor.Tensor
 }
