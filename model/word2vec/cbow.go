@@ -55,7 +55,7 @@ func (c *CBOW) Train(f io.ReadCloser) error {
 	return c.Trainer(f, c.trainOne)
 }
 
-func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
+func (c *CBOW) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 	sum := <-c.sums
 	pool := <-c.pools
 
@@ -64,7 +64,7 @@ func (c *CBOW) trainOne(wordIDs []int, wordIndex int) error {
 	pool.Zero()
 	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
 
-	if err := c.Opt.Update(targetID, sum, pool, c.currentLearningRate); err != nil {
+	if err := c.Opt.Update(targetID, sum, pool, lr); err != nil {
 		c.sums <- sum
 		c.pools <- pool
 		return err

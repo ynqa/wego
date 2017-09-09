@@ -56,17 +56,6 @@ func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector te
 			return err
 		}
 
-		// inner := contextVector.Inner(relayPoint.Vector)
-		// inner, _ := tensor.Inner(contextVector, relayPoint.Vector)
-		// g := hs.gradUpd(float64(childCode), learningRate, inner)
-		// f := model.Sigmoid(inner)
-		// g := (1.0 - float64(childCode) - f) * learningRate
-
-		// tensor.FMA(relayPoint.Vector, g, poolVector)
-		// tensor.FMA(contextVector, g, relayPoint.Vector)
-		// poolVector.UnsafeAdd(relayPoint.Vector.Mul(g))
-		// relayPoint.Vector.UnsafeAdd(contextVector.Mul(g))
-
 		if hs.MaxDepth > 0 && p >= hs.MaxDepth {
 			break
 		}
@@ -96,7 +85,7 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec *mod
 	case tensor.Float32:
 		var inner float32
 		if ip, ok := eng.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
+			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
 				return errors.Wrap(err, "Inner failed for HS")
 			}
 		} else {
