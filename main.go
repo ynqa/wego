@@ -19,7 +19,7 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/chewxy/word-embedding/cmd"
+	"github.com/ynqa/word-embedding/cmd"
 )
 
 func main() {
