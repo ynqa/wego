@@ -12,3 +12,5 @@ import:
   version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
 - package: gopkg.in/cheggaaa/pb.v2
   version: v2.0.4
+- package: github.com/chewxy/gorgonia
+  version: v0.7.0
