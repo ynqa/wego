@@ -1,5 +1,5 @@
-hash: f82ba129e2da4175e7cd9771dc19b4b9d22fd9dd361da3eb612de65c0f751db7
-updated: 2017-08-23T21:34:42.166746981+09:00
+hash: 840aca2db78a77a2026188d6ecd66d88f39f8eeb43cd449569b263e98fb90142
+updated: 2017-09-09T21:07:41.631196289+09:00
 imports:
 - name: github.com/awalterschulze/gographviz
   version: 01fdca2df2c7f57917d029fc952cbf23f621101b
@@ -12,9 +12,11 @@ imports:
 - name: github.com/chewxy/cu
   version: 12e8b106ce46d83d03d2b597f8f180dd59e0ae6b
 - name: github.com/chewxy/gorgonia
-  version: 6fb52724c661201223d7b22b417d220e81f8ff75
+  version: 9ccc360a0b1ad8fdcddf6140b4cc16135c2ce3d4
   subpackages:
   - tensor
+  - tensor/internal/execution
+  - tensor/internal/storage
 - name: github.com/chewxy/hm
   version: b848cc4452055ea6549d5a273911d6542180a276
 - name: github.com/chewxy/lingo
@@ -61,7 +63,7 @@ imports:
   subpackages:
   - mat64
 - name: github.com/hashicorp/hcl
-  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
+  version: 8f6b1344a92ff8877cf24a5de9177bf7d0a2a187
   subpackages:
   - hcl/ast
   - hcl/parser
@@ -76,7 +78,7 @@ imports:
 - name: github.com/leesper/go_rng
   version: edc201f107a87fc2a2dc965f334c89e50fcd682a
 - name: github.com/magiconair/properties
-  version: be5ece7dd465ab0765a9682137865547526d1dfb
+  version: 8d7837e64d3c1ee4e54a880c5a920ab4316fc90a
 - name: github.com/mattn/go-runewidth
   version: 14207d285c6c197daabb5c9793d63e7af9ab2d50
 - name: github.com/mitchellh/mapstructure
@@ -84,11 +86,11 @@ imports:
 - name: github.com/olekukonko/tablewriter
   version: febf2d34b54a69ce7530036c7503b1c9fbfdf0bb
 - name: github.com/pelletier/go-toml
-  version: 4692b8f9babfc93db58cc592ba2689d8736781de
+  version: 1d6b12b7cb290426e27e6b4e38b89fcda3aeef03
 - name: github.com/pkg/errors
   version: 645ef00459ed84a119197bfb8d8205042c6df63d
 - name: github.com/spf13/afero
-  version: 9be650865eab0c12963d8753212f4f9c66cdcf12
+  version: ee1bd8ee15a1306d1f9201acc41ef39cd9f99a1b
   subpackages:
   - mem
 - name: github.com/spf13/cast
@@ -96,7 +98,7 @@ imports:
 - name: github.com/spf13/cobra
   version: ee4055870c2d5f7ce112642377e32c9929c3bbaf
 - name: github.com/spf13/jwalterweatherman
-  version: 0efa5202c04663c757d84f90f5219c1250baf94f
+  version: 12bd96e66386c1960ab0f74ced1362f66f552f7b
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/spf13/viper
@@ -108,12 +110,12 @@ imports:
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: e56139fd9c5bc7244c76116c68e500765bb6db6b
+  version: bd91bbf73e9a4a801adbfb97133c992678533126
   subpackages:
   - transform
   - unicode/norm
 - name: golang.org/x/tools
-  version: 1807494da808122833b9bd8e3e5fa179ef237d41
+  version: 3b1faeda9afbcba128c2d794b38ffe7982141139
   subpackages:
   - container/intsets
 - name: gopkg.in/cheggaaa/pb.v1

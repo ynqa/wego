@@ -13,4 +13,4 @@ import:
 - package: gopkg.in/cheggaaa/pb.v2
   version: v2.0.4
 - package: github.com/chewxy/gorgonia/tensor
-  version: 6fb52724c661201223d7b22b417d220e81f8ff75
+  version: 9ccc360a0b1ad8fdcddf6140b4cc16135c2ce3d4
