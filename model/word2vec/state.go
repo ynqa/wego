@@ -124,7 +124,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	for scanner.Scan() {
 		if buffered < s.BatchSize {
 			line = append(line, scanner.Text())
-			current++
+			buffered++
 			continue
 		}
 
