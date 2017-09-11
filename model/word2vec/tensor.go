@@ -26,12 +26,14 @@ import (
 var dtype tensor.Dtype = tensor.Float64
 var eng tensor.Engine = tensor.Float64Engine{}
 
+// s implements a single valued slice
 type s int
 
 func (a s) Start() int { return int(a) }
 func (a s) End() int   { return int(a + 1) }
 func (a s) Step() int  { return 1 }
 
+// Embedding represents a word embedding. It holds a Tensor, and preslices it for additional performance gains.
 type Embedding struct {
 	ref tensor.Tensor // hold a reference
 	m   []*model.SyncTensor
@@ -53,7 +55,6 @@ func newEmbedding(vocabulary, dimension int) *Embedding {
 	}
 
 	// preslice all the things!
-	// m := make([]tensor.Tensor, vocabulary)
 	m := make([]*model.SyncTensor, vocabulary)
 	for i := 0; i < vocabulary; i++ {
 		slice, _ := ref.Slice(s(i))

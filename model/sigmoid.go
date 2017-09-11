@@ -20,7 +20,7 @@ import (
 	"github.com/chewxy/math32"
 )
 
-// Sigmoid returns f(x) = \frac{1}{1 + e^{-x}}.
+// SigmoidF64 returns f(x) = \frac{1}{1 + e^{-x}}.
 // See: http://en.wikipedia.org/wiki/Sigmoid_function.
 func SigmoidF64(f float64) float64 {
 	exp := math.Exp(f)
@@ -30,6 +30,7 @@ func SigmoidF64(f float64) float64 {
 	return exp / (1.0 + exp)
 }
 
+// SigmoidF32 returns f(x) = \frac{1}{1 + e^{-x}}.
 func SigmoidF32(f float32) float32 {
 	exp := math32.Exp(f)
 	if math32.IsInf(exp, 1) {
