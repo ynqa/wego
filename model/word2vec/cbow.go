@@ -25,11 +25,7 @@ import (
 type CBOW struct {
 	*State
 
-	// sum, pool tensor.Tensor
 	sums, pools chan tensor.Tensor
-
-	// sum  vector.Vector
-	// pool vector.Vector
 }
 
 // NewCBOW creates *CBOW

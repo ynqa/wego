@@ -45,8 +45,8 @@ type State struct {
 	BatchSize          int
 	Theta              float64
 
-	ignoreWord          int
-	currentWordSize     int
+	ignoredWords        int
+	trainedWords        int
 	currentLearningRate float64
 	progress            *pb.ProgressBar
 
@@ -116,13 +116,13 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	sema := make(chan struct{}, runtime.NumCPU())
 	var wg sync.WaitGroup
 
-	var current int
+	var buffered int
 	line := make([]string, 0, s.BatchSize)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		if current < s.BatchSize {
+		if buffered < s.BatchSize {
 			line = append(line, scanner.Text())
 			current++
 			continue
@@ -135,7 +135,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 		wg.Add(1)
 		wordIDs := s.toIDs(line)
 		go s.trainOneBatch(wordIDs, &wg, sema, errChan, trainOne)
-		current = 0
+		buffered = 0
 		line = line[:0]
 	}
 	wg.Wait()
@@ -145,7 +145,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	}
 
 	// Leftover processing
-	if current > 0 {
+	if buffered > 0 {
 		if s.Lower {
 			lower(line)
 		}
@@ -173,7 +173,7 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 		p := s.subsampleRate(w)
 
 		if p < r {
-			s.ignoreWord++
+			s.ignoredWords++
 			continue
 		}
 
@@ -204,7 +204,7 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 		p := s.subsampleRate(w)
 
 		if p < r {
-			s.ignoreWord++
+			s.ignoredWords++
 			continue
 		}
 
@@ -222,10 +222,10 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 
 func (s *State) incrementDoneWord() {
 	for range s.cwsCh {
-		s.currentWordSize++
-		if s.currentWordSize%s.BatchSize == 0 {
+		s.trainedWords++
+		if s.trainedWords%s.BatchSize == 0 {
 			s.lrMutex.Lock()
-			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.currentWordSize, s.TotalFreq())
+			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.trainedWords, s.TotalFreq())
 			s.lrMutex.Unlock()
 		}
 	}

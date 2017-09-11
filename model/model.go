@@ -17,7 +17,7 @@ package model
 import (
 	"io"
 	"sync"
-	
+
 	"github.com/chewxy/gorgonia/tensor"
 )
 
@@ -28,6 +28,7 @@ type Model interface {
 	Save(outputFile string) error
 }
 
+// SyncTensor is a Tensor that has a read-write lock on it.
 type SyncTensor struct {
 	sync.RWMutex
 	tensor.Tensor

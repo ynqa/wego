@@ -25,7 +25,7 @@ import (
 type SkipGram struct {
 	*State
 
-	poolvecs chan tensor.Tensor
+	pools chan tensor.Tensor
 }
 
 // NewSkipGram creates *SkipGram
@@ -36,8 +36,8 @@ func NewSkipGram(s *State) *SkipGram {
 		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
 	}
 	return &SkipGram{
-		State:    s,
-		poolvecs: pool,
+		State: s,
+		pools: pool,
 	}
 }
 
@@ -48,7 +48,7 @@ func (s *SkipGram) Train(f io.ReadCloser) error {
 
 func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 	// grab poolvector from pool
-	pool := <-s.poolvecs
+	pool := <-s.pools
 	targetID := wordIDs[wordIndex]
 	shr := nextRandom(s.Window)
 	for a := shr; a < s.Window*2+1-shr; a++ {
@@ -67,6 +67,6 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 		}
 		tensor.Add(s.emb.m[contextID].Tensor, pool, tensor.UseUnsafe())
 	}
-	s.poolvecs <- pool
+	s.pools <- pool
 	return nil
 }
