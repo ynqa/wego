@@ -34,7 +34,7 @@ type CBOW struct {
 
 // NewCBOW creates *CBOW
 func NewCBOW(s *State) *CBOW {
-	maxprocs := runtime.GOMAXPROCS(-1)
+	maxprocs := runtime.NumCPU()
 	pools := make(chan tensor.Tensor, maxprocs)
 	sums := make(chan tensor.Tensor, maxprocs)
 
