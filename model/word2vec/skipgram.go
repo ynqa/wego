@@ -62,10 +62,10 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 		contextID := wordIDs[c]
 
 		pool.Zero()
-		if err := s.Opt.Update(targetID, s.emb.m[contextID], pool, lr); err != nil {
+		if err := s.Opt.Update(targetID, s.emb.m[contextID].Tensor, pool, lr); err != nil {
 			return err
 		}
-		tensor.Add(s.emb.m[contextID], pool, tensor.UseUnsafe())
+		tensor.Add(s.emb.m[contextID].Tensor, pool, tensor.UseUnsafe())
 	}
 	s.poolvecs <- pool
 	return nil
