@@ -30,7 +30,7 @@ type SkipGram struct {
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
-	maxprocs := runtime.GOMAXPROCS(-1)
+	maxprocs := runtime.NumCPU()
 	pool := make(chan tensor.Tensor, maxprocs)
 	for i := 0; i < maxprocs; i++ {
 		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))

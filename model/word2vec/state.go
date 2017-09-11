@@ -113,7 +113,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	go s.incrementDoneWord()
 
 	errChan := make(chan error, 1)
-	sema := make(chan struct{}, runtime.GOMAXPROCS(-1))
+	sema := make(chan struct{}, runtime.NumCPU())
 	var wg sync.WaitGroup
 
 	var current int
