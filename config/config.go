@@ -43,14 +43,14 @@ func (c Config) String() string {
 		return "inputFile"
 	case OutputFile:
 		return "outputFile"
+	case Lower:
+		return "lower"
 	case Dimension:
 		return "dimension"
 	case Window:
 		return "window"
 	case InitLearningRate:
 		return "initlr"
-	case Lower:
-		return "lower"
 	default:
 		return "unknown"
 	}
