@@ -29,7 +29,7 @@ import (
 
 	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
-	pb "gopkg.in/cheggaaa/pb.v1"
+	"gopkg.in/cheggaaa/pb.v1"
 
 	"github.com/ynqa/word-embedding/model"
 )
@@ -225,7 +225,7 @@ func (s *State) incrementDoneWord() {
 		s.trainedWords++
 		if s.trainedWords%s.BatchSize == 0 {
 			s.lrMutex.Lock()
-			s.currentLearningRate = updateLearningRate(s.InitLearningRate, s.Theta, s.trainedWords, s.TotalFreq())
+			s.currentLearningRate = computeLearningRate(s.InitLearningRate, s.Theta, s.trainedWords, s.TotalFreq())
 			s.lrMutex.Unlock()
 		}
 	}
