@@ -24,13 +24,14 @@ func nextRandom(window int) int {
 	return int(next % uint64(window))
 }
 
-func updateLearningRate(initlr, theta float64, currentWords, totalWords int) float64 {
+func computeLearningRate(initlr, theta float64, currentWords, totalWords int) float64 {
 	lr := initlr * (1.0 - float64(currentWords)/float64(totalWords))
 	if lr < initlr*theta {
 		lr = initlr * theta
 	}
 	return lr
 }
+
 func lower(a []string) {
 	for i := range a {
 		a[i] = strings.ToLower(a[i])
