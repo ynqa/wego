@@ -27,9 +27,10 @@ import (
 
 // SimilarityCmd is the command for calculation of similarity.
 var SimilarityCmd = &cobra.Command{
-	Use:   "sim -i FILENAME WORD",
-	Short: "Estimate the similarity between words",
-	Long:  "Estimate the similarity between words",
+	Use:     "sim -i FILENAME WORD",
+	Short:   "Estimate the similarity between words",
+	Long:    "Estimate the similarity between words",
+	Example: "  word-embedding sim -i example/word_vectors.txt microsoft",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		similarityBind(cmd)
 	},
@@ -44,7 +45,7 @@ var SimilarityCmd = &cobra.Command{
 func init() {
 	SimilarityCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"Set the input file path to load word vector list")
-	SimilarityCmd.Flags().Int(config.Rank.String(), config.DefaultRank,
+	SimilarityCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"How many the most similar words will be displayed")
 }
 
