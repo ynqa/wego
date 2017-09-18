@@ -16,4 +16,4 @@ lint:
 
 .PHONY: test
 test:
-	go test -v `glide nv`
+	go test -cover -v `glide nv`
