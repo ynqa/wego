@@ -15,10 +15,7 @@
 package word2vec
 
 import (
-	"strings"
 	"testing"
-
-	"github.com/chewxy/lingo/corpus"
 )
 
 func TestNewNegativeSampling(t *testing.T) {
@@ -30,11 +27,8 @@ func TestNewNegativeSampling(t *testing.T) {
 }
 
 func TestNSInit(t *testing.T) {
-	words := strings.Fields(mockText)
-	c, _ := corpus.Construct(corpus.WithWords(words))
-
 	ns := NewNegativeSampling(10)
-	ns.Init(c, 10)
+	ns.Init(testCorpus(), 10)
 
 	if len(ns.negativeTensor.m) != 3 {
 		t.Error("NegativeSampling: Init returns negativeTensor with length=3")
