@@ -14,7 +14,14 @@
 
 package word2vec
 
-import "strings"
+import (
+	"bytes"
+	"fmt"
+	"math/rand"
+	"strings"
+
+	"github.com/chewxy/gorgonia/tensor"
+)
 
 var next uint64 = 1
 
@@ -36,4 +43,36 @@ func lower(a []string) {
 	for i := range a {
 		a[i] = strings.ToLower(a[i])
 	}
+}
+
+func formatTensor(t tensor.Tensor) string {
+	var buf bytes.Buffer
+	switch data := t.Data().(type) {
+	case []float64:
+		for i, v := range data {
+			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		}
+	case []float32:
+		for i, v := range data {
+			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		}
+	}
+	return buf.String()
+}
+
+func randomTensor(dt tensor.Dtype, eng tensor.Engine, shape ...int) tensor.Tensor {
+	ref := tensor.New(tensor.Of(dt), tensor.WithShape(shape...), tensor.WithEngine(eng))
+	switch dtype {
+	case tensor.Float64:
+		dat := ref.Data().([]float64)
+		for i := range dat {
+			dat[i] = (rand.Float64() - 0.5) / float64(shape[len(shape)-1])
+		}
+	case tensor.Float32:
+		dat := ref.Data().([]float32)
+		for i := range dat {
+			dat[i] = (rand.Float32() - 0.5) / float32(shape[len(shape)-1])
+		}
+	}
+	return ref
 }
