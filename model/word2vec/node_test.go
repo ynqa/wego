@@ -12,32 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package huffman
+package word2vec
 
 import (
 	"bytes"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/chewxy/gorgonia/tensor"
-	"github.com/chewxy/lingo/corpus"
 )
 
-var emptyOpt corpus.ConsOpt = func(c *corpus.Corpus) error { return nil }
-
-func NewDummyCorpus() *corpus.Corpus {
-	document := "a b b c c c c"
-
-	c, _ := corpus.Construct(emptyOpt)
-	for _, word := range strings.Fields(document) {
-		c.Add(word)
-	}
-	return c
-}
-
 func TestHuffmanTree(t *testing.T) {
-	c := NewDummyCorpus()
+	c := testCorpus()
 	huffmanTree, err := NewHuffmanTree(c, 100, tensor.Float64, tensor.Float64Engine{})
 
 	if err != nil {
@@ -49,19 +35,20 @@ func TestHuffmanTree(t *testing.T) {
 	}
 
 	testCases := []struct {
-		wordID   int
+		word     string
 		expected string
 	}{
-		{0, "00"},
-		{1, "01"},
-		{2, "1"},
+		{"A", "00"},
+		{"B", "01"},
+		{"C", "1"},
 	}
 
 	for _, testCase := range testCases {
-		actual := huffmanTree[testCase.wordID].GetPath().Codes()
+		wordID, _ := c.Id(testCase.word)
+		actual := huffmanTree[wordID].GetPath().Codes()
 		if actual != testCase.expected {
-			t.Errorf("Expected codes: %v, but got %v",
-				testCase.expected, actual)
+			t.Errorf("Expected codes: %v, but got %v in %v",
+				testCase.expected, actual, testCase.word)
 		}
 	}
 }
