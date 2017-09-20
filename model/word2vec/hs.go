@@ -21,12 +21,11 @@ import (
 	"github.com/chewxy/lingo/corpus"
 
 	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/model/word2vec/huffman"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
 type HierarchicalSoftmax struct {
-	nodeMap  map[int]*huffman.Node
+	nodeMap  map[int]*Node
 	MaxDepth int
 }
 
@@ -40,7 +39,7 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 
 // Init initializes the huffman tree.
 func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error) {
-	hs.nodeMap, err = huffman.NewHuffmanTree(c, dimension, dtype, eng)
+	hs.nodeMap, err = NewHuffmanTree(c, dimension, dtype, eng)
 	return
 }
 

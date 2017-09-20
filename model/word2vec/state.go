@@ -261,7 +261,7 @@ func (s *State) Save(outputPath string) error {
 	for i := 0; i < s.Size(); i++ {
 		word, _ := s.Word(i)
 		vs.WriteString(fmt.Sprintf("%v ", word))
-		vs.WriteString(fmt.Sprintf("%v\n", format(s.emb.m[i])))
+		vs.WriteString(fmt.Sprintf("%v\n", formatTensor(s.emb.m[i])))
 	}
 
 	w.WriteString(fmt.Sprintf("%v", vs.String()))
