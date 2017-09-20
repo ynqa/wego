@@ -18,43 +18,73 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"strings"
 	"testing"
 
+	"github.com/chewxy/gorgonia/tensor"
+	"github.com/chewxy/lingo/corpus"
 	"github.com/ynqa/word-embedding/config"
 	"github.com/ynqa/word-embedding/model"
 )
 
-var mockConfig = model.NewConfig(
-	config.DefaultLower,
-	config.DefaultDimension,
-	config.DefaultWindow,
-	config.DefaultInitLearningRate,
-)
+// MockOperator satisfies the interface of Optimizer.
+type MockOptimizer struct{}
 
-var mockState = NewState(
-	mockConfig,
-	mockOpt,
-	config.DefaultSubsampleThreshold,
-	config.DefaultTheta,
-	config.DefaultBatchSize,
-)
-
-var mockText = "A A A A B B B B C C C C"
-
-type nopSeeker struct {
-	io.ReadCloser
+func (m *MockOptimizer) Init(c *corpus.Corpus, dimension int) error { return nil }
+func (m *MockOptimizer) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+	return nil
 }
 
-func (n nopSeeker) Seek(offset int64, whence int) (int64, error) {
-	return 0, nil
+// MockNopSeeker stores io.ReadCloser with Seek func that has nothing.
+type MockNopSeeker struct{ io.ReadCloser }
+
+func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
+
+var (
+	testText   = "A B B C C C C"
+	testConfig = model.NewConfig(
+		config.DefaultLower,
+		config.DefaultDimension,
+		config.DefaultWindow,
+		config.DefaultInitLearningRate,
+	)
+	mockOpt       Optimizer = new(MockOptimizer)
+	mockNopSeeker           = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(testText)))}
+)
+
+func testCorpus() *corpus.Corpus {
+	var emptyOpt corpus.ConsOpt = func(c *corpus.Corpus) error { return nil }
+
+	c, _ := corpus.Construct(emptyOpt)
+	for _, word := range strings.Fields(testText) {
+		c.Add(word)
+	}
+	return c
+}
+
+// testInitializedState returns *State has already called Preprocess.
+func testInitializedState() *State {
+	s := NewState(
+		testConfig,
+		mockOpt,
+		config.DefaultSubsampleThreshold,
+		config.DefaultTheta,
+		config.DefaultBatchSize,
+	)
+	s.Preprocess(mockNopSeeker)
+	return s
 }
 
 func TestPreprocess(t *testing.T) {
-	f := nopSeeker{
-		ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(mockText))),
-	}
+	testState := NewState(
+		testConfig,
+		mockOpt,
+		config.DefaultSubsampleThreshold,
+		config.DefaultTheta,
+		config.DefaultBatchSize,
+	)
 
-	if _, err := mockState.Preprocess(f); err != nil {
+	if _, err := testState.Preprocess(mockNopSeeker); err != nil {
 		t.Error("Word2Vec: Preprocess returns error")
 	}
 }

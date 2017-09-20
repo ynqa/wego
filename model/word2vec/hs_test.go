@@ -15,10 +15,7 @@
 package word2vec
 
 import (
-	"strings"
 	"testing"
-
-	"github.com/chewxy/lingo/corpus"
 )
 
 func TestNewHierarchicalSoftmax(t *testing.T) {
@@ -30,11 +27,8 @@ func TestNewHierarchicalSoftmax(t *testing.T) {
 }
 
 func TestHSInit(t *testing.T) {
-	words := strings.Fields(mockText)
-	c, _ := corpus.Construct(corpus.WithWords(words))
-
 	hs := NewHierarchicalSoftmax(10)
-	hs.Init(c, 10)
+	hs.Init(testCorpus(), 10)
 
 	if len(hs.nodeMap) != 3 {
 		t.Error("HierarchicalSoftmax: Init returns nodeMap with length=3")
