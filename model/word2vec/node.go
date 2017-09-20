@@ -12,34 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package huffman
+package word2vec
 
 import (
 	"errors"
-	"math/rand"
 	"sort"
 
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/ynqa/word-embedding/model"
 )
-
-func randomTensor(size int, dt tensor.Dtype, eng tensor.Engine) tensor.Tensor {
-	ref := tensor.New(tensor.Of(dt), tensor.WithShape(size), tensor.WithEngine(eng))
-	switch dt {
-	case tensor.Float64:
-		dat := ref.Data().([]float64)
-		for i := range dat {
-			dat[i] = (rand.Float64() - 0.5) / float64(size)
-		}
-	case tensor.Float32:
-		dat := ref.Data().([]float32)
-		for i := range dat {
-			dat[i] = (rand.Float32() - 0.5) / float32(size)
-		}
-	}
-	return ref
-}
 
 // Node stores the node with vector in huffman tree.
 type Node struct {
@@ -88,7 +70,7 @@ func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engi
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: &model.SyncTensor{Tensor: randomTensor(dimension, dt, eng)},
+			Vector: &model.SyncTensor{Tensor: randomTensor(dt, eng, dimension)},
 		}
 		left.Parent = parent
 		left.Code = 0

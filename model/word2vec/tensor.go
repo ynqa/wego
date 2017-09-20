@@ -15,10 +15,6 @@
 package word2vec
 
 import (
-	"bytes"
-	"fmt"
-	"math/rand"
-
 	"github.com/chewxy/gorgonia/tensor"
 	"github.com/ynqa/word-embedding/model"
 )
@@ -40,19 +36,7 @@ type Embedding struct {
 }
 
 func newEmbedding(vocabulary, dimension int) *Embedding {
-	ref := tensor.New(tensor.Of(dtype), tensor.WithShape(vocabulary, dimension), tensor.WithEngine(eng))
-	switch dtype {
-	case tensor.Float64:
-		dat := ref.Data().([]float64)
-		for i := range dat {
-			dat[i] = (rand.Float64() - 0.5) / float64(dimension)
-		}
-	case tensor.Float32:
-		dat := ref.Data().([]float32)
-		for i := range dat {
-			dat[i] = (rand.Float32() - 0.5) / float32(dimension)
-		}
-	}
+	ref := randomTensor(dtype, eng, vocabulary, dimension)
 
 	// preslice all the things!
 	m := make([]*model.SyncTensor, vocabulary)
@@ -65,19 +49,4 @@ func newEmbedding(vocabulary, dimension int) *Embedding {
 		ref: ref,
 		m:   m,
 	}
-}
-
-func format(t tensor.Tensor) string {
-	var buf bytes.Buffer
-	switch data := t.Data().(type) {
-	case []float64:
-		for i, v := range data {
-			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
-		}
-	case []float32:
-		for i, v := range data {
-			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
-		}
-	}
-	return buf.String()
 }
