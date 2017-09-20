@@ -29,7 +29,7 @@ var RootCmd = &cobra.Command{
 	Short: "The tools embedding words into vector space",
 	Long:  "The tools embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Set sub-command from: distance|word2vec")
+		return errors.New("Set sub-command from: sim|word2vec")
 	},
 }
 
