@@ -23,7 +23,7 @@ import (
 )
 
 func TestHuffmanTree(t *testing.T) {
-	c := testCorpus()
+	c := newTestCorpus()
 	huffmanTree, err := NewHuffmanTree(c, 100, tensor.Float64, tensor.Float64Engine{})
 
 	if err != nil {

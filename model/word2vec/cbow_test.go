@@ -21,9 +21,9 @@ import (
 )
 
 func TestCBOW(t *testing.T) {
-	cbow := NewCBOW(testInitializedState())
+	cbow := NewCBOW(newTestState())
 
-	stdin := ioutil.NopCloser(bytes.NewReader([]byte(testText)))
+	stdin := ioutil.NopCloser(bytes.NewReader([]byte(text)))
 
 	if err := cbow.Train(stdin); err != nil {
 		t.Error("CBOW: Train returns error")

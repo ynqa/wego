@@ -41,31 +41,31 @@ type MockNopSeeker struct{ io.ReadCloser }
 func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
 
 var (
-	testText   = "A B B C C C C"
-	testConfig = model.NewConfig(
+	text = "A B B C C C C"
+	conf = model.NewConfig(
 		config.DefaultLower,
 		config.DefaultDimension,
 		config.DefaultWindow,
 		config.DefaultInitLearningRate,
 	)
 	mockOpt       Optimizer = new(MockOptimizer)
-	mockNopSeeker           = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(testText)))}
+	mockNopSeeker           = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
 )
 
-func testCorpus() *corpus.Corpus {
+func newTestCorpus() *corpus.Corpus {
 	var emptyOpt corpus.ConsOpt = func(c *corpus.Corpus) error { return nil }
 
 	c, _ := corpus.Construct(emptyOpt)
-	for _, word := range strings.Fields(testText) {
+	for _, word := range strings.Fields(text) {
 		c.Add(word)
 	}
 	return c
 }
 
-// testInitializedState returns *State has already called Preprocess.
-func testInitializedState() *State {
+// newTestState returns *State has already called Preprocess.
+func newTestState() *State {
 	s := NewState(
-		testConfig,
+		conf,
 		mockOpt,
 		config.DefaultSubsampleThreshold,
 		config.DefaultTheta,
@@ -77,7 +77,7 @@ func testInitializedState() *State {
 
 func TestPreprocess(t *testing.T) {
 	testState := NewState(
-		testConfig,
+		conf,
 		mockOpt,
 		config.DefaultSubsampleThreshold,
 		config.DefaultTheta,
