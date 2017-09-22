@@ -21,9 +21,9 @@ import (
 )
 
 func TestSkipGram(t *testing.T) {
-	skipgram := NewSkipGram(testInitializedState())
+	skipgram := NewSkipGram(newTestState())
 
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testText)))
+	f := ioutil.NopCloser(bytes.NewReader([]byte(text)))
 
 	if err := skipgram.Train(f); err != nil {
 		t.Error("SkipGram: Train returns error")
