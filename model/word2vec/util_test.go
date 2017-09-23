@@ -25,36 +25,3 @@ func TestNextRandom(t *testing.T) {
 		t.Errorf("Extected range between 0 < nextRandom(x) < 5: %v", r)
 	}
 }
-
-// Prove that the learning rate is decreasing as currentWords is higher,
-func TestComputeLearningRate(t *testing.T) {
-	initlr := 0.025
-	theta := 1.0e-4
-	totalWords := 100
-	firstCurrentWords := 50
-
-	flr := computeLearningRate(initlr, theta, totalWords, firstCurrentWords)
-
-	secondCurrentWords := 70
-
-	slr := computeLearningRate(initlr, theta, totalWords, secondCurrentWords)
-
-	if flr < slr {
-		t.Errorf("Expected first > second: %v vs. %v", flr, slr)
-	}
-}
-
-// Prove that the learning rate is not less than initlr * theta
-func TestLowerLimitLearningRate(t *testing.T) {
-	initlr := 0.025
-	theta := 1.0e-4
-	currentWords := 100
-	totalWords := 100
-
-	lr := computeLearningRate(initlr, theta, currentWords, totalWords)
-
-	if lr != (initlr * theta) {
-		t.Errorf("Expected that the lower limit of learning rate is (initlr * theta)=%v: %v",
-			(initlr * theta), lr)
-	}
-}
