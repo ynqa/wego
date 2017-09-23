@@ -60,7 +60,7 @@ func (c *CBOW) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 	pool.Zero()
 	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
 
-	if err := c.Opt.Update(targetID, sum, pool, lr); err != nil {
+	if err := c.opt.Update(targetID, sum, pool, lr); err != nil {
 		c.sums <- sum
 		c.pools <- pool
 		return err
