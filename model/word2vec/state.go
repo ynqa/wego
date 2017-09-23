@@ -82,7 +82,7 @@ func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if s.Lower {
+		if s.ToLower {
 			line = strings.ToLower(line)
 		}
 
@@ -128,7 +128,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 			continue
 		}
 
-		if s.Lower {
+		if s.ToLower {
 			lower(line)
 		}
 
@@ -146,7 +146,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 
 	// Leftover processing
 	if buffered > 0 {
-		if s.Lower {
+		if s.ToLower {
 			lower(line)
 		}
 

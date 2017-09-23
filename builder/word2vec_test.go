@@ -45,12 +45,12 @@ func TestSetInitLearningRate(t *testing.T) {
 	}
 }
 
-func TestSetLower(t *testing.T) {
+func TestSetToLower(t *testing.T) {
 	builder := &Word2VecBuilder{}
-	builder.SetLower(false)
+	builder.SetToLower(false)
 
-	if builder.lower {
-		t.Errorf("Expected builder.lower=false: %v", builder.lower)
+	if builder.toLower {
+		t.Errorf("Expected builder.lower=false: %v", builder.toLower)
 	}
 }
 
