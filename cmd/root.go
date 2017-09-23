@@ -46,7 +46,7 @@ func ConfigFlagSet() *pflag.FlagSet {
 		"Set the context window size")
 	fs.Float64(config.InitLearningRate.String(), config.DefaultInitLearningRate,
 		"Set the initial learning rate")
-	fs.Bool(config.Lower.String(), config.DefaultLower,
+	fs.Bool(config.ToLower.String(), config.DefaultToLower,
 		"Whether the words on corpus convert to lowercase or not")
 	return fs
 }
@@ -57,7 +57,7 @@ func configBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Dimension.String(), cmd.Flags().Lookup(config.Dimension.String()))
 	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
 	viper.BindPFlag(config.InitLearningRate.String(), cmd.Flags().Lookup(config.InitLearningRate.String()))
-	viper.BindPFlag(config.Lower.String(), cmd.Flags().Lookup(config.Lower.String()))
+	viper.BindPFlag(config.ToLower.String(), cmd.Flags().Lookup(config.ToLower.String()))
 }
 
 func init() {

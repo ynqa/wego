@@ -21,7 +21,7 @@ type Config int
 const (
 	InputFile Config = iota
 	OutputFile
-	Lower
+	ToLower
 	Dimension
 	Window
 	InitLearningRate
@@ -31,7 +31,7 @@ const (
 const (
 	DefaultInputFile        string  = "example/input.txt"
 	DefaultOutputFile       string  = "example/word_vectors.txt"
-	DefaultLower            bool    = true
+	DefaultToLower          bool    = false
 	DefaultDimension        int     = 10
 	DefaultWindow           int     = 5
 	DefaultInitLearningRate float64 = 0.025
@@ -43,7 +43,7 @@ func (c Config) String() string {
 		return "inputFile"
 	case OutputFile:
 		return "outputFile"
-	case Lower:
+	case ToLower:
 		return "lower"
 	case Dimension:
 		return "dimension"
