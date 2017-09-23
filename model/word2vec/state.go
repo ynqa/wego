@@ -40,10 +40,10 @@ type State struct {
 	*corpus.Corpus
 	emb *Embedding
 
-	Opt                Optimizer
-	SubsampleThreshold float64
-	BatchSize          int
-	Theta              float64
+	opt                Optimizer
+	subsampleThreshold float64
+	batchSize          int
+	theta              float64
 
 	ignoredWords        int
 	trainedWords        int
@@ -61,10 +61,10 @@ func NewState(config *model.Config, opt Optimizer,
 	return &State{
 		Config:             config,
 		Corpus:             corpus.New(),
-		Opt:                opt,
-		SubsampleThreshold: subsampleThreshold,
-		BatchSize:          batchSize,
-		Theta:              theta,
+		opt:                opt,
+		subsampleThreshold: subsampleThreshold,
+		batchSize:          batchSize,
+		theta:              theta,
 
 		currentLearningRate: config.InitLearningRate,
 		cwsCh:               make(chan struct{}),
@@ -75,7 +75,7 @@ func NewState(config *model.Config, opt Optimizer,
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
 		s.emb = newEmbedding(s.Corpus.Size(), s.Dimension)
-		s.Opt.Init(s.Corpus, s.Dimension)
+		s.opt.Init(s.Corpus, s.Dimension)
 	}()
 
 	scanner := bufio.NewScanner(f)
@@ -117,12 +117,12 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	var wg sync.WaitGroup
 
 	var buffered int
-	line := make([]string, 0, s.BatchSize)
+	line := make([]string, 0, s.batchSize)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		if buffered < s.BatchSize {
+		if buffered < s.batchSize {
 			line = append(line, scanner.Text())
 			buffered++
 			continue
@@ -223,9 +223,9 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 func (s *State) incrementDoneWord() {
 	for range s.cwsCh {
 		s.trainedWords++
-		if s.trainedWords%s.BatchSize == 0 {
+		if s.trainedWords%s.batchSize == 0 {
 			s.lrMutex.Lock()
-			s.currentLearningRate = computeLearningRate(s.InitLearningRate, s.Theta, s.trainedWords, s.TotalFreq())
+			s.currentLearningRate = s.computeLearningRate(s.trainedWords, s.TotalFreq())
 			s.lrMutex.Unlock()
 		}
 	}
@@ -278,9 +278,17 @@ func (s *State) endTraining() {
 	s.progress.Finish()
 }
 
+func (s *State) computeLearningRate(currentWords, totalWords int) float64 {
+	lr := s.InitLearningRate * (1.0 - float64(currentWords)/float64(totalWords))
+	if lr < s.InitLearningRate*s.theta {
+		lr = s.InitLearningRate * s.theta
+	}
+	return lr
+}
+
 func (s *State) subsampleRate(wordID int) float64 {
 	z := float64(s.IDFreq(wordID)) / float64(s.TotalFreq())
-	return (math.Sqrt(z/s.SubsampleThreshold) + 1.0) * s.SubsampleThreshold / z
+	return (math.Sqrt(z/s.subsampleThreshold) + 1.0) * s.subsampleThreshold / z
 }
 
 func (s *State) toIDs(words []string) []int {
