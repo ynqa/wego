@@ -31,7 +31,7 @@ type Word2VecBuilder struct {
 	dimension          int
 	window             int
 	initLearningRate   float64
-	lower              bool
+	toLower            bool
 	model              string
 	optimizer          string
 	maxDepth           int
@@ -47,7 +47,7 @@ func NewWord2VecBuilder() *Word2VecBuilder {
 		dimension:          config.DefaultDimension,
 		window:             config.DefaultWindow,
 		initLearningRate:   config.DefaultInitLearningRate,
-		lower:              config.DefaultLower,
+		toLower:            config.DefaultToLower,
 		model:              config.DefaultModel,
 		optimizer:          config.DefaultOptimizer,
 		maxDepth:           config.DefaultMaxDepth,
@@ -64,7 +64,7 @@ func NewWord2VecBuilderViper() *Word2VecBuilder {
 		dimension:          viper.GetInt(config.Dimension.String()),
 		window:             viper.GetInt(config.Window.String()),
 		initLearningRate:   viper.GetFloat64(config.InitLearningRate.String()),
-		lower:              viper.GetBool(config.Lower.String()),
+		toLower:            viper.GetBool(config.ToLower.String()),
 		model:              viper.GetString(config.Model.String()),
 		optimizer:          viper.GetString(config.Optimizer.String()),
 		maxDepth:           viper.GetInt(config.MaxDepth.String()),
@@ -80,7 +80,7 @@ func (wb *Word2VecBuilder) String() string {
 		"Dimension:          %v\n"+
 			"Window:             %v\n"+
 			"InitLearningRate:   %v\n"+
-			"Lower:              %v\n"+
+			"ToLower:            %v\n"+
 			"Model:              %v\n"+
 			"Optimizer:          %v\n"+
 			"MaxDepth:           %v\n"+
@@ -89,7 +89,7 @@ func (wb *Word2VecBuilder) String() string {
 			"BatchSize:          %v\n"+
 			"SubsampleThreshold: %v\n",
 		wb.dimension, wb.window, wb.initLearningRate,
-		wb.lower, wb.model, wb.optimizer, wb.maxDepth, wb.negativeSampleSize,
+		wb.toLower, wb.model, wb.optimizer, wb.maxDepth, wb.negativeSampleSize,
 		wb.theta, wb.batchSize, wb.subsampleThreshold)
 }
 
@@ -111,9 +111,9 @@ func (wb *Word2VecBuilder) SetInitLearningRate(initlr float64) *Word2VecBuilder 
 	return wb
 }
 
-// SetLower sets whether the words on corpus convert to lowercase or not.
-func (wb *Word2VecBuilder) SetLower(lower bool) *Word2VecBuilder {
-	wb.lower = lower
+// SetToLower sets whether the words on corpus convert to lowercase or not.
+func (wb *Word2VecBuilder) SetToLower(toLower bool) *Word2VecBuilder {
+	wb.toLower = toLower
 	return wb
 }
 
@@ -161,7 +161,7 @@ func (wb *Word2VecBuilder) SetSubSampleThreshold(threshold float64) *Word2VecBui
 
 // Build creates model.Model interface.
 func (wb *Word2VecBuilder) Build() (model.Model, error) {
-	cnf := model.NewConfig(wb.lower, wb.dimension, wb.window, wb.initLearningRate)
+	cnf := model.NewConfig(wb.toLower, wb.dimension, wb.window, wb.initLearningRate)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {

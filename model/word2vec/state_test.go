@@ -43,7 +43,7 @@ func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0,
 var (
 	text = "A B B C C C C"
 	conf = model.NewConfig(
-		config.DefaultLower,
+		config.DefaultToLower,
 		config.DefaultDimension,
 		config.DefaultWindow,
 		config.DefaultInitLearningRate,

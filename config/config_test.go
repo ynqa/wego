@@ -40,7 +40,7 @@ func TestConfigString(t *testing.T) {
 			expect: "outputFile",
 		},
 		{
-			input:  Lower,
+			input:  ToLower,
 			expect: "lower",
 		},
 		{
