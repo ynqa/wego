@@ -225,7 +225,7 @@ func (s *State) incrementDoneWord() {
 		s.trainedWords++
 		if s.trainedWords%s.batchSize == 0 {
 			s.lrMutex.Lock()
-			s.currentLearningRate = s.computeLearningRate(s.trainedWords, s.TotalFreq())
+			s.currentLearningRate = s.updateLearningRate()
 			s.lrMutex.Unlock()
 		}
 	}
@@ -278,8 +278,8 @@ func (s *State) endTraining() {
 	s.progress.Finish()
 }
 
-func (s *State) computeLearningRate(currentWords, totalWords int) float64 {
-	lr := s.InitLearningRate * (1.0 - float64(currentWords)/float64(totalWords))
+func (s *State) updateLearningRate() float64 {
+	lr := s.InitLearningRate * (1.0 - float64(s.trainedWords)/float64(s.TotalFreq()))
 	if lr < s.InitLearningRate*s.theta {
 		lr = s.InitLearningRate * s.theta
 	}
