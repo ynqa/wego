@@ -69,9 +69,5 @@ func runSimilarity(target string) error {
 		return err
 	}
 
-	if err := est.Describe(); err != nil {
-		return err
-	}
-
-	return nil
+	return est.Describe()
 }

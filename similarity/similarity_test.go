@@ -35,7 +35,7 @@ func TestEstimate(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	if len(estimator.tensor) != 4 {
-		t.Errorf("Expected estimator.tensor len=4: %d", len(estimator.tensor))
+	if len(estimator.dense) != 4 {
+		t.Errorf("Expected estimator.tensor len=4: %d", len(estimator.dense))
 	}
 }
