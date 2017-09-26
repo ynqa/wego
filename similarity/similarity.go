@@ -23,17 +23,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/chewxy/gorgonia/tensor"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-
-	"github.com/ynqa/word-embedding/vector"
 )
 
 // Estimator stores the elements for cosine similarity.
 type Estimator struct {
 	target string
 	rank   int
-	tensor map[string]vector.Vector
+	dense  map[string]*tensor.Dense
 }
 
 // NewEstimator creates *SimilarityEstimator
@@ -41,7 +40,7 @@ func NewEstimator(target string, rank int) *Estimator {
 	return &Estimator{
 		target: target,
 		rank:   rank,
-		tensor: make(map[string]vector.Vector),
+		dense:  make(map[string]*tensor.Dense),
 	}
 }
 
@@ -61,7 +60,7 @@ func (e *Estimator) Estimate(f io.ReadCloser) error {
 			return err
 		}
 
-		e.tensor[word] = vec
+		e.dense[word] = vec
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -78,20 +77,38 @@ func (e *Estimator) Describe() error {
 }
 
 func (e *Estimator) stdout() error {
-	tvec, ok := e.tensor[e.target]
+	tvec, ok := e.dense[e.target]
 	if !ok {
 		return fmt.Errorf("%v is not found", e.target)
 	}
 
-	res := make(Measures, len(e.tensor))
+	tvecNorm, err := norm(tvec)
 
-	for word, vec := range e.tensor {
+	if err != nil {
+		return err
+	}
+
+	res := make(Measures, len(e.dense))
+
+	for word, vec := range e.dense {
 		if word == e.target {
 			continue
 		}
+		vecNorm, err := norm(vec)
+
+		if err != nil {
+			return err
+		}
+
+		sim, err := cosine(tvec, vec, tvecNorm, vecNorm)
+
+		if err != nil {
+			return err
+		}
+
 		res = append(res, Measure{
 			word:       word,
-			similarity: tvec.Cosine(vec),
+			similarity: sim,
 		})
 	}
 
@@ -114,17 +131,40 @@ func (e *Estimator) stdout() error {
 	return nil
 }
 
-func parse(line string) (string, vector.Vector, error) {
+func parse(line string) (string, *tensor.Dense, error) {
 	sep := strings.Fields(line)
 	word := sep[0]
 	v := sep[1:]
-	vec := vector.NewVector(len(v))
+	vec := tensor.NewDense(tensor.Float64, tensor.Shape{len(v)})
+	dat := vec.Data().([]float64)
 	for k, pair := range v {
 		val, err := strconv.ParseFloat(strings.Split(pair, ":")[1], 64)
 		if err != nil {
 			return "", nil, err
 		}
-		vec[k] = val
+		dat[k] = val
 	}
 	return word, vec, nil
+}
+
+func norm(d *tensor.Dense) (float64, error) {
+	ifNorm, err := d.Norm(tensor.UnorderedNorm())
+
+	if err != nil {
+		return 0, errors.Wrap(err, "Norm failed")
+	}
+
+	n := ifNorm.ScalarValue().(float64)
+	return n, nil
+}
+
+func cosine(d1, d2 *tensor.Dense, d1Norm, d2Norm float64) (float64, error) {
+	inner, err := tensor.Inner(d1, d2)
+
+	if err != nil {
+		return 0, errors.Wrap(err, "Inner failed")
+	}
+
+	cos := inner.(float64) / (d1Norm * d2Norm)
+	return cos, nil
 }
