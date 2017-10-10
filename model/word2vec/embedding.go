@@ -15,12 +15,8 @@
 package word2vec
 
 import (
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/ynqa/word-embedding/model"
 )
-
-var dtype tensor.Dtype = tensor.Float64
-var eng tensor.Engine = tensor.Float64Engine{}
 
 // s implements a single valued slice
 type s int
@@ -31,12 +27,11 @@ func (a s) Step() int  { return 1 }
 
 // Embedding represents a word embedding. It holds a Tensor, and preslices it for additional performance gains.
 type Embedding struct {
-	ref tensor.Tensor // hold a reference
-	m   []*model.SyncTensor
+	m []*model.SyncTensor
 }
 
-func newEmbedding(vocabulary, dimension int) *Embedding {
-	ref := randomTensor(dtype, eng, vocabulary, dimension)
+func newEmbedding(dtype *model.Dtype, vocabulary, dimension int) *Embedding {
+	ref := dtype.RandomTensor(vocabulary, dimension)
 
 	// preslice all the things!
 	m := make([]*model.SyncTensor, vocabulary)
@@ -46,7 +41,6 @@ func newEmbedding(vocabulary, dimension int) *Embedding {
 	}
 
 	return &Embedding{
-		ref: ref,
-		m:   m,
+		m: m,
 	}
 }
