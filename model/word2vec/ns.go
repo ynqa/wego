@@ -38,15 +38,15 @@ func NewNegativeSampling(negativeSampleSize int) *NegativeSampling {
 }
 
 // Init initializes the negative vector.
-func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
-	ns.negativeTensor = newEmbedding(c.Size(), dimension)
+func (ns *NegativeSampling) Init(c *corpus.Corpus, d *model.Dtype, dimension int) (err error) {
+	ns.negativeTensor = NewEmbedding(d, c.Size(), dimension)
 	return
 }
 
 // Update updates the word vector using the negative vector.
-func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+func (ns *NegativeSampling) Update(d *model.Dtype, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
 
-	var label float64
+	var label int
 	var negativeID int
 	var negativeVector *model.SyncTensor
 
@@ -63,7 +63,7 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 			}
 		}
 
-		if err := ns.gradUpd(label, learningRate, negativeVector, contextVector, poolVector); err != nil {
+		if err := ns.gradUpd(d, label, learningRate, negativeVector, contextVector, poolVector); err != nil {
 			return errors.Wrap(err, "gradUpdate failed for NS")
 		}
 
@@ -76,14 +76,14 @@ func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector tenso
 	return nil
 }
 
-func (ns *NegativeSampling) gradUpd(label, lr float64, negVec *model.SyncTensor, ctxVec, poolVec tensor.Tensor) (err error) {
+func (ns *NegativeSampling) gradUpd(d *model.Dtype, label int, lr float64, negVec *model.SyncTensor, ctxVec, poolVec tensor.Tensor) (err error) {
 	negVec.Lock()
 	defer negVec.Unlock()
 
 	switch negVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
-		if ip, ok := eng.(tensor.InnerProderF64); ok {
+		if ip, ok := d.E.(tensor.InnerProderF64); ok {
 			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
 				return errors.Wrap(err, "Inner failed")
 			}
@@ -91,12 +91,12 @@ func (ns *NegativeSampling) gradUpd(label, lr float64, negVec *model.SyncTensor,
 			return errors.New("Engine does not perform Inner for Float64")
 		}
 		sig := model.SigmoidF64(inner)
-		g := (label - sig) * lr
+		g := (float64(label) - sig) * lr
 		tensor.FMA(negVec, &g, poolVec)
 		tensor.FMA(ctxVec, &g, negVec)
 	case tensor.Float32:
 		var inner float32
-		if ip, ok := eng.(tensor.InnerProderF32); ok {
+		if ip, ok := d.E.(tensor.InnerProderF32); ok {
 			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
 				return errors.Wrap(err, "Inner failed")
 			}

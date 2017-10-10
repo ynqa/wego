@@ -16,9 +16,6 @@ package model
 
 import (
 	"io"
-	"sync"
-
-	"github.com/chewxy/gorgonia/tensor"
 )
 
 // Model is the interface of Preprocess, Train, Save.
@@ -26,10 +23,4 @@ type Model interface {
 	Preprocess(f io.ReadSeeker) (io.ReadCloser, error)
 	Train(f io.ReadCloser) error
 	Save(outputFile string) error
-}
-
-// SyncTensor is a Tensor that has a read-write lock on it.
-type SyncTensor struct {
-	sync.RWMutex
-	tensor.Tensor
 }

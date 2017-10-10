@@ -20,12 +20,15 @@ import (
 	"github.com/spf13/viper"
 )
 
+const similarityFlagSize = 2
+
 func TestSimilarityBind(t *testing.T) {
 	defer viper.Reset()
 
 	similarityBind(SimilarityCmd)
 
-	if len(viper.AllKeys()) != 2 {
-		t.Errorf("Expected similarityBind maps 2 keys: %v", viper.AllKeys())
+	if len(viper.AllKeys()) != similarityFlagSize {
+		t.Errorf("Expected similarityBind maps %v keys: %v",
+			similarityFlagSize, viper.AllKeys())
 	}
 }

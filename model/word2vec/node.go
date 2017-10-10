@@ -18,7 +18,6 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/ynqa/word-embedding/model"
 )
@@ -40,7 +39,7 @@ func (n *Nodes) Less(i, j int) bool { return (*n)[i].Value < (*n)[j].Value }
 func (n *Nodes) Swap(i, j int)      { (*n)[i], (*n)[j] = (*n)[j], (*n)[i] }
 
 // NewHuffmanTree creates the map of wordID with Node.
-func NewHuffmanTree(c *corpus.Corpus, dimension int, dt tensor.Dtype, eng tensor.Engine) (map[int]*Node, error) {
+func NewHuffmanTree(c *corpus.Corpus, d *model.Dtype, dimension int) (map[int]*Node, error) {
 	ns := make(Nodes, 0, c.Size())
 	nm := make(map[int]*Node)
 	for i := 0; i < c.Size(); i++ {
@@ -49,14 +48,14 @@ func NewHuffmanTree(c *corpus.Corpus, dimension int, dt tensor.Dtype, eng tensor
 		nm[i] = n
 		ns = append(ns, n)
 	}
-	err := ns.buildHuffmanTree(dimension, dt, eng)
+	err := ns.buildHuffmanTree(d, dimension)
 	if err != nil {
 		return nil, err
 	}
 	return nm, nil
 }
 
-func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engine) error {
+func (n *Nodes) buildHuffmanTree(d *model.Dtype, dimension int) error {
 	if len(*n) == 0 {
 		return errors.New("The length of Nodes is 0")
 	}
@@ -65,12 +64,12 @@ func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engi
 	for len(*n) > 1 {
 		// Pop
 		left, right := (*n)[0], (*n)[1]
-		(*n) = (*n)[2:]
+		*n = (*n)[2:]
 
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: &model.SyncTensor{Tensor: randomTensor(dt, eng, dimension)},
+			Vector: &model.SyncTensor{Tensor: d.RandomTensor(dimension)},
 		}
 		left.Parent = parent
 		left.Code = 0
@@ -80,7 +79,7 @@ func (n *Nodes) buildHuffmanTree(dimension int, dt tensor.Dtype, eng tensor.Engi
 		idx := sort.Search(len(*n), func(i int) bool { return (*n)[i].Value >= parentValue })
 
 		// Insert
-		(*n) = append((*n), &Node{})
+		*n = append(*n, &Node{})
 		copy((*n)[idx+1:], (*n)[idx:])
 		(*n)[idx] = parent
 	}

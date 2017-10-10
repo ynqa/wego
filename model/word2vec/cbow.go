@@ -35,8 +35,8 @@ func NewCBOW(s *State) *CBOW {
 	sums := make(chan tensor.Tensor, maxprocs)
 
 	for i := 0; i < maxprocs; i++ {
-		pools <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
-		sums <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
+		pools <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Dtype.T), tensor.WithEngine(s.Dtype.E))
+		sums <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Dtype.T), tensor.WithEngine(s.Dtype.E))
 	}
 
 	return &CBOW{
@@ -60,7 +60,7 @@ func (c *CBOW) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 	pool.Zero()
 	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
 
-	if err := c.opt.Update(targetID, sum, pool, lr); err != nil {
+	if err := c.opt.Update(c.Dtype, targetID, sum, pool, lr); err != nil {
 		c.sums <- sum
 		c.pools <- pool
 		return err

@@ -15,8 +15,6 @@
 package builder
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -28,10 +26,13 @@ import (
 // Word2VecBuilder manages the members to build the Model interface.
 // TODO: Validate the fields on Build called.
 type Word2VecBuilder struct {
-	dimension          int
-	window             int
-	initLearningRate   float64
-	toLower            bool
+	dimension        int
+	window           int
+	initLearningRate float64
+	dtype            string
+	toLower          bool
+	verbose          bool
+
 	model              string
 	optimizer          string
 	maxDepth           int
@@ -44,10 +45,13 @@ type Word2VecBuilder struct {
 // NewWord2VecBuilder creates *Word2VecBuilder.
 func NewWord2VecBuilder() *Word2VecBuilder {
 	return &Word2VecBuilder{
-		dimension:          config.DefaultDimension,
-		window:             config.DefaultWindow,
-		initLearningRate:   config.DefaultInitLearningRate,
-		toLower:            config.DefaultToLower,
+		dimension:        config.DefaultDimension,
+		window:           config.DefaultWindow,
+		initLearningRate: config.DefaultInitLearningRate,
+		dtype:            config.DefaultDtype,
+		toLower:          config.DefaultToLower,
+		verbose:          config.DefaultVerbose,
+
 		model:              config.DefaultModel,
 		optimizer:          config.DefaultOptimizer,
 		maxDepth:           config.DefaultMaxDepth,
@@ -61,10 +65,13 @@ func NewWord2VecBuilder() *Word2VecBuilder {
 // NewWord2VecBuilderViper creates *Word2VecBuilder using viper.
 func NewWord2VecBuilderViper() *Word2VecBuilder {
 	return &Word2VecBuilder{
-		dimension:          viper.GetInt(config.Dimension.String()),
-		window:             viper.GetInt(config.Window.String()),
-		initLearningRate:   viper.GetFloat64(config.InitLearningRate.String()),
-		toLower:            viper.GetBool(config.ToLower.String()),
+		dimension:        viper.GetInt(config.Dimension.String()),
+		window:           viper.GetInt(config.Window.String()),
+		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
+		dtype:            viper.GetString(config.Dtype.String()),
+		toLower:          viper.GetBool(config.ToLower.String()),
+		verbose:          viper.GetBool(config.Verbose.String()),
+
 		model:              viper.GetString(config.Model.String()),
 		optimizer:          viper.GetString(config.Optimizer.String()),
 		maxDepth:           viper.GetInt(config.MaxDepth.String()),
@@ -73,24 +80,6 @@ func NewWord2VecBuilderViper() *Word2VecBuilder {
 		batchSize:          viper.GetInt(config.BatchSize.String()),
 		subsampleThreshold: viper.GetFloat64(config.SubsampleThreshold.String()),
 	}
-}
-
-func (wb *Word2VecBuilder) String() string {
-	return fmt.Sprintf(
-		"Dimension:          %v\n"+
-			"Window:             %v\n"+
-			"InitLearningRate:   %v\n"+
-			"ToLower:            %v\n"+
-			"Model:              %v\n"+
-			"Optimizer:          %v\n"+
-			"MaxDepth:           %v\n"+
-			"NegativeSampleSize: %v\n"+
-			"Theta:              %v\n"+
-			"BatchSize:          %v\n"+
-			"SubsampleThreshold: %v\n",
-		wb.dimension, wb.window, wb.initLearningRate,
-		wb.toLower, wb.model, wb.optimizer, wb.maxDepth, wb.negativeSampleSize,
-		wb.theta, wb.batchSize, wb.subsampleThreshold)
 }
 
 // SetDimension sets the dimension of word vector.
@@ -111,9 +100,21 @@ func (wb *Word2VecBuilder) SetInitLearningRate(initlr float64) *Word2VecBuilder 
 	return wb
 }
 
-// SetToLower sets whether the words on corpus convert to lowercase or not.
-func (wb *Word2VecBuilder) SetToLower(toLower bool) *Word2VecBuilder {
-	wb.toLower = toLower
+// SetDtype sets the dtype for gorgonia tensor. One of: float32|float64
+func (wb *Word2VecBuilder) SetDtype(dtype string) *Word2VecBuilder {
+	wb.dtype = dtype
+	return wb
+}
+
+// SetToLower converts the words in corpus to lowercase.
+func (wb *Word2VecBuilder) SetToLower() *Word2VecBuilder {
+	wb.toLower = true
+	return wb
+}
+
+// SetVerbose sets verbose mode.
+func (wb *Word2VecBuilder) SetVerbose() *Word2VecBuilder {
+	wb.verbose = true
 	return wb
 }
 
@@ -161,7 +162,13 @@ func (wb *Word2VecBuilder) SetSubSampleThreshold(threshold float64) *Word2VecBui
 
 // Build creates model.Model interface.
 func (wb *Word2VecBuilder) Build() (model.Model, error) {
-	cnf := model.NewConfig(wb.toLower, wb.dimension, wb.window, wb.initLearningRate)
+	dtype, err := model.NewDtype(wb.dtype)
+	if err != nil {
+		return nil, err
+	}
+
+	cnf := model.NewConfig(wb.dimension, wb.window, wb.initLearningRate,
+		dtype, wb.toLower, wb.verbose)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {

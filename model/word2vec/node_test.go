@@ -18,13 +18,11 @@ import (
 	"bytes"
 	"strconv"
 	"testing"
-
-	"github.com/chewxy/gorgonia/tensor"
 )
 
 func TestHuffmanTree(t *testing.T) {
 	c := newTestCorpus()
-	huffmanTree, err := NewHuffmanTree(c, 100, tensor.Float64, tensor.Float64Engine{})
+	huffmanTree, err := NewHuffmanTree(c, mockDtype, 5)
 
 	if err != nil {
 		t.Errorf(err.Error())

@@ -33,7 +33,7 @@ func NewSkipGram(s *State) *SkipGram {
 	maxprocs := runtime.NumCPU()
 	pool := make(chan tensor.Tensor, maxprocs)
 	for i := 0; i < maxprocs; i++ {
-		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(dtype), tensor.WithEngine(eng))
+		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Dtype.T), tensor.WithEngine(s.Dtype.E))
 	}
 	return &SkipGram{
 		State: s,
@@ -62,7 +62,7 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 		contextID := wordIDs[c]
 
 		pool.Zero()
-		if err := s.opt.Update(targetID, s.emb.m[contextID].Tensor, pool, lr); err != nil {
+		if err := s.opt.Update(s.Dtype, targetID, s.emb.m[contextID].Tensor, pool, lr); err != nil {
 			return err
 		}
 		tensor.Add(s.emb.m[contextID].Tensor, pool, tensor.UseUnsafe())
