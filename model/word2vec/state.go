@@ -74,8 +74,8 @@ func NewState(config *model.Config, opt Optimizer,
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
-		s.emb = newEmbedding(s.Corpus.Size(), s.Dimension)
-		s.opt.Init(s.Corpus, s.Dimension)
+		s.emb = NewEmbedding(s.Dtype, s.Corpus.Size(), s.Dimension)
+		s.opt.Init(s.Corpus, s.Dtype, s.Dimension)
 	}()
 
 	scanner := bufio.NewScanner(f)
@@ -104,11 +104,12 @@ func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 
 // Trainer trains a corpus. It assumes that Preprocess() has already been called
 func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
-	s.startTraining()
-	defer func() {
-		s.endTraining()
-		f.Close()
-	}()
+	if s.Verbose {
+		s.startTraining()
+		defer s.endTraining()
+	}
+
+	defer f.Close()
 
 	go s.incrementDoneWord()
 
@@ -167,7 +168,9 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 	defer wg.Done()
 	sema <- struct{}{} // get lock
 	for i, w := range wordIDs {
-		s.progress.Increment()
+		if s.Verbose {
+			s.progress.Increment()
+		}
 
 		r := rand.Float64()
 		p := s.subsampleRate(w)
@@ -198,8 +201,9 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 
 func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
 	for i, w := range wordIDs {
-		s.progress.Increment()
-
+		if s.Verbose {
+			s.progress.Increment()
+		}
 		r := rand.Float64()
 		p := s.subsampleRate(w)
 

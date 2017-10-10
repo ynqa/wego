@@ -21,6 +21,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+const configFlagSize = 9
+
 func TestConfigFlagSet(t *testing.T) {
 	fs := ConfigFlagSet()
 
@@ -36,7 +38,8 @@ func TestConfigBind(t *testing.T) {
 	config.Flags().AddFlagSet(ConfigFlagSet())
 	configBind(config)
 
-	if len(viper.AllKeys()) != 6 {
-		t.Errorf("Expected configBind maps 6 keys: %v", viper.AllKeys())
+	if len(viper.AllKeys()) != configFlagSize {
+		t.Errorf("Expected configBind maps %v keys: %v",
+			configFlagSize, viper.AllKeys())
 	}
 }

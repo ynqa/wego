@@ -38,20 +38,20 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 }
 
 // Init initializes the huffman tree.
-func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error) {
-	hs.nodeMap, err = NewHuffmanTree(c, dimension, dtype, eng)
+func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, d *model.Dtype, dimension int) (err error) {
+	hs.nodeMap, err = NewHuffmanTree(c, d, dimension)
 	return
 }
 
 // Update updates the word vector using the huffman tree.
-func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+func (hs *HierarchicalSoftmax) Update(d *model.Dtype, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
 	path := hs.nodeMap[targetID].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
 
 		childCode := path[p+1].Code
 
-		if err := hs.gradUpd(float64(childCode), learningRate, relayPoint.Vector, poolVector, contextVector); err != nil {
+		if err := hs.gradUpd(d, childCode, learningRate, relayPoint.Vector, poolVector, contextVector); err != nil {
 			return err
 		}
 
@@ -62,14 +62,14 @@ func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector te
 	return nil
 }
 
-func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec *model.SyncTensor, poolVec, ctxVec tensor.Tensor) (err error) {
+func (hs *HierarchicalSoftmax) gradUpd(d *model.Dtype, childCode int, lr float64, relayPointVec *model.SyncTensor, poolVec, ctxVec tensor.Tensor) (err error) {
 	relayPointVec.Lock()
 	defer relayPointVec.Unlock()
 
 	switch relayPointVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
-		if ip, ok := eng.(tensor.InnerProderF64); ok {
+		if ip, ok := d.E.(tensor.InnerProderF64); ok {
 			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
 				return errors.Wrap(err, "Inner failed for HS")
 			}
@@ -78,12 +78,12 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode, lr float64, relayPointVec *mod
 		}
 
 		sig := model.SigmoidF64(inner)
-		g := (1.0 - childCode - sig) * lr
+		g := (1.0 - float64(childCode) - sig) * lr
 		tensor.FMA(relayPointVec, &g, poolVec)
 		tensor.FMA(ctxVec, &g, relayPointVec)
 	case tensor.Float32:
 		var inner float32
-		if ip, ok := eng.(tensor.InnerProderF32); ok {
+		if ip, ok := d.E.(tensor.InnerProderF32); ok {
 			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
 				return errors.Wrap(err, "Inner failed for HS")
 			}

@@ -30,7 +30,8 @@ type Embedding struct {
 	m []*model.SyncTensor
 }
 
-func newEmbedding(dtype *model.Dtype, vocabulary, dimension int) *Embedding {
+// NewEmbedding creates *Embedding
+func NewEmbedding(dtype *model.Dtype, vocabulary, dimension int) *Embedding {
 	ref := dtype.RandomTensor(vocabulary, dimension)
 
 	// preslice all the things!

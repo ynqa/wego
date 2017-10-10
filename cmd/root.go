@@ -35,7 +35,7 @@ var RootCmd = &cobra.Command{
 
 // ConfigFlagSet creates the common config flags.
 func ConfigFlagSet() *pflag.FlagSet {
-	fs := pflag.NewFlagSet(RootCmd.Name(), pflag.ContinueOnError)
+	fs := pflag.NewFlagSet(RootCmd.Name(), pflag.ExitOnError)
 	fs.StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"Set the input file path to load corpus")
 	fs.StringP(config.OutputFile.String(), "o", config.DefaultOutputFile,
@@ -46,8 +46,14 @@ func ConfigFlagSet() *pflag.FlagSet {
 		"Set the context window size")
 	fs.Float64(config.InitLearningRate.String(), config.DefaultInitLearningRate,
 		"Set the initial learning rate")
+	fs.String(config.Dtype.String(), config.DefaultDtype,
+		"Set the dtype. One of float64|float32")
+	fs.Bool(config.Prof.String(), config.DefaultProf,
+		"Profiling mode to check the performances")
 	fs.Bool(config.ToLower.String(), config.DefaultToLower,
 		"Whether the words on corpus convert to lowercase or not")
+	fs.Bool(config.Verbose.String(), config.DefaultVerbose,
+		"Verbose mode")
 	return fs
 }
 
@@ -57,7 +63,10 @@ func configBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Dimension.String(), cmd.Flags().Lookup(config.Dimension.String()))
 	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
 	viper.BindPFlag(config.InitLearningRate.String(), cmd.Flags().Lookup(config.InitLearningRate.String()))
+	viper.BindPFlag(config.Dtype.String(), cmd.Flags().Lookup(config.Dtype.String()))
+	viper.BindPFlag(config.Prof.String(), cmd.Flags().Lookup(config.Prof.String()))
 	viper.BindPFlag(config.ToLower.String(), cmd.Flags().Lookup(config.ToLower.String()))
+	viper.BindPFlag(config.Verbose.String(), cmd.Flags().Lookup(config.Verbose.String()))
 }
 
 func init() {

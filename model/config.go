@@ -16,18 +16,22 @@ package model
 
 // Config stores the common config.
 type Config struct {
-	ToLower          bool
 	Dimension        int
 	Window           int
 	InitLearningRate float64
+	Dtype            *Dtype
+	ToLower          bool
+	Verbose          bool
 }
 
 // NewConfig creates *Config
-func NewConfig(toLower bool, dimension, window int, initlr float64) *Config {
+func NewConfig(dimension, window int, initlr float64, dtype *Dtype, toLower, verbose bool) *Config {
 	return &Config{
-		ToLower:          toLower,
 		Dimension:        dimension,
 		Window:           window,
 		InitLearningRate: initlr,
+		Dtype:            dtype,
+		ToLower:          toLower,
+		Verbose:          verbose,
 	}
 }

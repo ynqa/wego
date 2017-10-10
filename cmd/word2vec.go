@@ -15,8 +15,8 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
+	"runtime/pprof"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -37,6 +37,15 @@ var Word2VecCmd = &cobra.Command{
 		word2vecBind(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if viper.GetBool(config.Prof.String()) {
+			f, err := os.Create("cpu.prof")
+			if err != nil {
+				os.Exit(1)
+			}
+			pprof.StartCPUProfile(f)
+			defer pprof.StopCPUProfile()
+		}
+
 		return runWord2Vec()
 	},
 }
@@ -88,9 +97,6 @@ func runWord2Vec() error {
 		return err
 	}
 
-	fmt.Println("Summary:")
-	fmt.Printf("%v\n", w2v)
-
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return err
@@ -100,16 +106,10 @@ func runWord2Vec() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Finished Preprocess")
 
 	if err := mod.Train(f); err != nil {
 		return err
 	}
-	fmt.Println("Finished Train")
 
-	if err := mod.Save(outputFile); err != nil {
-		return err
-	}
-	fmt.Println("Finished Save")
-	return nil
+	return mod.Save(outputFile)
 }

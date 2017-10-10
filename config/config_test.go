@@ -40,10 +40,6 @@ func TestConfigString(t *testing.T) {
 			expect: "outputFile",
 		},
 		{
-			input:  ToLower,
-			expect: "lower",
-		},
-		{
 			input:  Dimension,
 			expect: "dimension",
 		},
@@ -54,6 +50,22 @@ func TestConfigString(t *testing.T) {
 		{
 			input:  InitLearningRate,
 			expect: "initlr",
+		},
+		{
+			input:  Dtype,
+			expect: "dtype",
+		},
+		{
+			input:  Prof,
+			expect: "prof",
+		},
+		{
+			input:  ToLower,
+			expect: "lower",
+		},
+		{
+			input:  Verbose,
+			expect: "verbose",
 		},
 	}
 
