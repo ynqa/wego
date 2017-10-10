@@ -1,6 +1,7 @@
 .idea/
 vendor/
-example/
+example/*
+!example/example.go
 
 text8
 text8.zip
