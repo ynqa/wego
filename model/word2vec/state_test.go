@@ -30,8 +30,8 @@ import (
 // MockOperator satisfies the interface of Optimizer.
 type MockOptimizer struct{}
 
-func (m *MockOptimizer) Init(c *corpus.Corpus, d *model.Dtype, dimension int) error { return nil }
-func (m *MockOptimizer) Update(d *model.Dtype, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+func (m *MockOptimizer) Init(c *corpus.Corpus, t *model.Type, dimension int) error { return nil }
+func (m *MockOptimizer) Update(t *model.Type, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
 	return nil
 }
 
@@ -41,13 +41,13 @@ type MockNopSeeker struct{ io.ReadCloser }
 func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
 
 var (
-	text         = "A B B C C C C"
-	mockDtype, _ = model.NewDtype("float64")
-	conf         = model.NewConfig(
+	text   = "A B B C C C C"
+	typ, _ = model.NewType("float64")
+	conf   = model.NewConfig(
 		config.DefaultDimension,
 		config.DefaultWindow,
 		config.DefaultInitLearningRate,
-		mockDtype,
+		typ,
 		config.DefaultToLower,
 		config.DefaultVerbose,
 	)

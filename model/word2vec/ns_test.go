@@ -28,7 +28,7 @@ func TestNewNegativeSampling(t *testing.T) {
 
 func TestNSInit(t *testing.T) {
 	ns := NewNegativeSampling(10)
-	ns.Init(newTestCorpus(), mockDtype, 10)
+	ns.Init(newTestCorpus(), typ, 10)
 
 	if len(ns.negativeTensor.m) != 3 {
 		t.Error("NegativeSampling: Init returns negativeTensor with length=3")

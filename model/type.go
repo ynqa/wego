@@ -21,34 +21,34 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Dtype stores gorgonia dtype and engine.
-type Dtype struct {
-	T tensor.Dtype
+// Type stores gorgonia dtype and engine.
+type Type struct {
+	D tensor.Dtype
 	E tensor.Engine
 }
 
-// NewDtype create *Dtype.
-func NewDtype(dtype string) (*Dtype, error) {
-	switch dtype {
+// NewType create *Type.
+func NewType(t string) (*Type, error) {
+	switch t {
 	case "float64":
-		return &Dtype{
-			T: tensor.Float64,
+		return &Type{
+			D: tensor.Float64,
 			E: tensor.Float64Engine{},
 		}, nil
 	case "float32":
-		return &Dtype{
-			T: tensor.Float32,
+		return &Type{
+			D: tensor.Float32,
 			E: tensor.Float32Engine{},
 		}, nil
 	default:
-		return nil, errors.Errorf("Dtype is expected one of float64|float32, but actual: %v", dtype)
+		return nil, errors.Errorf("Dtype is expected one of float64|float32, but actual: %v", t)
 	}
 }
 
 // RandomTensor create a tensor with shape.
-func (d *Dtype) RandomTensor(shape ...int) tensor.Tensor {
-	ref := tensor.New(tensor.Of(d.T), tensor.WithShape(shape...), tensor.WithEngine(d.E))
-	switch d.T {
+func (t *Type) RandomTensor(shape ...int) tensor.Tensor {
+	ref := tensor.New(tensor.Of(t.D), tensor.WithShape(shape...), tensor.WithEngine(t.E))
+	switch t.D {
 	case tensor.Float64:
 		dat := ref.Data().([]float64)
 		for i := range dat {

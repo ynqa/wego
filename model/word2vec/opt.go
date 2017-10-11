@@ -22,6 +22,6 @@ import (
 
 // Optimizer is the interface to initialize after scanning corpus once, and update the word vector.
 type Optimizer interface {
-	Init(c *corpus.Corpus, d *model.Dtype, dimension int) error
-	Update(d *model.Dtype, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error
+	Init(c *corpus.Corpus, t *model.Type, dimension int) error
+	Update(t *model.Type, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error
 }

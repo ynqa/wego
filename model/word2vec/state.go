@@ -74,8 +74,8 @@ func NewState(config *model.Config, opt Optimizer,
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
-		s.emb = NewEmbedding(s.Dtype, s.Corpus.Size(), s.Dimension)
-		s.opt.Init(s.Corpus, s.Dtype, s.Dimension)
+		s.emb = NewEmbedding(s.Type, s.Corpus.Size(), s.Dimension)
+		s.opt.Init(s.Corpus, s.Type, s.Dimension)
 	}()
 
 	scanner := bufio.NewScanner(f)

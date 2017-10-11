@@ -135,12 +135,21 @@ func TestSetSubSampleThreshold(t *testing.T) {
 	}
 }
 
+func TestInvalidTypeBuild(t *testing.T) {
+	b := &Word2VecBuilder{}
+	b.SetDtype("fake_dtype")
+
+	if _, err := b.Build(); err == nil {
+		t.Errorf("Expected to fail building with invalid dtype except for skip-gram|cbow: %v", b.dtype)
+	}
+}
+
 func TestInvalidModelBuild(t *testing.T) {
 	b := &Word2VecBuilder{}
 	b.SetModel("fake_model")
 
 	if _, err := b.Build(); err == nil {
-		t.Errorf("Expected to fail building with invalid model in skip-gram|cbow: %v", b.model)
+		t.Errorf("Expected to fail building with invalid model except for skip-gram|cbow: %v", b.model)
 	}
 }
 
@@ -149,6 +158,6 @@ func TestInvalidOptimizerBuild(t *testing.T) {
 	b.SetOptimizer("fake_optimizer")
 
 	if _, err := b.Build(); err == nil {
-		t.Errorf("Expected to fail building with invalid optimizer in ns|hs: %v", b.optimizer)
+		t.Errorf("Expected to fail building with invalid optimizer except for ns|hs: %v", b.optimizer)
 	}
 }

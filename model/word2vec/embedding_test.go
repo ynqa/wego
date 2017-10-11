@@ -19,7 +19,7 @@ import (
 )
 
 func TestNewEmbedding(t *testing.T) {
-	tns := NewEmbedding(mockDtype, 20, 10)
+	tns := NewEmbedding(typ, 20, 10)
 
 	if len(tns.m) != 20 {
 		t.Errorf("NewEmbedding(20, 10) returns a tensor with 20 vocabularies, but %v", len(tns.m))

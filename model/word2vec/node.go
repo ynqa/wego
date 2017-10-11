@@ -19,6 +19,7 @@ import (
 	"sort"
 
 	"github.com/chewxy/lingo/corpus"
+
 	"github.com/ynqa/word-embedding/model"
 )
 
@@ -39,7 +40,7 @@ func (n *Nodes) Less(i, j int) bool { return (*n)[i].Value < (*n)[j].Value }
 func (n *Nodes) Swap(i, j int)      { (*n)[i], (*n)[j] = (*n)[j], (*n)[i] }
 
 // NewHuffmanTree creates the map of wordID with Node.
-func NewHuffmanTree(c *corpus.Corpus, d *model.Dtype, dimension int) (map[int]*Node, error) {
+func NewHuffmanTree(c *corpus.Corpus, t *model.Type, dimension int) (map[int]*Node, error) {
 	ns := make(Nodes, 0, c.Size())
 	nm := make(map[int]*Node)
 	for i := 0; i < c.Size(); i++ {
@@ -48,14 +49,14 @@ func NewHuffmanTree(c *corpus.Corpus, d *model.Dtype, dimension int) (map[int]*N
 		nm[i] = n
 		ns = append(ns, n)
 	}
-	err := ns.buildHuffmanTree(d, dimension)
+	err := ns.buildHuffmanTree(t, dimension)
 	if err != nil {
 		return nil, err
 	}
 	return nm, nil
 }
 
-func (n *Nodes) buildHuffmanTree(d *model.Dtype, dimension int) error {
+func (n *Nodes) buildHuffmanTree(t *model.Type, dimension int) error {
 	if len(*n) == 0 {
 		return errors.New("The length of Nodes is 0")
 	}
@@ -69,7 +70,7 @@ func (n *Nodes) buildHuffmanTree(d *model.Dtype, dimension int) error {
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: &model.SyncTensor{Tensor: d.RandomTensor(dimension)},
+			Vector: &model.SyncTensor{Tensor: t.RandomTensor(dimension)},
 		}
 		left.Parent = parent
 		left.Code = 0
