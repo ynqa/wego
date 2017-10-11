@@ -22,7 +22,7 @@ import (
 
 func TestHuffmanTree(t *testing.T) {
 	c := newTestCorpus()
-	huffmanTree, err := NewHuffmanTree(c, mockDtype, 5)
+	huffmanTree, err := NewHuffmanTree(c, typ, 5)
 
 	if err != nil {
 		t.Errorf(err.Error())

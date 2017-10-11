@@ -19,7 +19,7 @@ import (
 )
 
 func TestRandomTensor(t *testing.T) {
-	d, err := NewDtype("float64")
+	d, err := NewType("float64")
 
 	if err != nil {
 		t.Error(err.Error())

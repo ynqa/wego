@@ -162,13 +162,13 @@ func (wb *Word2VecBuilder) SetSubSampleThreshold(threshold float64) *Word2VecBui
 
 // Build creates model.Model interface.
 func (wb *Word2VecBuilder) Build() (model.Model, error) {
-	dtype, err := model.NewDtype(wb.dtype)
+	t, err := model.NewType(wb.dtype)
 	if err != nil {
 		return nil, err
 	}
 
 	cnf := model.NewConfig(wb.dimension, wb.window, wb.initLearningRate,
-		dtype, wb.toLower, wb.verbose)
+		t, wb.toLower, wb.verbose)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {
