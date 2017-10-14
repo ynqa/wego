@@ -50,8 +50,7 @@ type State struct {
 	progress            *pb.ProgressBar
 
 	// concurrency stuff
-	cwsCh   chan struct{}
-	lrMutex sync.Mutex
+	cwsCh chan struct{}
 }
 
 // NewState creates *NewState.
@@ -179,9 +178,7 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 			continue
 		}
 
-		s.lrMutex.Lock()
 		lr := s.currentLearningRate
-		s.lrMutex.Unlock()
 
 		if err := trainOne(wordIDs, i, lr); err != nil {
 			select {
@@ -211,9 +208,7 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 			continue
 		}
 
-		s.lrMutex.Lock()
 		lr := s.currentLearningRate
-		s.lrMutex.Unlock()
 
 		if err := trainOne(wordIDs, i, lr); err != nil {
 			return err
@@ -227,9 +222,7 @@ func (s *State) incrementDoneWord() {
 	for range s.cwsCh {
 		s.trainedWords++
 		if s.trainedWords%s.batchSize == 0 {
-			s.lrMutex.Lock()
 			s.currentLearningRate = s.updateLearningRate()
-			s.lrMutex.Unlock()
 		}
 	}
 }
@@ -264,7 +257,7 @@ func (s *State) Save(outputPath string) error {
 	for i := 0; i < s.Size(); i++ {
 		word, _ := s.Word(i)
 		vs.WriteString(fmt.Sprintf("%v ", word))
-		vs.WriteString(fmt.Sprintf("%v\n", formatTensor(s.emb.m[i])))
+		vs.WriteString(fmt.Sprintf("%v\n", formatTensor(s.emb.vector[i])))
 	}
 
 	w.WriteString(fmt.Sprintf("%v", vs.String()))

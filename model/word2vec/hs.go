@@ -61,15 +61,12 @@ func (hs *HierarchicalSoftmax) Update(t *model.Type, targetID int, contextVector
 	return nil
 }
 
-func (hs *HierarchicalSoftmax) gradUpd(t *model.Type, childCode int, lr float64, relayPointVec *model.SyncTensor, poolVec, ctxVec tensor.Tensor) (err error) {
-	relayPointVec.Lock()
-	defer relayPointVec.Unlock()
-
+func (hs *HierarchicalSoftmax) gradUpd(t *model.Type, childCode int, lr float64, relayPointVec, poolVec, ctxVec tensor.Tensor) (err error) {
 	switch relayPointVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
 		if ip, ok := t.E.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
+			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
 				return errors.Wrap(err, "Inner failed for HS")
 			}
 		} else {
@@ -83,7 +80,7 @@ func (hs *HierarchicalSoftmax) gradUpd(t *model.Type, childCode int, lr float64,
 	case tensor.Float32:
 		var inner float32
 		if ip, ok := t.E.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec.Tensor); err != nil {
+			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
 				return errors.Wrap(err, "Inner failed for HS")
 			}
 		} else {

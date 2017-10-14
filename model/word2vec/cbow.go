@@ -85,9 +85,9 @@ func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool tensor.Tensor, g f
 }
 
 func (c *CBOW) initSum(contextID int, sum, pool tensor.Tensor) {
-	tensor.Add(sum, c.emb.m[contextID], tensor.UseUnsafe())
+	tensor.Add(sum, c.emb.vector[contextID], tensor.UseUnsafe())
 }
 
 func (c *CBOW) updateCtx(contextID int, sum, pool tensor.Tensor) {
-	tensor.Add(c.emb.m[contextID], pool, tensor.UseUnsafe())
+	tensor.Add(c.emb.vector[contextID], pool, tensor.UseUnsafe())
 }

@@ -20,6 +20,7 @@ import (
 
 	"github.com/chewxy/lingo/corpus"
 
+	"github.com/chewxy/gorgonia/tensor"
 	"github.com/ynqa/word-embedding/model"
 )
 
@@ -28,7 +29,7 @@ type Node struct {
 	Parent    *Node
 	Code      int
 	Value     int
-	Vector    *model.SyncTensor
+	Vector    tensor.Tensor
 	CachePath Nodes
 }
 
@@ -70,7 +71,7 @@ func (n *Nodes) buildHuffmanTree(t *model.Type, dimension int) error {
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: &model.SyncTensor{Tensor: t.RandomTensor(dimension)},
+			Vector: t.RandomTensor(dimension),
 		}
 		left.Parent = parent
 		left.Code = 0
