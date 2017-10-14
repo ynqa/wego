@@ -21,9 +21,9 @@ import (
 func TestNewEmbedding(t *testing.T) {
 	tns := NewEmbedding(typ, 20, 10)
 
-	if len(tns.m) != 20 {
-		t.Errorf("NewEmbedding(20, 10) returns a tensor with 20 vocabularies, but %v", len(tns.m))
-	} else if tns.m[0].Shape()[0] != 10 {
-		t.Errorf("NewEmbedding(20, 10) returns a tensor with 20 dimensions, but %v", tns.m[0].Shape()[0])
+	if len(tns.vector) != 20 {
+		t.Errorf("NewEmbedding(20, 10) returns a tensor with 20 vocabularies, but %v", len(tns.vector))
+	} else if tns.vector[0].Shape()[0] != 10 {
+		t.Errorf("NewEmbedding(20, 10) returns a tensor with 20 dimensions, but %v", tns.vector[0].Shape()[0])
 	}
 }

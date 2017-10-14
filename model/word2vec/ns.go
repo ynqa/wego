@@ -49,16 +49,16 @@ func (ns *NegativeSampling) Update(t *model.Type, targetID int, contextVector, p
 
 	var label int
 	var negativeID int
-	var negativeVector *model.SyncTensor
+	var negativeVector tensor.Tensor
 
 	for n := -1; n < ns.NegativeSampleSize; n++ {
 		if n == -1 {
 			label = 1
-			negativeVector = ns.negativeTensor.m[targetID]
+			negativeVector = ns.negativeTensor.vector[targetID]
 		} else {
 			label = 0
-			negativeID := rand.Intn(len(ns.negativeTensor.m))
-			negativeVector = ns.negativeTensor.m[negativeID]
+			negativeID := rand.Intn(len(ns.negativeTensor.vector))
+			negativeVector = ns.negativeTensor.vector[negativeID]
 			if targetID == negativeID {
 				continue
 			}
@@ -69,23 +69,20 @@ func (ns *NegativeSampling) Update(t *model.Type, targetID int, contextVector, p
 		}
 
 		if n == -1 {
-			ns.negativeTensor.m[targetID] = negativeVector
+			ns.negativeTensor.vector[targetID] = negativeVector
 		} else {
-			ns.negativeTensor.m[negativeID] = negativeVector
+			ns.negativeTensor.vector[negativeID] = negativeVector
 		}
 	}
 	return nil
 }
 
-func (ns *NegativeSampling) gradUpd(t *model.Type, label int, lr float64, negVec *model.SyncTensor, ctxVec, poolVec tensor.Tensor) (err error) {
-	negVec.Lock()
-	defer negVec.Unlock()
-
+func (ns *NegativeSampling) gradUpd(t *model.Type, label int, lr float64, negVec, ctxVec, poolVec tensor.Tensor) (err error) {
 	switch negVec.Dtype() {
 	case tensor.Float64:
 		var inner float64
 		if ip, ok := t.E.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
+			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
 				return errors.Wrap(err, "Inner failed")
 			}
 		} else {
@@ -98,7 +95,7 @@ func (ns *NegativeSampling) gradUpd(t *model.Type, label int, lr float64, negVec
 	case tensor.Float32:
 		var inner float32
 		if ip, ok := t.E.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(negVec.Tensor, ctxVec); err != nil {
+			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
 				return errors.Wrap(err, "Inner failed")
 			}
 		} else {

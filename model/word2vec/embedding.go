@@ -15,19 +15,21 @@
 package word2vec
 
 import (
+	"github.com/chewxy/gorgonia/tensor"
+
 	"github.com/ynqa/word-embedding/model"
 )
 
 // s implements a single valued slice
-type s int
+type slice int
 
-func (a s) Start() int { return int(a) }
-func (a s) End() int   { return int(a + 1) }
-func (a s) Step() int  { return 1 }
+func (s slice) Start() int { return int(s) }
+func (s slice) End() int   { return int(s + 1) }
+func (s slice) Step() int  { return 1 }
 
 // Embedding represents a word embedding. It holds a Tensor, and preslices it for additional performance gains.
 type Embedding struct {
-	m []*model.SyncTensor
+	vector []tensor.Tensor
 }
 
 // NewEmbedding creates *Embedding
@@ -35,13 +37,13 @@ func NewEmbedding(t *model.Type, vocabulary, dimension int) *Embedding {
 	ref := t.RandomTensor(vocabulary, dimension)
 
 	// preslice all the things!
-	m := make([]*model.SyncTensor, vocabulary)
+	m := make([]tensor.Tensor, vocabulary)
+
 	for i := 0; i < vocabulary; i++ {
-		slice, _ := ref.Slice(s(i))
-		m[i] = &model.SyncTensor{Tensor: slice}
+		m[i], _ = ref.Slice(slice(i))
 	}
 
 	return &Embedding{
-		m: m,
+		vector: m,
 	}
 }
