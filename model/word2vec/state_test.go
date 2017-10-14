@@ -48,6 +48,7 @@ var (
 		config.DefaultDimension,
 		config.DefaultWindow,
 		config.DefaultInitLearningRate,
+		config.DefaultThread,
 		typ,
 		config.DefaultToLower,
 		config.DefaultVerbose,

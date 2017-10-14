@@ -23,7 +23,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
 
@@ -114,7 +113,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	go s.incrementDoneWord()
 
 	errChan := make(chan error, 1)
-	sema := make(chan struct{}, runtime.NumCPU())
+	sema := make(chan struct{}, s.Thread)
 	var wg sync.WaitGroup
 
 	var buffered int

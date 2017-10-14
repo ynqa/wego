@@ -14,6 +14,10 @@
 
 package config
 
+import (
+	"runtime"
+)
+
 // Config is enum of the common config.
 type Config int
 
@@ -24,6 +28,7 @@ const (
 	Dimension
 	Window
 	InitLearningRate
+	Thread
 	Dtype
 	Prof
 	ToLower
@@ -43,6 +48,9 @@ const (
 	DefaultVerbose          bool    = false
 )
 
+// DefaultThread is the same as number of CPU.
+var DefaultThread = runtime.NumCPU()
+
 func (c Config) String() string {
 	switch c {
 	case InputFile:
@@ -55,6 +63,8 @@ func (c Config) String() string {
 		return "window"
 	case InitLearningRate:
 		return "initlr"
+	case Thread:
+		return "thread"
 	case Dtype:
 		return "dtype"
 	case Prof:

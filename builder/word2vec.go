@@ -29,6 +29,7 @@ type Word2VecBuilder struct {
 	dimension        int
 	window           int
 	initLearningRate float64
+	thread           int
 	dtype            string
 	toLower          bool
 	verbose          bool
@@ -48,6 +49,7 @@ func NewWord2VecBuilder() *Word2VecBuilder {
 		dimension:        config.DefaultDimension,
 		window:           config.DefaultWindow,
 		initLearningRate: config.DefaultInitLearningRate,
+		thread:           config.DefaultThread,
 		dtype:            config.DefaultDtype,
 		toLower:          config.DefaultToLower,
 		verbose:          config.DefaultVerbose,
@@ -68,6 +70,7 @@ func NewWord2VecBuilderViper() *Word2VecBuilder {
 		dimension:        viper.GetInt(config.Dimension.String()),
 		window:           viper.GetInt(config.Window.String()),
 		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
+		thread:           viper.GetInt(config.Thread.String()),
 		dtype:            viper.GetString(config.Dtype.String()),
 		toLower:          viper.GetBool(config.ToLower.String()),
 		verbose:          viper.GetBool(config.Verbose.String()),
@@ -97,6 +100,12 @@ func (wb *Word2VecBuilder) SetWindow(window int) *Word2VecBuilder {
 // SetInitLearningRate sets the initial learning rate.
 func (wb *Word2VecBuilder) SetInitLearningRate(initlr float64) *Word2VecBuilder {
 	wb.initLearningRate = initlr
+	return wb
+}
+
+// SetThread sets number of goroutine.
+func (wb *Word2VecBuilder) SetThread(thread int) *Word2VecBuilder {
+	wb.thread = thread
 	return wb
 }
 
@@ -168,7 +177,7 @@ func (wb *Word2VecBuilder) Build() (model.Model, error) {
 	}
 
 	cnf := model.NewConfig(wb.dimension, wb.window, wb.initLearningRate,
-		t, wb.toLower, wb.verbose)
+		wb.thread, t, wb.toLower, wb.verbose)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {

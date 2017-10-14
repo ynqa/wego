@@ -16,7 +16,6 @@ package word2vec
 
 import (
 	"io"
-	"runtime"
 
 	"gorgonia.org/tensor"
 )
@@ -30,9 +29,8 @@ type SkipGram struct {
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
-	maxprocs := runtime.NumCPU()
-	pool := make(chan tensor.Tensor, maxprocs)
-	for i := 0; i < maxprocs; i++ {
+	pool := make(chan tensor.Tensor, s.Thread)
+	for i := 0; i < s.Thread; i++ {
 		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
 	}
 	return &SkipGram{

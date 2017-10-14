@@ -16,7 +16,6 @@ package word2vec
 
 import (
 	"io"
-	"runtime"
 
 	"gorgonia.org/tensor"
 )
@@ -30,11 +29,10 @@ type CBOW struct {
 
 // NewCBOW creates *CBOW
 func NewCBOW(s *State) *CBOW {
-	maxprocs := runtime.NumCPU()
-	pools := make(chan tensor.Tensor, maxprocs)
-	sums := make(chan tensor.Tensor, maxprocs)
+	pools := make(chan tensor.Tensor, s.Thread)
+	sums := make(chan tensor.Tensor, s.Thread)
 
-	for i := 0; i < maxprocs; i++ {
+	for i := 0; i < s.Thread; i++ {
 		pools <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
 		sums <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
 	}
