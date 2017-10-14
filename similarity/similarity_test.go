@@ -20,10 +20,10 @@ import (
 	"testing"
 )
 
-var mockVector = `apple 1:1 2:1 3:1 4:1 5:1
-	banana 1:1 2:1 3:1 4:1 5:1
-	chocolate 1:0 2:0 3:0 4:0 5:0
-	dragon 1:-1 2:-1 3:-1 4:-1 5:-1`
+var mockVector = `apple 1 1 1 1 1
+	banana 1 1 1 1 1
+	chocolate 0 0 0 0 0
+	dragon -1 -1 -1 -1 -1`
 
 func TestEstimate(t *testing.T) {
 	estimator := NewEstimator("apple", 3)
