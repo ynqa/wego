@@ -137,8 +137,8 @@ func parse(line string) (string, *tensor.Dense, error) {
 	v := sep[1:]
 	vec := tensor.NewDense(tensor.Float64, tensor.Shape{len(v)})
 	dat := vec.Data().([]float64)
-	for k, pair := range v {
-		val, err := strconv.ParseFloat(strings.Split(pair, ":")[1], 64)
+	for k, elem := range v {
+		val, err := strconv.ParseFloat(elem, 64)
 		if err != nil {
 			return "", nil, err
 		}

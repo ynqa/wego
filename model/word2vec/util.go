@@ -40,12 +40,12 @@ func formatTensor(t tensor.Tensor) string {
 	var buf bytes.Buffer
 	switch data := t.Data().(type) {
 	case []float64:
-		for i, v := range data {
-			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		for _, v := range data {
+			fmt.Fprintf(&buf, "%f ", v)
 		}
 	case []float32:
-		for i, v := range data {
-			fmt.Fprintf(&buf, "%d:%f ", i+1, v)
+		for _, v := range data {
+			fmt.Fprintf(&buf, "%f ", v)
 		}
 	}
 	return buf.String()
