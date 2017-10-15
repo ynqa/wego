@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/chewxy/gorgonia/tensor"
+	"gorgonia.org/tensor"
 )
 
 var next uint64 = 1

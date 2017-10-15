@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
+	"gorgonia.org/tensor"
 )
 
 // Estimator stores the elements for cosine similarity.

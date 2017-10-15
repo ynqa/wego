@@ -21,8 +21,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
+	"gorgonia.org/tensor"
+
 	"github.com/ynqa/word-embedding/config"
 	"github.com/ynqa/word-embedding/model"
 )

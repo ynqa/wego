@@ -15,8 +15,9 @@
 package word2vec
 
 import (
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
+	"gorgonia.org/tensor"
+
 	"github.com/ynqa/word-embedding/model"
 )
 
