@@ -18,7 +18,7 @@ import (
 	"io"
 	"runtime"
 
-	"github.com/chewxy/gorgonia/tensor"
+	"gorgonia.org/tensor"
 )
 
 // CBOW is a piece of Word2Vec model.

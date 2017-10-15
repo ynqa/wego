@@ -17,9 +17,10 @@ package word2vec
 import (
 	"math/rand"
 
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
+	"gorgonia.org/tensor"
+
 	"github.com/ynqa/word-embedding/model"
 )
 

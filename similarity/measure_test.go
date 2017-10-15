@@ -14,7 +14,9 @@
 
 package similarity
 
-import "testing"
+import (
+	"testing"
+)
 
 func NewDummyMeasures() Measures {
 	ms := make(Measures, 0)

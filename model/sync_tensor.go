@@ -17,7 +17,7 @@ package model
 import (
 	"sync"
 
-	"github.com/chewxy/gorgonia/tensor"
+	"gorgonia.org/tensor"
 )
 
 // SyncTensor is a Tensor that has a read-write lock on it.
