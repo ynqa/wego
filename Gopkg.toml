@@ -1,0 +1,35 @@
+[[constraint]]
+  branch = "master"
+  name = "github.com/chewxy/lingo"
+
+[[constraint]]
+  name = "github.com/chewxy/math32"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/olekukonko/tablewriter"
+
+[[constraint]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/spf13/cobra"
+
+[[constraint]]
+  name = "github.com/spf13/pflag"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/spf13/viper"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "gopkg.in/cheggaaa/pb.v1"
+  version = "1.0.18"
+
+[[constraint]]
+  branch = "master"
+  name = "gorgonia.org/tensor"

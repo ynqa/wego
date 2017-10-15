@@ -8,12 +8,12 @@ clean:
 
 .PHONY: fmt
 fmt:
-	go fmt `glide nv`
+	go fmt `go list ./...`
 
 .PHONY: lint
 lint:
-	golint `glide nv`
+	golint `go list ./...`
 
 .PHONY: test
 test:
-	go test -cover -v `glide nv`
+	go test -cover -v `go list ./...`

@@ -1,16 +1,17 @@
 language: go
 go:
-  - 1.7
-  - 1.8
+  - 1.9
   - tip
 
-install:
-  - go get github.com/Masterminds/glide
+before_install:
+  - go get github.com/golang/dep/...
   - go get github.com/golang/lint/golint
   - go get github.com/mattn/goveralls
 
+install:
+  - $GOPATH/bin/dep ensure
+
 script:
-  - glide install
   - make test
   - make lint
 
