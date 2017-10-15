@@ -17,8 +17,8 @@ package model
 import (
 	"math/rand"
 
-	"github.com/chewxy/gorgonia/tensor"
 	"github.com/pkg/errors"
+	"gorgonia.org/tensor"
 )
 
 // Type stores gorgonia dtype and engine.
