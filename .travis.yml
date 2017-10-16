@@ -1,7 +1,11 @@
 language: go
+
 go:
   - 1.9
   - tip
+
+services:
+  - docker
 
 before_install:
   - go get github.com/golang/dep/...
@@ -14,6 +18,7 @@ install:
 script:
   - make test
   - make lint
+  - make docker-build
 
 after_script:
   - goveralls -repotoken ${COVERALLS_TOKEN}
