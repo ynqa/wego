@@ -4,11 +4,11 @@
 [![GoDoc](https://godoc.org/github.com/ynqa/word-embedding?status.svg)](https://godoc.org/github.com/ynqa/word-embedding)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/word-embedding)](https://goreportcard.com/report/github.com/ynqa/word-embedding)
 
-This is an implementation of word embedding (also referred to as word representation) models in Golang.
+This is an implementation of word embedding (a.k.a word representation) models in Golang.
 
 ## Details
 
-Word embedding makes words' meaning, structure, and concept mapping into vector space (and low dimension). For representative instance:
+Word embedding makes word's meaning, structure, and concept mapping into vector space with low dimension. For representative instance:
 
 ```
 Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
@@ -35,14 +35,6 @@ $ go get -u github.com/ynqa/word-embedding
 $ bin/word-embedding -h
 ```
 
-## Demo
-
-Downloading [text8](http://mattmahoney.net/dc/textdata) corpus, and training by Skip-Gram with negative sampling.
-
-```
-$ sh demo.sh
-```
-
 ## Usage
 
 ```
@@ -53,17 +45,35 @@ Usage:
   word-embedding [command]
 
 Available Commands:
+  help        Help about any command
   sim         Estimate the similarity between words
   word2vec    Embed words using word2vec
+
+Flags:
+  -h, --help   help for word-embedding
+```
+
+For more information about each sub-command, see below:
+- [word2vec](./model/README.md)
+- [sim](./similarity/README.md)
+
+Also it's possible to use from the codes, see [it](./example/example.go):
+
+## Demo
+
+Downloading [text8](http://mattmahoney.net/dc/textdata) corpus, and training by Skip-Gram with negative sampling.
+
+```
+$ sh demo.sh
 ```
 
 ## File I/O
 - Input
   - Given a text is composed of one-sentence per one-line, ideally.
 - Output
-  - Output a file is like [libsvm](https://github.com/cjlin1/libsvm) format:
+  - Output a file is subject to the following format:
   ```
-  <word> <index1>:<value1> <index2>:<value2> ...
+  <word> <value1> <value2> ...
   ```
 
 ## References
