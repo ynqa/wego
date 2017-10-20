@@ -24,6 +24,7 @@ Flags:
       --batchSize int       Set the batch size to update learning rate (default 10000)
   -d, --dimension int       Set the dimension of word vector (default 10)
       --dtype string        Set the dtype. One of float64|float32 (default "float64")
+  -h, --help                help for word2vec
       --initlr float        Set the initial learning rate (default 0.025)
   -i, --inputFile string    Set the input file path to load corpus (default "example/input.txt")
       --lower               Whether the words on corpus convert to lowercase or not
@@ -34,6 +35,7 @@ Flags:
       --prof                Profiling mode to check the performances
       --sample int          Set the number of the samples as negative (using only negative sampling) (default 5)
       --theta float         Set the lower limit of learning rate (lr >= initlr * theta) (default 0.0001)
+      --thread int          Set number of parallel (default 8)
       --threshold float     Set the threshold for subsampling (default 0.001)
       --verbose             Verbose mode
   -w, --window int          Set the context window size (default 5)
