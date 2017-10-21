@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package model
 
-var next uint64 = 1
+import (
+	"strings"
+)
 
-// Linear congruential generator like rand.Intn(window)
-func nextRandom(value int) int {
-	next = next*uint64(25214903917) + 11
-	return int(next % uint64(value))
+// Lower convert strings in slice to lower case.
+func Lower(a []string) {
+	for i := range a {
+		a[i] = strings.ToLower(a[i])
+	}
 }

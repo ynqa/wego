@@ -135,7 +135,7 @@ func (w *Word2Vec) Train(f io.ReadCloser) error {
 		}
 
 		if w.ToLower {
-			lower(line)
+			model.Lower(line)
 		}
 
 		wg.Add(1)
@@ -149,7 +149,7 @@ func (w *Word2Vec) Train(f io.ReadCloser) error {
 	// Leftover processing
 	if buffered > 0 {
 		if w.ToLower {
-			lower(line)
+			model.Lower(line)
 		}
 
 		wordIDs := w.toIDs(line)
