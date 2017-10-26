@@ -43,6 +43,7 @@ var SimilarityCmd = &cobra.Command{
 }
 
 func init() {
+	SimilarityCmd.Flags().BoolP("help", "h", false, "Help for "+SimilarityCmd.Name())
 	SimilarityCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"Set the input file path to load word vector list")
 	SimilarityCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,

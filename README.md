@@ -55,9 +55,8 @@ Flags:
 
 For more information about each sub-command, see below:
 - [word2vec](./model/README.md)
+  - In code-based, refer to the [example](./example/example.go).
 - [sim](./similarity/README.md)
-
-Also it's possible to use from the codes, see [it](./example/example.go):
 
 ## Demo
 
