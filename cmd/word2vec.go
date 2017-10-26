@@ -52,6 +52,7 @@ var Word2VecCmd = &cobra.Command{
 
 func init() {
 	Word2VecCmd.Flags().AddFlagSet(ConfigFlagSet())
+	Word2VecCmd.Flags().BoolP("help", "h", false, "Help for "+Word2VecCmd.Name())
 	Word2VecCmd.Flags().String(config.Model.String(), config.DefaultModel,
 		"Set the model of Word2Vec. One of: cbow|skip-gram")
 	Word2VecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer,

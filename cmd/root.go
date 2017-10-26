@@ -73,6 +73,7 @@ func configBind(cmd *cobra.Command) {
 }
 
 func init() {
+	RootCmd.Flags().BoolP("help", "h", false, "Help for "+RootCmd.Name())
 	RootCmd.AddCommand(Word2VecCmd)
 	RootCmd.AddCommand(SimilarityCmd)
 }
