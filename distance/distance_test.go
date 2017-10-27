@@ -12,35 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package distance
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
-func TestInvalidSimilarityConfigString(t *testing.T) {
-	var Fake SimilarityConfig = 1024
+var mockVector = `apple 1 1 1 1 1
+	banana 1 1 1 1 1
+	chocolate 0 0 0 0 0
+	dragon -1 -1 -1 -1 -1`
 
-	if Fake.String() != "unknown" {
-		t.Errorf("Fake should be not registered in SimilarityConfig: %v", Fake.String())
-	}
-}
+func TestEstimate(t *testing.T) {
+	estimator := NewEstimator("apple", 3)
 
-func TestSimilarityConfigString(t *testing.T) {
-	testCases := []struct {
-		input  SimilarityConfig
-		expect string
-	}{
-		{
-			input:  Rank,
-			expect: "rank",
-		},
+	f := ioutil.NopCloser(bytes.NewReader([]byte(mockVector)))
+	err := estimator.Estimate(f)
+
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
-	for _, testCase := range testCases {
-		actual := testCase.input.String()
-		if actual != testCase.expect {
-			t.Errorf("SimilarityConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expect, actual)
-		}
+	if len(estimator.dense) != 4 {
+		t.Errorf("Expected estimator.tensor len=4: %d", len(estimator.dense))
 	}
 }

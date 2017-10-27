@@ -24,7 +24,7 @@ Flags:
       --batchSize int       Set the batch size to update learning rate (default 10000)
   -d, --dimension int       Set the dimension of word vector (default 10)
       --dtype string        Set the dtype. One of float64|float32 (default "float64")
-  -h, --help                help for word2vec
+  -h, --help                Help for word2vec
       --initlr float        Set the initial learning rate (default 0.025)
   -i, --inputFile string    Set the input file path to load corpus (default "example/input.txt")
       --lower               Whether the words on corpus convert to lowercase or not

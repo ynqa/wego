@@ -45,18 +45,18 @@ Usage:
   word-embedding [command]
 
 Available Commands:
+  distance    Estimate the distance between words
   help        Help about any command
-  sim         Estimate the similarity between words
   word2vec    Embed words using word2vec
 
 Flags:
-  -h, --help   help for word-embedding
+  -h, --help   Help for word-embedding
 ```
 
 For more information about each sub-command, see below:
+- [distance](./distance/README.md)
 - [word2vec](./model/README.md)
   - In code-based, refer to the [example](./example/example.go).
-- [sim](./similarity/README.md)
 
 ## Demo
 

@@ -22,44 +22,44 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/word-embedding/config"
-	"github.com/ynqa/word-embedding/similarity"
+	"github.com/ynqa/word-embedding/distance"
 )
 
-// SimilarityCmd is the command for calculation of similarity.
-var SimilarityCmd = &cobra.Command{
-	Use:     "sim -i FILENAME WORD",
-	Short:   "Estimate the similarity between words",
-	Long:    "Estimate the similarity between words",
-	Example: "  word-embedding sim -i example/word_vectors.txt microsoft",
+// DistanceCmd is the command for calculation of similarity.
+var DistanceCmd = &cobra.Command{
+	Use:     "distance",
+	Short:   "Estimate the distance between words",
+	Long:    "Estimate the distance between words",
+	Example: "  word-embedding distance -i example/word_vectors.txt microsoft",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		similarityBind(cmd)
+		distanceBind(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
-			return runSimilarity(args[0])
+			return runDistance(args[0])
 		}
 		return errors.New("Input a single word")
 	},
 }
 
 func init() {
-	SimilarityCmd.Flags().BoolP("help", "h", false, "Help for "+SimilarityCmd.Name())
-	SimilarityCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
+	DistanceCmd.Flags().BoolP("help", "h", false, "Help for "+DistanceCmd.Name())
+	DistanceCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"Set the input file path to load word vector list")
-	SimilarityCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
+	DistanceCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"How many the most similar words will be displayed")
 }
 
-func similarityBind(cmd *cobra.Command) {
+func distanceBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Rank.String(), cmd.Flags().Lookup(config.Rank.String()))
 	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
 }
 
-func runSimilarity(target string) error {
+func runDistance(target string) error {
 	inputFile := viper.GetString(config.InputFile.String())
 	rank := viper.GetInt(config.Rank.String())
 
-	est := similarity.NewEstimator(target, rank)
+	est := distance.NewEstimator(target, rank)
 
 	f, err := os.Open(inputFile)
 	if err != nil {

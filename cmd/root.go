@@ -29,7 +29,7 @@ var RootCmd = &cobra.Command{
 	Short: "The tools embedding words into vector space",
 	Long:  "The tools embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Set sub-command from: sim|word2vec")
+		return errors.New("Set sub-command from: distance|word2vec")
 	},
 }
 
@@ -75,5 +75,5 @@ func configBind(cmd *cobra.Command) {
 func init() {
 	RootCmd.Flags().BoolP("help", "h", false, "Help for "+RootCmd.Name())
 	RootCmd.AddCommand(Word2VecCmd)
-	RootCmd.AddCommand(SimilarityCmd)
+	RootCmd.AddCommand(DistanceCmd)
 }
