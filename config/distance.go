@@ -12,23 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package config
 
-import (
-	"testing"
+// DistanceConfig is enum of the common config.
+type DistanceConfig int
 
-	"github.com/spf13/viper"
+// The list of DistanceConfig.
+const (
+	Rank DistanceConfig = iota
 )
 
-const similarityFlagSize = 2
+// The defaults of DistanceConfig.
+const (
+	DefaultRank int = 10
+)
 
-func TestSimilarityBind(t *testing.T) {
-	defer viper.Reset()
-
-	similarityBind(SimilarityCmd)
-
-	if len(viper.AllKeys()) != similarityFlagSize {
-		t.Errorf("Expected similarityBind maps %v keys: %v",
-			similarityFlagSize, viper.AllKeys())
+func (d DistanceConfig) String() string {
+	switch d {
+	case Rank:
+		return "rank"
+	default:
+		return "unknown"
 	}
 }

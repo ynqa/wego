@@ -12,30 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package similarity
+package distance
 
-import (
-	"bytes"
-	"io/ioutil"
-	"testing"
-)
-
-var mockVector = `apple 1 1 1 1 1
-	banana 1 1 1 1 1
-	chocolate 0 0 0 0 0
-	dragon -1 -1 -1 -1 -1`
-
-func TestEstimate(t *testing.T) {
-	estimator := NewEstimator("apple", 3)
-
-	f := ioutil.NopCloser(bytes.NewReader([]byte(mockVector)))
-	err := estimator.Estimate(f)
-
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if len(estimator.dense) != 4 {
-		t.Errorf("Expected estimator.tensor len=4: %d", len(estimator.dense))
-	}
+// Measure stores the word with cosine similarity value on the target.
+type Measure struct {
+	word       string
+	similarity float64
 }
+
+// Measures is the list of Sim.
+type Measures []Measure
+
+func (m Measures) Len() int           { return len(m) }
+func (m Measures) Less(i, j int) bool { return m[i].similarity < m[j].similarity }
+func (m Measures) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }

@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package similarity
+package cmd
 
-// Measure stores the word with cosine similarity value on the target.
-type Measure struct {
-	word       string
-	similarity float64
+import (
+	"testing"
+
+	"github.com/spf13/viper"
+)
+
+const distanceFlagSize = 2
+
+func TestSimilarityBind(t *testing.T) {
+	defer viper.Reset()
+
+	distanceBind(DistanceCmd)
+
+	if len(viper.AllKeys()) != distanceFlagSize {
+		t.Errorf("Expected similarityBind maps %v keys: %v",
+			distanceFlagSize, viper.AllKeys())
+	}
 }
-
-// Measures is the list of Sim.
-type Measures []Measure
-
-func (m Measures) Len() int           { return len(m) }
-func (m Measures) Less(i, j int) bool { return m[i].similarity < m[j].similarity }
-func (m Measures) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
