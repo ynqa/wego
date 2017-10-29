@@ -16,26 +16,24 @@ package word2vec
 
 import (
 	"io"
-
-	"gorgonia.org/tensor"
 )
 
 // SkipGram is a piece of Word2Vec model.
 type SkipGram struct {
 	*State
 
-	pools chan tensor.Tensor
+	pools chan []float64
 }
 
 // NewSkipGram creates *SkipGram
 func NewSkipGram(s *State) *SkipGram {
-	pool := make(chan tensor.Tensor, s.Thread)
+	pools := make(chan []float64, s.Thread)
 	for i := 0; i < s.Thread; i++ {
-		pool <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
+		pools <- make([]float64, s.Dimension)
 	}
 	return &SkipGram{
 		State: s,
-		pools: pool,
+		pools: pools,
 	}
 }
 
@@ -44,7 +42,7 @@ func (s *SkipGram) Train(f io.ReadCloser) error {
 	return s.Trainer(f, s.trainOne)
 }
 
-func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
+func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) {
 	// grab poolvector from pool
 	pool := <-s.pools
 	targetID := wordIDs[wordIndex]
@@ -59,12 +57,15 @@ func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, lr float64) error {
 		}
 		contextID := wordIDs[c]
 
-		pool.Zero()
-		if err := s.opt.Update(s.Type, targetID, s.emb.vector[contextID], pool, lr); err != nil {
-			return err
+		for i := 0; i < s.Dimension; i++ {
+			pool[i] = 0.0
 		}
-		tensor.Add(s.emb.vector[contextID], pool, tensor.UseUnsafe())
+
+		s.opt.Update(targetID, s.vector[contextID*s.Dimension:contextID*s.Dimension+s.Dimension], pool, lr)
+
+		for i := 0; i < s.Dimension; i++ {
+			s.vector[contextID*s.Dimension+i] += pool[i]
+		}
 	}
 	s.pools <- pool
-	return nil
 }

@@ -37,12 +37,13 @@ import (
 type State struct {
 	*model.Config
 	*corpus.Corpus
-	emb *Embedding
 
 	opt                Optimizer
 	subsampleThreshold float64
 	batchSize          int
 	theta              float64
+
+	vector []float64
 
 	ignoredWords        int
 	trainedWords        int
@@ -72,8 +73,11 @@ func NewState(config *model.Config, opt Optimizer,
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
-		s.emb = NewEmbedding(s.Type, s.Corpus.Size(), s.Dimension)
-		s.opt.Init(s.Corpus, s.Type, s.Dimension)
+		s.vector = make([]float64, s.Corpus.Size()*s.Dimension)
+		for i := 0; i < s.Corpus.Size()*s.Dimension; i++ {
+			s.vector[i] = (rand.Float64() - 0.5) / float64(s.Dimension)
+		}
+		s.opt.Init(s.Corpus, s.Dimension)
 	}()
 
 	scanner := bufio.NewScanner(f)
@@ -101,7 +105,7 @@ func (s *State) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 }
 
 // Trainer trains a corpus. It assumes that Preprocess() has already been called
-func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
+func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex int, lr float64)) error {
 	if s.Verbose {
 		s.startTraining()
 		defer s.endTraining()
@@ -111,7 +115,6 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 
 	go s.incrementDoneWord()
 
-	errChan := make(chan error, 1)
 	sema := make(chan struct{}, s.Thread)
 	var wg sync.WaitGroup
 
@@ -133,15 +136,11 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 
 		wg.Add(1)
 		wordIDs := s.toIDs(line)
-		go s.trainOneBatch(wordIDs, &wg, sema, errChan, trainOne)
+		go s.trainOneBatch(wordIDs, &wg, sema, trainOne)
 		buffered = 0
 		line = line[:0]
 	}
 	wg.Wait()
-	close(errChan)
-	if err := <-errChan; err != nil {
-		return errors.Wrap(err, "Unable to complete training.")
-	}
 
 	// Leftover processing
 	if buffered > 0 {
@@ -150,9 +149,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 		}
 
 		wordIDs := s.toIDs(line)
-		if err := s.trainRemainderBatch(wordIDs, trainOne); err != nil {
-			return err
-		}
+		s.trainRemainderBatch(wordIDs, trainOne)
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -162,7 +159,7 @@ func (s *State) Trainer(f io.ReadCloser, trainOne func(wordIDs []int, wordIndex 
 	return nil
 }
 
-func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{}, errCh chan error, trainOne func(wordIDs []int, wordIndex int, lr float64) error) {
+func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{}, trainOne func(wordIDs []int, wordIndex int, lr float64)) {
 	defer wg.Done()
 	sema <- struct{}{} // get lock
 	for i, w := range wordIDs {
@@ -179,23 +176,14 @@ func (s *State) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struc
 		}
 
 		lr := s.currentLearningRate
-
-		if err := trainOne(wordIDs, i, lr); err != nil {
-			select {
-			case errCh <- err:
-			default:
-				// dies silent death
-			}
-			<-sema // release
-			return
-		}
+		trainOne(wordIDs, i, lr)
 		s.cwsCh <- struct{}{} // increment wordsize
 
 	}
 	<-sema // release
 }
 
-func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int, lr float64) error) error {
+func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, wordIndex int, lr float64)) {
 	for i, w := range wordIDs {
 		if s.Verbose {
 			s.progress.Increment()
@@ -210,12 +198,9 @@ func (s *State) trainRemainderBatch(wordIDs []int, trainOne func(wordIDs []int, 
 
 		lr := s.currentLearningRate
 
-		if err := trainOne(wordIDs, i, lr); err != nil {
-			return err
-		}
+		trainOne(wordIDs, i, lr)
 		s.cwsCh <- struct{}{} // increment wordsize
 	}
-	return nil
 }
 
 func (s *State) incrementDoneWord() {
@@ -252,15 +237,17 @@ func (s *State) Save(outputPath string) error {
 		file.Close()
 	}()
 
-	vs := bytes.NewBuffer(make([]byte, 0))
-
+	var buf bytes.Buffer
 	for i := 0; i < s.Size(); i++ {
 		word, _ := s.Word(i)
-		vs.WriteString(fmt.Sprintf("%v ", word))
-		vs.WriteString(fmt.Sprintf("%v\n", formatTensor(s.emb.vector[i])))
+		fmt.Fprintf(&buf, "%v ", word)
+		for j := 0; j < s.Dimension; j++ {
+			fmt.Fprintf(&buf, "%f ", s.vector[i*s.Dimension+j])
+		}
+		fmt.Fprintln(&buf)
 	}
 
-	w.WriteString(fmt.Sprintf("%v", vs.String()))
+	w.WriteString(fmt.Sprintf("%v", buf.String()))
 
 	return nil
 }

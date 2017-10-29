@@ -45,15 +45,6 @@ func TestSetInitLearningRate(t *testing.T) {
 	}
 }
 
-func TestSetDtype(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.SetDtype("float32")
-
-	if b.dtype != "float32" {
-		t.Errorf("Expected builder.dtype=float32: %v", b.dtype)
-	}
-}
-
 func TestSetToLower(t *testing.T) {
 	b := &Word2VecBuilder{}
 	b.SetToLower()
@@ -132,15 +123,6 @@ func TestSetSubSampleThreshold(t *testing.T) {
 
 	if b.subsampleThreshold != 0.001 {
 		t.Errorf("Expected builder.subsampleThreshold=0.001: %v", b.subsampleThreshold)
-	}
-}
-
-func TestInvalidTypeBuild(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.SetDtype("fake_dtype")
-
-	if _, err := b.Build(); err == nil {
-		t.Errorf("Expected to fail building with invalid dtype except for skip-gram|cbow: %v", b.dtype)
 	}
 }
 

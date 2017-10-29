@@ -16,82 +16,60 @@ package word2vec
 
 import (
 	"github.com/chewxy/lingo/corpus"
-	"github.com/pkg/errors"
-	"gorgonia.org/tensor"
-
-	"github.com/ynqa/word-embedding/model"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
 type HierarchicalSoftmax struct {
 	nodeMap  map[int]*Node
-	MaxDepth int
+	maxDepth int
+
+	vocabulary int
+	dimension  int
 }
 
 // NewHierarchicalSoftmax creates *HierarchicalSoftmax.
 // The huffman tree is NOT built yet.
 func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	hs := new(HierarchicalSoftmax)
-	hs.MaxDepth = maxDepth
+	hs.maxDepth = maxDepth
 	return hs
 }
 
 // Init initializes the huffman tree.
-func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, t *model.Type, dimension int) (err error) {
-	hs.nodeMap, err = NewHuffmanTree(c, t, dimension)
+func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error) {
+	hs.vocabulary = c.Size()
+	hs.dimension = dimension
+
+	hs.nodeMap, err = NewHuffmanTree(c, dimension)
 	return
 }
 
 // Update updates the word vector using the huffman tree.
-func (hs *HierarchicalSoftmax) Update(t *model.Type, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 	path := hs.nodeMap[targetID].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
 
 		childCode := path[p+1].Code
 
-		if err := hs.gradUpd(t, childCode, learningRate, relayPoint.Vector, poolVector, contextVector); err != nil {
-			return err
-		}
+		hs.gradUpd(childCode, learningRate, relayPoint.Vector, poolVector, contextVector)
 
-		if hs.MaxDepth > 0 && p >= hs.MaxDepth {
+		if hs.maxDepth > 0 && p >= hs.maxDepth {
 			break
 		}
 	}
-	return nil
 }
 
-func (hs *HierarchicalSoftmax) gradUpd(t *model.Type, childCode int, lr float64, relayPointVec, poolVec, ctxVec tensor.Tensor) (err error) {
-	switch relayPointVec.Dtype() {
-	case tensor.Float64:
-		var inner float64
-		if ip, ok := t.E.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
-				return errors.Wrap(err, "Inner failed for HS")
-			}
-		} else {
-			return errors.New("Engine does not perform Inner for Float64")
-		}
+func (hs *HierarchicalSoftmax) gradUpd(childCode int, lr float64, relayPointVec, poolVec, ctxVec []float64) {
+	var inner float64
 
-		sig := model.SigmoidF64(inner)
-		g := (1.0 - float64(childCode) - sig) * lr
-		tensor.FMA(relayPointVec, &g, poolVec)
-		tensor.FMA(ctxVec, &g, relayPointVec)
-	case tensor.Float32:
-		var inner float32
-		if ip, ok := t.E.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(ctxVec, relayPointVec); err != nil {
-				return errors.Wrap(err, "Inner failed for HS")
-			}
-		} else {
-			return errors.New("Engine does not perform Inner for Float32")
-		}
-
-		sig := model.SigmoidF32(inner)
-		g := (float32(1) - float32(childCode) - sig) * float32(lr)
-		tensor.FMA(relayPointVec, &g, poolVec)
-		tensor.FMA(ctxVec, &g, relayPointVec)
-
+	for i := 0; i < hs.dimension; i++ {
+		inner += ctxVec[i] * relayPointVec[i]
 	}
-	return nil
+	g := (1.0 - float64(childCode) - sigmoid(inner)) * lr
+
+	for i := 0; i < hs.dimension; i++ {
+		poolVec[i] += g * relayPointVec[i]
+		relayPointVec[i] += g * ctxVec[i]
+	}
 }

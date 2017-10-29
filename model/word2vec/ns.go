@@ -15,97 +15,84 @@
 package word2vec
 
 import (
-	"math/rand"
-
 	"github.com/chewxy/lingo/corpus"
-	"github.com/pkg/errors"
-	"gorgonia.org/tensor"
-
-	"github.com/ynqa/word-embedding/model"
+	"math/rand"
 )
 
 // NegativeSampling is a piece of Word2Vec optimizer.
 type NegativeSampling struct {
-	negativeTensor     *Embedding
-	NegativeSampleSize int
+	contextVector []float64
+	sampleSize    int
+
+	vocabulary int
+	dimension  int
 }
 
 // NewNegativeSampling creates *NegativeSampling.
 // The negative vector is NOT built yet.
-func NewNegativeSampling(negativeSampleSize int) *NegativeSampling {
+func NewNegativeSampling(sampleSize int) *NegativeSampling {
 	ns := new(NegativeSampling)
-	ns.NegativeSampleSize = negativeSampleSize
+	ns.sampleSize = sampleSize
 	return ns
 }
 
 // Init initializes the negative vector.
-func (ns *NegativeSampling) Init(c *corpus.Corpus, t *model.Type, dimension int) (err error) {
-	ns.negativeTensor = NewEmbedding(t, c.Size(), dimension)
+func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
+	ns.vocabulary = c.Size()
+	ns.dimension = dimension
+
+	ns.contextVector = make([]float64, ns.vocabulary*ns.dimension)
+	for i := 0; i < ns.vocabulary*ns.dimension; i++ {
+		ns.contextVector[i] = (rand.Float64() - 0.5) / float64(ns.dimension)
+	}
 	return
 }
 
 // Update updates the word vector using the negative vector.
-func (ns *NegativeSampling) Update(t *model.Type, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
+func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 
 	var label int
 	var negativeID int
-	var negativeVector tensor.Tensor
+	var negativeVector []float64
 
-	for n := -1; n < ns.NegativeSampleSize; n++ {
+	for n := -1; n < ns.sampleSize; n++ {
 		if n == -1 {
 			label = 1
-			negativeVector = ns.negativeTensor.vector[targetID]
+			negativeVector = ns.contextVector[targetID*ns.dimension : targetID*ns.dimension+ns.dimension]
 		} else {
 			label = 0
-			negativeID := rand.Intn(len(ns.negativeTensor.vector))
-			negativeVector = ns.negativeTensor.vector[negativeID]
+			negativeID := nextRandom(ns.vocabulary)
+			negativeVector = ns.contextVector[negativeID*ns.dimension : negativeID*ns.dimension+ns.dimension]
 			if targetID == negativeID {
 				continue
 			}
 		}
 
-		if err := ns.gradUpd(t, label, learningRate, negativeVector, contextVector, poolVector); err != nil {
-			return errors.Wrap(err, "gradUpdate failed for NS")
+		ns.gradUpd(label, learningRate, negativeVector, contextVector, poolVector)
+
+		var index int
+		if n == -1 {
+			index = targetID
+		} else {
+			index = negativeID
 		}
 
-		if n == -1 {
-			ns.negativeTensor.vector[targetID] = negativeVector
-		} else {
-			ns.negativeTensor.vector[negativeID] = negativeVector
+		for i := 0; i < ns.dimension; i++ {
+			ns.contextVector[index*ns.dimension+i] = negativeVector[i]
 		}
 	}
-	return nil
 }
 
-func (ns *NegativeSampling) gradUpd(t *model.Type, label int, lr float64, negVec, ctxVec, poolVec tensor.Tensor) (err error) {
-	switch negVec.Dtype() {
-	case tensor.Float64:
-		var inner float64
-		if ip, ok := t.E.(tensor.InnerProderF64); ok {
-			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
-				return errors.Wrap(err, "Inner failed")
-			}
-		} else {
-			return errors.New("Engine does not perform Inner for Float64")
-		}
-		sig := model.SigmoidF64(inner)
-		g := (float64(label) - sig) * lr
-		tensor.FMA(negVec, &g, poolVec)
-		tensor.FMA(ctxVec, &g, negVec)
-	case tensor.Float32:
-		var inner float32
-		if ip, ok := t.E.(tensor.InnerProderF32); ok {
-			if inner, err = ip.Inner(negVec, ctxVec); err != nil {
-				return errors.Wrap(err, "Inner failed")
-			}
-		} else {
-			return errors.New("Engine does not perform Inner for Float64")
-		}
-		sig := model.SigmoidF32(inner)
-		g := (float32(label) - sig) * float32(lr)
-		tensor.FMA(negVec, &g, poolVec)
-		tensor.FMA(ctxVec, &g, negVec)
+func (ns *NegativeSampling) gradUpd(label int, lr float64, negVec, ctxVec, poolVec []float64) {
+	var inner float64
+	for i := 0; i < ns.dimension; i++ {
+		inner += negVec[i] * ctxVec[i]
 	}
 
-	return nil
+	g := (float64(label) - sigmoid(inner)) * lr
+
+	for i := 0; i < ns.dimension; i++ {
+		poolVec[i] += g * negVec[i]
+		negVec[i] += g * ctxVec[i]
+	}
 }

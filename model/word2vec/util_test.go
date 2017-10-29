@@ -15,6 +15,7 @@
 package word2vec
 
 import (
+	"math"
 	"testing"
 )
 
@@ -23,5 +24,28 @@ func TestNextRandom(t *testing.T) {
 	r := nextRandom(5)
 	if !(0 <= r && r < 5) {
 		t.Errorf("Extected range between 0 < nextRandom(x) < 5: %v", r)
+	}
+}
+
+func TestSigmoid(t *testing.T) {
+	f := sigmoid(0)
+	if f != 0.5 {
+		t.Errorf("Expected SigmoidF64(0.0)=0.5: %v", f)
+	}
+}
+
+func TestPositiveInfSigmoid(t *testing.T) {
+	f := sigmoid(math.Inf(1))
+
+	if f != 1.0 {
+		t.Errorf("Expected SigmoidF64(+Inf)=1.0: %v", f)
+	}
+}
+
+func TestNegativeInfSigmoid(t *testing.T) {
+	f := sigmoid(math.Inf(-1))
+
+	if f != 0.0 {
+		t.Errorf("Expected SigmoidF64(-Inf)=0.0: %v", f)
 	}
 }

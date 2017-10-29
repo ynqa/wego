@@ -11,7 +11,7 @@
   branch = "master"
   name = "github.com/chewxy/cu"
   packages = ["."]
-  revision = "e3e81a3cc0469c1efdd9650c62528d8cead829dd"
+  revision = "722bde9b6d36068b0f0264019852ab357ed97d31"
 
 [[projects]]
   name = "github.com/chewxy/gorgonia"
@@ -95,7 +95,7 @@
   branch = "master"
   name = "github.com/hashicorp/hcl"
   packages = [".","hcl/ast","hcl/parser","hcl/scanner","hcl/strconv","hcl/token","json/parser","json/scanner","json/token"]
-  revision = "42e33e2d55a0ff1d6263f738896ea8c13571a8d0"
+  revision = "23c074d0eceb2b8a5bfdbb271ab780cde70f05a8"
 
 [[projects]]
   name = "github.com/inconshreveable/mousetrap"
@@ -125,7 +125,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "d0303fe809921458f417bcf828397a65db30a7e4"
+  revision = "06020f85339e21b2478f756a78e295255ffa4d6a"
 
 [[projects]]
   branch = "master"
@@ -149,7 +149,7 @@
   branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
-  revision = "e67d870304c4bca21331b02f414f970df13aa694"
+  revision = "5660eeed305fe5f69c8fc6cf899132a459a97064"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -158,10 +158,10 @@
   version = "v1.1.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "7b2c5ac9fc04fc5efafb60700713d4fa609b777b"
+  version = "v0.0.1"
 
 [[projects]]
   branch = "master"
@@ -191,25 +191,25 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "686000749eaec0b8855b8eef5336cf63899fe51d"
+  revision = "661970f62f5897bc0cd5fdca7e087ba8a98a8fa1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
-  revision = "c01e4764d870b77f8abe5096ee19ad20d80e8075"
+  revision = "6eab0e8f74e86c598ec3b6fad4888e0c11482d48"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/tools"
   packages = ["container/intsets"]
-  revision = "9bd2f442688b66c5289262d70f537c2ecf81d7de"
+  revision = "9b61fcc4c548d69663d915801fc4b42a43b6cd9c"
 
 [[projects]]
   branch = "master"
   name = "gonum.org/v1/gonum"
   packages = ["blas","blas/blas64","blas/gonum","floats","internal/asm/c128","internal/asm/f32","internal/asm/f64","internal/math32","lapack","lapack/gonum","lapack/lapack64","mat"]
-  revision = "aff0e10c44138b1247d90efb9117f68ba7c76f0c"
+  revision = "637e7b76b9ea1ace629203817cddce3630c2ec93"
 
 [[projects]]
   name = "gopkg.in/cheggaaa/pb.v1"
@@ -232,6 +232,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3be731301381e6af1e80eb94e1c675f304fc65e92e3775e476c918ca3a06328f"
+  inputs-digest = "e98e2354a35db0da787d1efa7b3ae61b7595631a97ebb3b8f9c21cb6b4c79c71"
   solver-name = "gps-cdcl"
   solver-version = 1
