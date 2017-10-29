@@ -15,19 +15,16 @@
 package word2vec
 
 import (
-	"bytes"
-	"fmt"
+	"math"
 	"strings"
-
-	"gorgonia.org/tensor"
 )
 
 var next uint64 = 1
 
 // Linear congruential generator like rand.Intn(window)
-func nextRandom(window int) int {
+func nextRandom(value int) int {
 	next = next*uint64(25214903917) + 11
-	return int(next % uint64(window))
+	return int(next % uint64(value))
 }
 
 func lower(a []string) {
@@ -36,17 +33,12 @@ func lower(a []string) {
 	}
 }
 
-func formatTensor(t tensor.Tensor) string {
-	var buf bytes.Buffer
-	switch data := t.Data().(type) {
-	case []float64:
-		for _, v := range data {
-			fmt.Fprintf(&buf, "%f ", v)
-		}
-	case []float32:
-		for _, v := range data {
-			fmt.Fprintf(&buf, "%f ", v)
-		}
+// sigmoid returns f(x) = \frac{1}{1 + e^{-x}}.
+// See: http://en.wikipedia.org/wiki/Sigmoid_function.
+func sigmoid(f float64) float64 {
+	exp := math.Exp(f)
+	if math.IsInf(exp, 1) {
+		return 1.0
 	}
-	return buf.String()
+	return exp / (1.0 + exp)
 }

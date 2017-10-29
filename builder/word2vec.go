@@ -50,7 +50,6 @@ func NewWord2VecBuilder() *Word2VecBuilder {
 		window:           config.DefaultWindow,
 		initLearningRate: config.DefaultInitLearningRate,
 		thread:           config.DefaultThread,
-		dtype:            config.DefaultDtype,
 		toLower:          config.DefaultToLower,
 		verbose:          config.DefaultVerbose,
 
@@ -71,7 +70,6 @@ func NewWord2VecBuilderViper() *Word2VecBuilder {
 		window:           viper.GetInt(config.Window.String()),
 		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
 		thread:           viper.GetInt(config.Thread.String()),
-		dtype:            viper.GetString(config.Dtype.String()),
 		toLower:          viper.GetBool(config.ToLower.String()),
 		verbose:          viper.GetBool(config.Verbose.String()),
 
@@ -106,12 +104,6 @@ func (wb *Word2VecBuilder) SetInitLearningRate(initlr float64) *Word2VecBuilder 
 // SetThread sets number of goroutine.
 func (wb *Word2VecBuilder) SetThread(thread int) *Word2VecBuilder {
 	wb.thread = thread
-	return wb
-}
-
-// SetDtype sets the dtype for gorgonia tensor. One of: float32|float64
-func (wb *Word2VecBuilder) SetDtype(dtype string) *Word2VecBuilder {
-	wb.dtype = dtype
 	return wb
 }
 
@@ -171,13 +163,8 @@ func (wb *Word2VecBuilder) SetSubSampleThreshold(threshold float64) *Word2VecBui
 
 // Build creates model.Model interface.
 func (wb *Word2VecBuilder) Build() (model.Model, error) {
-	t, err := model.NewType(wb.dtype)
-	if err != nil {
-		return nil, err
-	}
-
 	cnf := model.NewConfig(wb.dimension, wb.window, wb.initLearningRate,
-		wb.thread, t, wb.toLower, wb.verbose)
+		wb.thread, wb.toLower, wb.verbose)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {

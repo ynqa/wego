@@ -48,8 +48,6 @@ func ConfigFlagSet() *pflag.FlagSet {
 		"Set number of parallel")
 	fs.Float64(config.InitLearningRate.String(), config.DefaultInitLearningRate,
 		"Set the initial learning rate")
-	fs.String(config.Dtype.String(), config.DefaultDtype,
-		"Set the dtype. One of float64|float32")
 	fs.Bool(config.Prof.String(), config.DefaultProf,
 		"Profiling mode to check the performances")
 	fs.Bool(config.ToLower.String(), config.DefaultToLower,
@@ -66,7 +64,6 @@ func configBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
 	viper.BindPFlag(config.InitLearningRate.String(), cmd.Flags().Lookup(config.InitLearningRate.String()))
 	viper.BindPFlag(config.Thread.String(), cmd.Flags().Lookup(config.Thread.String()))
-	viper.BindPFlag(config.Dtype.String(), cmd.Flags().Lookup(config.Dtype.String()))
 	viper.BindPFlag(config.Prof.String(), cmd.Flags().Lookup(config.Prof.String()))
 	viper.BindPFlag(config.ToLower.String(), cmd.Flags().Lookup(config.ToLower.String()))
 	viper.BindPFlag(config.Verbose.String(), cmd.Flags().Lookup(config.Verbose.String()))

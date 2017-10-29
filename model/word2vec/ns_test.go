@@ -21,16 +21,16 @@ import (
 func TestNewNegativeSampling(t *testing.T) {
 	ns := NewNegativeSampling(10)
 
-	if ns.negativeTensor != nil {
+	if ns.contextVector != nil {
 		t.Error("NegativeSampling: Initializing without building negative vactors")
 	}
 }
 
 func TestNSInit(t *testing.T) {
 	ns := NewNegativeSampling(10)
-	ns.Init(newTestCorpus(), typ, 10)
+	ns.Init(newTestCorpus(), 10)
 
-	if len(ns.negativeTensor.vector) != 3 {
-		t.Error("NegativeSampling: Init returns negativeTensor with length=3")
+	if len(ns.contextVector) != 3*10 {
+		t.Error("NegativeSampling: Init returns negativeTensor with length=3*10")
 	}
 }

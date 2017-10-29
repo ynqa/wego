@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/chewxy/lingo/corpus"
-	"gorgonia.org/tensor"
 
 	"github.com/ynqa/word-embedding/config"
 	"github.com/ynqa/word-embedding/model"
@@ -31,9 +30,8 @@ import (
 // MockOperator satisfies the interface of Optimizer.
 type MockOptimizer struct{}
 
-func (m *MockOptimizer) Init(c *corpus.Corpus, t *model.Type, dimension int) error { return nil }
-func (m *MockOptimizer) Update(t *model.Type, targetID int, contextVector, poolVector tensor.Tensor, learningRate float64) error {
-	return nil
+func (m *MockOptimizer) Init(c *corpus.Corpus, dimension int) error { return nil }
+func (m *MockOptimizer) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 }
 
 // MockNopSeeker stores io.ReadCloser with Seek func that has nothing.
@@ -42,14 +40,12 @@ type MockNopSeeker struct{ io.ReadCloser }
 func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
 
 var (
-	text   = "A B B C C C C"
-	typ, _ = model.NewType("float64")
-	conf   = model.NewConfig(
+	text = "A B B C C C C"
+	conf = model.NewConfig(
 		config.DefaultDimension,
 		config.DefaultWindow,
 		config.DefaultInitLearningRate,
 		config.DefaultThread,
-		typ,
 		config.DefaultToLower,
 		config.DefaultVerbose,
 	)

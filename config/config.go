@@ -29,7 +29,6 @@ const (
 	Window
 	InitLearningRate
 	Thread
-	Dtype
 	Prof
 	ToLower
 	Verbose
@@ -42,7 +41,6 @@ const (
 	DefaultDimension        int     = 10
 	DefaultWindow           int     = 5
 	DefaultInitLearningRate float64 = 0.025
-	DefaultDtype            string  = "float64"
 	DefaultProf             bool    = false
 	DefaultToLower          bool    = false
 	DefaultVerbose          bool    = false
@@ -65,8 +63,6 @@ func (c Config) String() string {
 		return "initlr"
 	case Thread:
 		return "thread"
-	case Dtype:
-		return "dtype"
 	case Prof:
 		return "prof"
 	case ToLower:

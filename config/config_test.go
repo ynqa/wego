@@ -52,10 +52,6 @@ func TestConfigString(t *testing.T) {
 			expect: "initlr",
 		},
 		{
-			input:  Dtype,
-			expect: "dtype",
-		},
-		{
 			input:  Prof,
 			expect: "prof",
 		},

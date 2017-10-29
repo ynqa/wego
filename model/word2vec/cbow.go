@@ -16,25 +16,23 @@ package word2vec
 
 import (
 	"io"
-
-	"gorgonia.org/tensor"
 )
 
 // CBOW is a piece of Word2Vec model.
 type CBOW struct {
 	*State
 
-	sums, pools chan tensor.Tensor
+	sums, pools chan []float64
 }
 
 // NewCBOW creates *CBOW
 func NewCBOW(s *State) *CBOW {
-	pools := make(chan tensor.Tensor, s.Thread)
-	sums := make(chan tensor.Tensor, s.Thread)
+	pools := make(chan []float64, s.Thread)
+	sums := make(chan []float64, s.Thread)
 
 	for i := 0; i < s.Thread; i++ {
-		pools <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
-		sums <- tensor.New(tensor.WithShape(s.Dimension), tensor.Of(s.Type.D), tensor.WithEngine(s.Type.E))
+		pools <- make([]float64, s.Dimension)
+		sums <- make([]float64, s.Dimension)
 	}
 
 	return &CBOW{
@@ -49,28 +47,27 @@ func (c *CBOW) Train(f io.ReadCloser) error {
 	return c.Trainer(f, c.trainOne)
 }
 
-func (c *CBOW) trainOne(wordIDs []int, wordIndex int, lr float64) error {
+func (c *CBOW) trainOne(wordIDs []int, wordIndex int, lr float64) {
 	sum := <-c.sums
 	pool := <-c.pools
 
 	targetID := wordIDs[wordIndex]
-	sum.Zero()
-	pool.Zero()
+
+	for i := 0; i < c.Dimension; i++ {
+		sum[i] = 0.0
+		pool[i] = 0.0
+	}
 	c.dowith(wordIDs, wordIndex, sum, pool, c.initSum)
 
-	if err := c.opt.Update(c.Type, targetID, sum, pool, lr); err != nil {
-		c.sums <- sum
-		c.pools <- pool
-		return err
-	}
+	c.opt.Update(targetID, sum, pool, lr)
+
 	c.dowith(wordIDs, wordIndex, sum, pool, c.updateCtx)
 
 	c.sums <- sum
 	c.pools <- pool
-	return nil
 }
 
-func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool tensor.Tensor, g func(contextID int, sum, pool tensor.Tensor)) {
+func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool []float64, g func(contextID int, sum, pool []float64)) {
 	shr := nextRandom(c.Window)
 	for a := shr; a < c.Window*2+1-shr; a++ {
 		if a != c.Window {
@@ -84,10 +81,14 @@ func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool tensor.Tensor, g f
 	}
 }
 
-func (c *CBOW) initSum(contextID int, sum, pool tensor.Tensor) {
-	tensor.Add(sum, c.emb.vector[contextID], tensor.UseUnsafe())
+func (c *CBOW) initSum(contextID int, sum, pool []float64) {
+	for i := 0; i < c.Dimension; i++ {
+		sum[i] += c.vector[contextID*c.Dimension+i]
+	}
 }
 
-func (c *CBOW) updateCtx(contextID int, sum, pool tensor.Tensor) {
-	tensor.Add(c.emb.vector[contextID], pool, tensor.UseUnsafe())
+func (c *CBOW) updateCtx(contextID int, sum, pool []float64) {
+	for i := 0; i < c.Dimension; i++ {
+		c.vector[contextID*c.Dimension+i] += pool[i]
+	}
 }

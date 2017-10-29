@@ -20,19 +20,17 @@ type Config struct {
 	Window           int
 	InitLearningRate float64
 	Thread           int
-	Type             *Type
 	ToLower          bool
 	Verbose          bool
 }
 
 // NewConfig creates *Config
-func NewConfig(dimension, window int, initlr float64, thread int, t *Type, toLower, verbose bool) *Config {
+func NewConfig(dimension, window int, initlr float64, thread int, toLower, verbose bool) *Config {
 	return &Config{
 		Dimension:        dimension,
 		Window:           window,
 		InitLearningRate: initlr,
 		Thread:           thread,
-		Type:             t,
 		ToLower:          toLower,
 		Verbose:          verbose,
 	}
