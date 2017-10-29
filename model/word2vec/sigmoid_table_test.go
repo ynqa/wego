@@ -18,10 +18,11 @@ import (
 	"testing"
 )
 
-func TestNextRandom(t *testing.T) {
+func TestSigmoidOverLength(t *testing.T) {
+	table := NewSigmoidTable()
 	// TODO: Fuzzy Test
-	r := nextRandom(5)
-	if !(0 <= r && r < 5) {
-		t.Errorf("Extected range between 0 < nextRandom(x) < 5: %v", r)
+	f := table.Sigmoid(3)
+	if !(f >= 0 || f <= 1) {
+		t.Errorf("Extected range between 0 < Sigmoid(x) < 1: %v", f)
 	}
 }
