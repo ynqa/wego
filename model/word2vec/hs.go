@@ -20,6 +20,7 @@ import (
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
 type HierarchicalSoftmax struct {
+	*SigmoidTable
 	nodeMap  map[int]*Node
 	maxDepth int
 
@@ -31,6 +32,7 @@ type HierarchicalSoftmax struct {
 // The huffman tree is NOT built yet.
 func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	hs := new(HierarchicalSoftmax)
+	hs.SigmoidTable = NewSigmoidTable()
 	hs.maxDepth = maxDepth
 	return hs
 }
@@ -66,7 +68,11 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode int, lr float64, relayPointVec,
 	for i := 0; i < hs.dimension; i++ {
 		inner += ctxVec[i] * relayPointVec[i]
 	}
-	g := (1.0 - float64(childCode) - sigmoid(inner)) * lr
+
+	if inner <= -hs.maxExp || inner >= hs.maxExp {
+		return
+	}
+	g := (1.0 - float64(childCode) - hs.Sigmoid(inner)) * lr
 
 	for i := 0; i < hs.dimension; i++ {
 		poolVec[i] += g * relayPointVec[i]

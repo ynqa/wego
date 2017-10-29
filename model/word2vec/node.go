@@ -16,7 +16,6 @@ package word2vec
 
 import (
 	"errors"
-	"math/rand"
 	"sort"
 
 	"github.com/chewxy/lingo/corpus"
@@ -66,15 +65,10 @@ func (n *Nodes) buildHuffmanTree(dimension int) error {
 		left, right := (*n)[0], (*n)[1]
 		*n = (*n)[2:]
 
-		vec := make([]float64, dimension)
-		for i := 0; i < dimension; i++ {
-			vec[i] = (rand.Float64() - 0.5) / float64(dimension)
-		}
-
 		parentValue := left.Value + right.Value
 		parent := &Node{
 			Value:  parentValue,
-			Vector: vec,
+			Vector: make([]float64, dimension),
 		}
 		left.Parent = parent
 		left.Code = 0

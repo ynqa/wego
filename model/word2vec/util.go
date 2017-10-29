@@ -15,7 +15,6 @@
 package word2vec
 
 import (
-	"math"
 	"strings"
 )
 
@@ -31,14 +30,4 @@ func lower(a []string) {
 	for i := range a {
 		a[i] = strings.ToLower(a[i])
 	}
-}
-
-// sigmoid returns f(x) = \frac{1}{1 + e^{-x}}.
-// See: http://en.wikipedia.org/wiki/Sigmoid_function.
-func sigmoid(f float64) float64 {
-	exp := math.Exp(f)
-	if math.IsInf(exp, 1) {
-		return 1.0
-	}
-	return exp / (1.0 + exp)
 }
