@@ -23,27 +23,27 @@ import (
 
 // Node stores the node with vector in huffman tree.
 type Node struct {
-	Parent    *Node
-	Code      int
-	Value     int
-	Vector    []float64
-	CachePath Nodes
+	parent    *Node
+	code      int
+	value     int
+	vector    []float64
+	cachePath Nodes
 }
 
 // Nodes is the list of Node.
 type Nodes []*Node
 
 func (n *Nodes) Len() int           { return len(*n) }
-func (n *Nodes) Less(i, j int) bool { return (*n)[i].Value < (*n)[j].Value }
+func (n *Nodes) Less(i, j int) bool { return (*n)[i].value < (*n)[j].value }
 func (n *Nodes) Swap(i, j int)      { (*n)[i], (*n)[j] = (*n)[j], (*n)[i] }
 
 // NewHuffmanTree creates the map of wordID with Node.
-func NewHuffmanTree(c *corpus.Corpus, dimension int) (map[int]*Node, error) {
+func newHuffmanTree(c *corpus.Corpus, dimension int) (map[int]*Node, error) {
 	ns := make(Nodes, 0, c.Size())
 	nm := make(map[int]*Node)
 	for i := 0; i < c.Size(); i++ {
 		n := new(Node)
-		n.Value = c.IDFreq(i)
+		n.value = c.IDFreq(i)
 		nm[i] = n
 		ns = append(ns, n)
 	}
@@ -65,17 +65,17 @@ func (n *Nodes) buildHuffmanTree(dimension int) error {
 		left, right := (*n)[0], (*n)[1]
 		*n = (*n)[2:]
 
-		parentValue := left.Value + right.Value
+		parentValue := left.value + right.value
 		parent := &Node{
-			Value:  parentValue,
-			Vector: make([]float64, dimension),
+			value:  parentValue,
+			vector: make([]float64, dimension),
 		}
-		left.Parent = parent
-		left.Code = 0
-		right.Parent = parent
-		right.Code = 1
+		left.parent = parent
+		left.code = 0
+		right.parent = parent
+		right.code = 1
 
-		idx := sort.Search(len(*n), func(i int) bool { return (*n)[i].Value >= parentValue })
+		idx := sort.Search(len(*n), func(i int) bool { return (*n)[i].value >= parentValue })
 
 		// Insert
 		*n = append(*n, &Node{})
@@ -86,7 +86,7 @@ func (n *Nodes) buildHuffmanTree(dimension int) error {
 }
 
 // GetPath returns the nodes from root to word on huffman tree.
-func (n *Node) GetPath() Nodes {
+func (n *Node) getPath() Nodes {
 	// Reverse
 	re := func(n Nodes) {
 		for i, j := 0, len(n)-1; i < j; i, j = i+1, j-1 {
@@ -97,18 +97,18 @@ func (n *Node) GetPath() Nodes {
 	trace := func() Nodes {
 		nodes := make(Nodes, 0)
 		nodes = append(nodes, n)
-		for parent := n.Parent; parent != nil; parent = parent.Parent {
+		for parent := n.parent; parent != nil; parent = parent.parent {
 			nodes = append(nodes, parent)
 		}
 		re(nodes)
 		return nodes
 	}
 
-	path := n.CachePath
+	path := n.cachePath
 	if path == nil {
 		path = trace()
 	}
 
-	n.CachePath = path
+	n.cachePath = path
 	return path
 }

@@ -22,7 +22,7 @@ import (
 
 func TestHuffmanTree(t *testing.T) {
 	c := newTestCorpus()
-	huffmanTree, err := NewHuffmanTree(c, 5)
+	huffmanTree, err := newHuffmanTree(c, 5)
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -43,7 +43,7 @@ func TestHuffmanTree(t *testing.T) {
 
 	for _, testCase := range testCases {
 		wordID, _ := c.Id(testCase.word)
-		actual := huffmanTree[wordID].GetPath().Codes()
+		actual := huffmanTree[wordID].getPath().codes()
 		if actual != testCase.expected {
 			t.Errorf("Expected codes: %v, but got %v in %v",
 				testCase.expected, actual, testCase.word)
@@ -51,10 +51,10 @@ func TestHuffmanTree(t *testing.T) {
 	}
 }
 
-func (n Nodes) Codes() string {
+func (n Nodes) codes() string {
 	c := bytes.NewBuffer(make([]byte, 0))
 	for _, v := range n {
-		c.WriteString(strconv.Itoa(v.Code))
+		c.WriteString(strconv.Itoa(v.code))
 	}
 	return c.String()[1:]
 }

@@ -27,11 +27,17 @@ import (
 	"github.com/ynqa/word-embedding/model"
 )
 
+// MockModel satisfies the interface of Model.
+type MockModel struct{}
+
+func (m *MockModel) trainOne(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer) {
+}
+
 // MockOperator satisfies the interface of Optimizer.
 type MockOptimizer struct{}
 
-func (m *MockOptimizer) Init(c *corpus.Corpus, dimension int) error { return nil }
-func (m *MockOptimizer) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
+func (m *MockOptimizer) init(c *corpus.Corpus, dimension int) error { return nil }
+func (m *MockOptimizer) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 }
 
 // MockNopSeeker stores io.ReadCloser with Seek func that has nothing.
@@ -49,6 +55,7 @@ var (
 		config.DefaultToLower,
 		config.DefaultVerbose,
 	)
+	mockMod       Model     = new(MockModel)
 	mockOpt       Optimizer = new(MockOptimizer)
 	mockNopSeeker           = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
 )
@@ -63,29 +70,17 @@ func newTestCorpus() *corpus.Corpus {
 	return c
 }
 
-// newTestState returns *State has already called Preprocess.
-func newTestState() *State {
-	s := NewState(
-		conf,
-		mockOpt,
-		config.DefaultSubsampleThreshold,
-		config.DefaultTheta,
-		config.DefaultBatchSize,
-	)
-	s.Preprocess(mockNopSeeker)
-	return s
-}
-
 func TestPreprocess(t *testing.T) {
-	testState := NewState(
+	testWord2Vec := NewWord2Vec(
 		conf,
+		mockMod,
 		mockOpt,
 		config.DefaultSubsampleThreshold,
 		config.DefaultTheta,
 		config.DefaultBatchSize,
 	)
 
-	if _, err := testState.Preprocess(mockNopSeeker); err != nil {
+	if _, err := testWord2Vec.Preprocess(mockNopSeeker); err != nil {
 		t.Error("Word2Vec: Preprocess returns error")
 	}
 }
