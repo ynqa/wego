@@ -14,18 +14,7 @@
 
 package word2vec
 
-import (
-	"bytes"
-	"io/ioutil"
-	"testing"
-)
-
-func TestCBOW(t *testing.T) {
-	cbow := NewCBOW(newTestState())
-
-	stdin := ioutil.NopCloser(bytes.NewReader([]byte(text)))
-
-	if err := cbow.Train(stdin); err != nil {
-		t.Error("CBOW: Train returns error")
-	}
+// Model is the interface to learn word vector.
+type Model interface {
+	trainOne(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)
 }

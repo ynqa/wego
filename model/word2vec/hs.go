@@ -32,29 +32,29 @@ type HierarchicalSoftmax struct {
 // The huffman tree is NOT built yet.
 func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	hs := new(HierarchicalSoftmax)
-	hs.SigmoidTable = NewSigmoidTable()
+	hs.SigmoidTable = newSigmoidTable()
 	hs.maxDepth = maxDepth
 	return hs
 }
 
 // Init initializes the huffman tree.
-func (hs *HierarchicalSoftmax) Init(c *corpus.Corpus, dimension int) (err error) {
+func (hs *HierarchicalSoftmax) init(c *corpus.Corpus, dimension int) (err error) {
 	hs.vocabulary = c.Size()
 	hs.dimension = dimension
 
-	hs.nodeMap, err = NewHuffmanTree(c, dimension)
+	hs.nodeMap, err = newHuffmanTree(c, dimension)
 	return
 }
 
 // Update updates the word vector using the huffman tree.
-func (hs *HierarchicalSoftmax) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
-	path := hs.nodeMap[targetID].GetPath()
+func (hs *HierarchicalSoftmax) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
+	path := hs.nodeMap[targetID].getPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
 
-		childCode := path[p+1].Code
+		childCode := path[p+1].code
 
-		hs.gradUpd(childCode, learningRate, relayPoint.Vector, poolVector, contextVector)
+		hs.gradUpd(childCode, learningRate, relayPoint.vector, poolVector, contextVector)
 
 		if hs.maxDepth > 0 && p >= hs.maxDepth {
 			break
@@ -72,7 +72,7 @@ func (hs *HierarchicalSoftmax) gradUpd(childCode int, lr float64, relayPointVec,
 	if inner <= -hs.maxExp || inner >= hs.maxExp {
 		return
 	}
-	g := (1.0 - float64(childCode) - hs.Sigmoid(inner)) * lr
+	g := (1.0 - float64(childCode) - hs.sigmoid(inner)) * lr
 
 	for i := 0; i < hs.dimension; i++ {
 		poolVec[i] += g * relayPointVec[i]

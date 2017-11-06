@@ -32,13 +32,13 @@ type NegativeSampling struct {
 // The negative vector is NOT built yet.
 func NewNegativeSampling(sampleSize int) *NegativeSampling {
 	ns := new(NegativeSampling)
-	ns.SigmoidTable = NewSigmoidTable()
+	ns.SigmoidTable = newSigmoidTable()
 	ns.sampleSize = sampleSize
 	return ns
 }
 
 // Init initializes the negative vector.
-func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
+func (ns *NegativeSampling) init(c *corpus.Corpus, dimension int) (err error) {
 	ns.vocabulary = c.Size()
 	ns.dimension = dimension
 	ns.contextVector = make([]float64, ns.vocabulary*ns.dimension)
@@ -46,7 +46,7 @@ func (ns *NegativeSampling) Init(c *corpus.Corpus, dimension int) (err error) {
 }
 
 // Update updates the word vector using the negative vector.
-func (ns *NegativeSampling) Update(targetID int, contextVector, poolVector []float64, learningRate float64) {
+func (ns *NegativeSampling) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 
 	var label int
 	var ctxID int
@@ -92,7 +92,7 @@ func (ns *NegativeSampling) gradUpd(label int, lr float64, ctxVector, contextVec
 	} else if inner >= ns.maxExp {
 		g = (float64(label - 1)) * lr
 	} else {
-		g = (float64(label) - ns.Sigmoid(inner)) * lr
+		g = (float64(label) - ns.sigmoid(inner)) * lr
 	}
 
 	for i := 0; i < ns.dimension; i++ {

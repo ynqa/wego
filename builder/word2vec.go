@@ -176,15 +176,16 @@ func (wb *Word2VecBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Invalid optimizer: %s not in hs|ns", wb.optimizer)
 	}
 
-	state := word2vec.NewState(cnf, opt,
-		wb.subsampleThreshold, wb.theta, wb.batchSize)
-
+	var mod word2vec.Model
 	switch wb.model {
 	case "cbow":
-		return word2vec.NewCBOW(state), nil
+		mod = word2vec.NewCBOW(cnf)
 	case "skip-gram":
-		return word2vec.NewSkipGram(state), nil
+		mod = word2vec.NewSkipGram(cnf)
 	default:
 		return nil, errors.Errorf("Invalid model: %s not in cbow|skip-gram", wb.model)
 	}
+
+	return word2vec.NewWord2Vec(cnf, mod, opt,
+		wb.subsampleThreshold, wb.theta, wb.batchSize), nil
 }
