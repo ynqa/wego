@@ -39,3 +39,35 @@ Flags:
       --verbose             Verbose mode
   -w, --window int          Set the context window size (default 5)
 ```
+
+## GloVe
+
+GloVe is weighted matrix factorization model for co-occurrence map between words.
+For optimization, preparing SGD, and AdaGrad.
+
+### Usage
+
+```
+Embed words using glove
+
+Usage:
+  word-embedding glove [flags]
+
+Flags:
+      --alpha float         Set alpha (default 0.75)
+      --batchSize int       Set the batch size to buffer words referred as chunk (default 10000)
+  -d, --dimension int       Set the dimension of word vector (default 10)
+  -h, --help                Help for glove
+      --initlr float        Set the initial learning rate (default 0.025)
+  -i, --inputFile string    Set the input file path to load corpus (default "example/input.txt")
+      --iter int            Set the iteration (default 50)
+      --lower               Whether the words on corpus convert to lowercase or not
+      --min-count int       Set the min count to filter rare words (default 5)
+  -o, --outputFile string   Set the output file path to save word vectors (default "example/word_vectors.txt")
+      --prof                Profiling mode to check the performances
+      --solver string       Set the solver of GloVe. One of: sgd|adagrad (default "sgd")
+      --thread int          Set number of parallel (default 8)
+      --verbose             Verbose mode
+  -w, --window int          Set the context window size (default 5)
+      --xmax int            Set xmax (default 100)
+```
