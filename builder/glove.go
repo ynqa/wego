@@ -15,6 +15,7 @@
 package builder
 
 import (
+	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/word-embedding/config"
@@ -28,13 +29,15 @@ type GloVeBuilder struct {
 	window           int
 	initLearningRate float64
 	thread           int
-	dtype            string
 	toLower          bool
 	verbose          bool
 
+	solver    string
 	iteration int
 	alpha     float64
 	xmax      int
+	minCount  int
+	batchSize int
 }
 
 // NewGloVeBuilder creates *GloVeBuilder
@@ -47,9 +50,12 @@ func NewGloVeBuilder() *GloVeBuilder {
 		toLower:          config.DefaultToLower,
 		verbose:          config.DefaultVerbose,
 
+		solver:    config.DefaultSolver,
 		iteration: config.DefaultIteration,
 		alpha:     config.DefaultAlpha,
 		xmax:      config.DefaultXmax,
+		minCount:  config.DefaultMinCount,
+		batchSize: config.DefaultBatchSize,
 	}
 }
 
@@ -63,9 +69,12 @@ func NewGloVeBuilderViper() *GloVeBuilder {
 		toLower:          viper.GetBool(config.ToLower.String()),
 		verbose:          viper.GetBool(config.Verbose.String()),
 
+		solver:    viper.GetString(config.Solver.String()),
 		iteration: viper.GetInt(config.Iteration.String()),
 		alpha:     viper.GetFloat64(config.Alpha.String()),
 		xmax:      viper.GetInt(config.Xmax.String()),
+		minCount:  viper.GetInt(config.MinCount.String()),
+		batchSize: viper.GetInt(config.BatchSize.String()),
 	}
 }
 
@@ -93,12 +102,6 @@ func (gb *GloVeBuilder) SetThread(thread int) *GloVeBuilder {
 	return gb
 }
 
-// SetDtype sets the dtype for gorgonia tensor. One of: float32|float64
-func (gb *GloVeBuilder) SetDtype(dtype string) *GloVeBuilder {
-	gb.dtype = dtype
-	return gb
-}
-
 // SetToLower converts the words in corpus to lowercase.
 func (gb *GloVeBuilder) SetToLower() *GloVeBuilder {
 	gb.toLower = true
@@ -108,6 +111,12 @@ func (gb *GloVeBuilder) SetToLower() *GloVeBuilder {
 // SetVerbose sets verbose mode.
 func (gb *GloVeBuilder) SetVerbose() *GloVeBuilder {
 	gb.verbose = true
+	return gb
+}
+
+// SetSolver sets the solver.
+func (gb *GloVeBuilder) SetSolver(solver string) *GloVeBuilder {
+	gb.solver = solver
 	return gb
 }
 
@@ -123,9 +132,21 @@ func (gb *GloVeBuilder) SetAlpha(alpha float64) *GloVeBuilder {
 	return gb
 }
 
-// SetXmax sets Xmax.
+// SetXmax sets x-max.
 func (gb *GloVeBuilder) SetXmax(xmax int) *GloVeBuilder {
 	gb.xmax = xmax
+	return gb
+}
+
+// SetMinCount sets min count.
+func (gb *GloVeBuilder) SetMinCount(minCount int) *GloVeBuilder {
+	gb.minCount = minCount
+	return gb
+}
+
+// SetBatchSize sets batchSize
+func (gb *GloVeBuilder) SetBatchSize(batchSize int) *GloVeBuilder {
+	gb.batchSize = batchSize
 	return gb
 }
 
@@ -134,5 +155,16 @@ func (gb *GloVeBuilder) Build() (model.Model, error) {
 	cnf := model.NewConfig(gb.dimension, gb.window, gb.initLearningRate,
 		gb.thread, gb.toLower, gb.verbose)
 
-	return glove.NewGloVe(cnf, gb.iteration, gb.alpha, gb.xmax), nil
+	var solver glove.Solver
+	switch gb.solver {
+	case "sgd":
+		solver = glove.NewSGD(cnf)
+	case "adagrad":
+		solver = glove.NewAdaGrad(cnf)
+	default:
+		return nil, errors.Errorf("Invalid solver: %s not in sgd|adagrad", gb.solver)
+	}
+
+	return glove.NewGloVe(cnf, solver,
+		gb.iteration, gb.xmax, gb.alpha, gb.minCount, gb.batchSize), nil
 }

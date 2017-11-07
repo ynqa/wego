@@ -52,18 +52,28 @@ var GloVeCmd = &cobra.Command{
 
 func init() {
 	GloVeCmd.Flags().AddFlagSet(ConfigFlagSet())
+	GloVeCmd.Flags().BoolP("help", "h", false, "Help for "+GloVeCmd.Name())
+	GloVeCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
+		"Set the solver of GloVe. One of: sgd|adagrad")
 	GloVeCmd.Flags().Int(config.Iteration.String(), config.DefaultIteration,
 		"Set the iteration")
 	GloVeCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
 		"Set alpha")
 	GloVeCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
 		"Set xmax")
+	GloVeCmd.Flags().Int(config.MinCount.String(), config.DefaultMinCount,
+		"Set the min count to filter rare words")
+	GloVeCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
+		"Set the batch size to buffer words referred as chunk")
 }
 
 func gloveBind(cmd *cobra.Command) {
+	viper.BindPFlag(config.Solver.String(), cmd.Flags().Lookup(config.Solver.String()))
 	viper.BindPFlag(config.Iteration.String(), cmd.Flags().Lookup(config.Iteration.String()))
 	viper.BindPFlag(config.Alpha.String(), cmd.Flags().Lookup(config.Alpha.String()))
 	viper.BindPFlag(config.Xmax.String(), cmd.Flags().Lookup(config.Xmax.String()))
+	viper.BindPFlag(config.MinCount.String(), cmd.Flags().Lookup(config.MinCount.String()))
+	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 }
 
 func runGloVe() error {
