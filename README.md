@@ -23,10 +23,9 @@ Listed models for word embedding, and checked it already implemented.
 - [x] Word2Vec
   - Distributed Representations of Words and Phrases
 and their Compositionality [[pdf]](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
-- [ ] GloVe
+- [x] GloVe
   - GloVe: Global Vectors for Word Representation [[pdf]](http://nlp.stanford.edu/pubs/glove.pdf)
-- [ ] SPPMI-SVD
-  - Neural Word Embedding as Implicit Matrix Factorization [[pdf]](https://papers.nips.cc/paper/5477-neural-word-embedding-as-implicit-matrix-factorization.pdf)
+- and more...
 
 ## Installation
 
@@ -46,6 +45,7 @@ Usage:
 
 Available Commands:
   distance    Estimate the distance between words
+  glove       Embed words using glove
   help        Help about any command
   word2vec    Embed words using word2vec
 
@@ -57,6 +57,7 @@ For more information about each sub-command, see below:
 - [distance](./distance/README.md)
 - [word2vec](./model/README.md)
   - In code-based, refer to the [example](./example/example.go).
+- [glove](./model/README.md)
 
 ## Demo
 
@@ -66,14 +67,12 @@ Downloading [text8](http://mattmahoney.net/dc/textdata) corpus, and training by 
 $ sh demo.sh
 ```
 
-## File I/O
-- Input
-  - Given a text is composed of one-sentence per one-line, ideally.
-- Output
-  - Output a file is subject to the following format:
-  ```
-  <word> <value1> <value2> ...
-  ```
+## Output
+Output a file is subject to the following format:
+
+```
+<word> <value1> <value2> ...
+```
 
 ## References
 - Just see it for more deep comprehension:
