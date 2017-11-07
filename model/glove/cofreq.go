@@ -24,13 +24,13 @@ import (
 // CofreqMap stores the co-frequency between word-word.
 type CofreqMap map[Pair]float64
 
-// Pair stores the co-occurrence pair words.
+// Pair stores the co-frequency pair words.
 type Pair struct {
-	l1 string
-	l2 string
+	l1 int
+	l2 int
 }
 
-// PairWithFreq stores the co-occurrence pair words.
+// PairWithFreq stores the co-frequency pair words.
 type PairWithFreq struct {
 	l1 int
 	l2 int
@@ -39,7 +39,7 @@ type PairWithFreq struct {
 	coefficient float64
 }
 
-func (c CofreqMap) update(l1, l2 string, distance float64) {
+func (c CofreqMap) update(l1, l2 int, distance float64) {
 	if l1 == l2 {
 		return
 	}
@@ -52,24 +52,27 @@ func (c CofreqMap) update(l1, l2 string, distance float64) {
 	c[pp] += 1.0 / distance
 }
 
-func (c CofreqMap) toList(cps *corpus.Corpus, xmax int, alpha float64) []PairWithFreq {
+func (c CofreqMap) toList(cps *corpus.Corpus, xmax int, alpha float64, minCount int) []PairWithFreq {
+	for p := range c {
+		if cps.IDFreq(p.l1) < minCount || cps.IDFreq(p.l2) < minCount {
+			delete(c, p)
+		}
+	}
+
 	lst := make([]PairWithFreq, len(c))
 	shuffle := rand.Perm(len(c))
 
 	i := 0
 	for p, f := range c {
-		l1, _ := cps.Id(p.l1)
-		l2, _ := cps.Id(p.l2)
-
 		coefficient := 1.0
 		if f < float64(xmax) {
 			coefficient = math.Pow(f/float64(xmax), alpha)
 		}
 
 		lst[shuffle[i]] = PairWithFreq{
-			l1:          l1,
-			l2:          l2,
-			f:           f,
+			l1:          p.l1,
+			l2:          p.l2,
+			f:           math.Log(f),
 			coefficient: coefficient,
 		}
 		i++
