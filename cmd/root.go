@@ -73,5 +73,5 @@ func init() {
 	RootCmd.Flags().BoolP("help", "h", false, "Help for "+RootCmd.Name())
 	RootCmd.AddCommand(Word2VecCmd)
 	RootCmd.AddCommand(DistanceCmd)
-	RootCmd.AddCommand(GloVeCmd)
+	RootCmd.AddCommand(GloveCmd)
 }

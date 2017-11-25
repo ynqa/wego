@@ -50,8 +50,8 @@ var (
 	mockNopSeeker = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
 )
 
-func TestGloVePreprocess(t *testing.T) {
-	testGloVe := NewGloVe(
+func TestGlovePreprocess(t *testing.T) {
+	testGlove := NewGlove(
 		conf,
 		mockSolver,
 		config.DefaultIteration,
@@ -60,7 +60,7 @@ func TestGloVePreprocess(t *testing.T) {
 		config.DefaultMinCount,
 		config.DefaultBatchSize,
 	)
-	if _, err := testGloVe.Preprocess(mockNopSeeker); err != nil {
+	if _, err := testGlove.Preprocess(mockNopSeeker); err != nil {
 		t.Error("Word2Vec: Preprocess returns error")
 	}
 }

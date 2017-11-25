@@ -22,10 +22,10 @@ import (
 
 const gloveFlagSize = 6
 
-func TestGloVeBind(t *testing.T) {
+func TestGloveBind(t *testing.T) {
 	defer viper.Reset()
 
-	gloveBind(GloVeCmd)
+	gloveBind(GloveCmd)
 
 	if len(viper.AllKeys()) != gloveFlagSize {
 		t.Errorf("Expected similarityBind maps %v keys: %v",
@@ -33,11 +33,11 @@ func TestGloVeBind(t *testing.T) {
 	}
 }
 
-func TestGloVeCmdPreRun(t *testing.T) {
+func TestGloveCmdPreRun(t *testing.T) {
 	defer viper.Reset()
 
 	var empty []string
-	GloVeCmd.PreRun(Word2VecCmd, empty)
+	GloveCmd.PreRun(Word2VecCmd, empty)
 
 	if len(viper.AllKeys()) != gloveFlagSize+configFlagSize {
 		t.Errorf("Expected PreRun of Word2VecCmd maps %v keys: %v",

@@ -27,8 +27,8 @@ import (
 	"github.com/ynqa/word-embedding/validate"
 )
 
-// GloVeCmd is for GloVe command.
-var GloVeCmd = &cobra.Command{
+// GloveCmd is for Glove command.
+var GloveCmd = &cobra.Command{
 	Use:   "glove",
 	Short: "Embed words using glove",
 	Long:  "Embed words using glove",
@@ -46,24 +46,24 @@ var GloVeCmd = &cobra.Command{
 			defer pprof.StopCPUProfile()
 		}
 
-		return runGloVe()
+		return runGlove()
 	},
 }
 
 func init() {
-	GloVeCmd.Flags().AddFlagSet(ConfigFlagSet())
-	GloVeCmd.Flags().BoolP("help", "h", false, "Help for "+GloVeCmd.Name())
-	GloVeCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
+	GloveCmd.Flags().AddFlagSet(ConfigFlagSet())
+	GloveCmd.Flags().BoolP("help", "h", false, "Help for "+GloveCmd.Name())
+	GloveCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
 		"Set the solver of GloVe. One of: sgd|adagrad")
-	GloVeCmd.Flags().Int(config.Iteration.String(), config.DefaultIteration,
+	GloveCmd.Flags().Int(config.Iteration.String(), config.DefaultIteration,
 		"Set the iteration")
-	GloVeCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
+	GloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
 		"Set alpha")
-	GloVeCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
+	GloveCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
 		"Set xmax")
-	GloVeCmd.Flags().Int(config.MinCount.String(), config.DefaultMinCount,
+	GloveCmd.Flags().Int(config.MinCount.String(), config.DefaultMinCount,
 		"Set the min count to filter rare words")
-	GloVeCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
+	GloveCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
 		"Set the batch size to buffer words referred as chunk")
 }
 
@@ -76,7 +76,7 @@ func gloveBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 }
 
-func runGloVe() error {
+func runGlove() error {
 	inputFile := viper.GetString(config.InputFile.String())
 
 	if !validate.FileExists(inputFile) {
@@ -89,7 +89,7 @@ func runGloVe() error {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
 
-	glove := builder.NewGloVeBuilderViper()
+	glove := builder.NewGloveBuilderViper()
 
 	mod, err := glove.Build()
 	if err != nil {

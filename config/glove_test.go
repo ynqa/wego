@@ -18,17 +18,17 @@ import (
 	"testing"
 )
 
-func TestInvalidGloVeConfigString(t *testing.T) {
-	var Fake GloVeConfig = 1024
+func TestInvalidGloveConfigString(t *testing.T) {
+	var Fake GloveConfig = 1024
 
 	if Fake.String() != "unknown" {
 		t.Errorf("Fake should be not registered in Word2VecConfig: %v", Fake.String())
 	}
 }
 
-func TestGloVeConfigString(t *testing.T) {
+func TestGloveConfigString(t *testing.T) {
 	testCases := []struct {
-		input  GloVeConfig
+		input  GloveConfig
 		expect string
 	}{
 		{
