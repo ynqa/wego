@@ -18,8 +18,8 @@ import (
 	"testing"
 )
 
-func TestGloVeSetDimension(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetDimension(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetDimension(100)
 
 	if b.dimension != 100 {
@@ -27,8 +27,8 @@ func TestGloVeSetDimension(t *testing.T) {
 	}
 }
 
-func TestGloVeSetWindow(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetWindow(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetWindow(10)
 
 	if b.window != 10 {
@@ -36,8 +36,8 @@ func TestGloVeSetWindow(t *testing.T) {
 	}
 }
 
-func TestGloVeSetInitLearningRate(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetInitLearningRate(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetInitLearningRate(0.001)
 
 	if b.initLearningRate != 0.001 {
@@ -45,8 +45,8 @@ func TestGloVeSetInitLearningRate(t *testing.T) {
 	}
 }
 
-func TestGloVeSetToLower(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetToLower(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetToLower()
 
 	if !b.toLower {
@@ -54,8 +54,8 @@ func TestGloVeSetToLower(t *testing.T) {
 	}
 }
 
-func TestGloVeSetVerbose(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetVerbose(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetVerbose()
 
 	if !b.verbose {
@@ -63,8 +63,8 @@ func TestGloVeSetVerbose(t *testing.T) {
 	}
 }
 
-func TestGloVeSetSolver(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetSolver(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetSolver("adagrad")
 
 	if b.solver != "adagrad" {
@@ -72,8 +72,8 @@ func TestGloVeSetSolver(t *testing.T) {
 	}
 }
 
-func TestGloVeSetIteration(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetIteration(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetIteration(50)
 
 	if b.iteration != 50 {
@@ -81,8 +81,8 @@ func TestGloVeSetIteration(t *testing.T) {
 	}
 }
 
-func TestGloVeSetAlpha(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetAlpha(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetAlpha(0.1)
 
 	if b.alpha != 0.1 {
@@ -90,8 +90,8 @@ func TestGloVeSetAlpha(t *testing.T) {
 	}
 }
 
-func TestGloVeSetXmax(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetXmax(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetXmax(10)
 
 	if b.xmax != 10 {
@@ -99,8 +99,8 @@ func TestGloVeSetXmax(t *testing.T) {
 	}
 }
 
-func TestGloVeSetMinCount(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetMinCount(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetMinCount(10)
 
 	if b.minCount != 10 {
@@ -108,8 +108,8 @@ func TestGloVeSetMinCount(t *testing.T) {
 	}
 }
 
-func TestGloVeSetBatchSize(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveSetBatchSize(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetBatchSize(2048)
 
 	if b.batchSize != 2048 {
@@ -117,8 +117,8 @@ func TestGloVeSetBatchSize(t *testing.T) {
 	}
 }
 
-func TestGloVeInvalidSolverBuild(t *testing.T) {
-	b := &GloVeBuilder{}
+func TestGloveInvalidSolverBuild(t *testing.T) {
+	b := &GloveBuilder{}
 	b.SetSolver("fake_solver")
 
 	if _, err := b.Build(); err == nil {

@@ -33,8 +33,8 @@ import (
 	"github.com/ynqa/word-embedding/model"
 )
 
-// GloVe stores the configs for GloVe models.
-type GloVe struct {
+// Glove stores the configs for GloVe models.
+type Glove struct {
 	*model.Config
 	*corpus.Corpus
 
@@ -56,15 +56,15 @@ type GloVe struct {
 	indexPerThread []int
 }
 
-// NewGloVe creates *GloVe.
-func NewGloVe(config *model.Config, solver Solver,
-	iteration int, xmax int, alpha float64, minCount, batchSize int) *GloVe {
+// NewGlove creates *Glove.
+func NewGlove(config *model.Config, solver Solver,
+	iteration int, xmax int, alpha float64, minCount, batchSize int) *Glove {
 
 	// WITHOUT WHITESPACE, UNKNOWN, ROOT
 	emptyOpt := func(c *corpus.Corpus) error { return nil }
 	c, _ := corpus.Construct(emptyOpt)
 
-	return &GloVe{
+	return &Glove{
 		Config: config,
 		Corpus: c,
 
@@ -84,22 +84,19 @@ func NewGloVe(config *model.Config, solver Solver,
 	}
 }
 
-func (g *GloVe) update(words []string) {
-	for i := 0; i < len(words); i++ {
-		wi, _ := g.Id(words[i])
+func (g *Glove) update(wordIDs []int) {
+	for i := 0; i < len(wordIDs); i++ {
 		for j := i - g.Config.Window; j <= i+g.Config.Window; j++ {
-			if i == j || j < 0 || j >= len(words) {
+			if i == j || j < 0 || j >= len(wordIDs) {
 				continue
 			}
-			wj, _ := g.Id(words[j])
-			g.CofreqMap.update(wi, wj, math.Abs(float64(i-j)))
+			g.CofreqMap.update(wordIDs[i], wordIDs[j], math.Abs(float64(i-j)))
 		}
 	}
-	return
 }
 
 // Preprocess scans the corpus once before Train to count the co-frequency between word-word.
-func (g *GloVe) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
+func (g *Glove) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	defer func() {
 		weightSize := g.Corpus.Size() * (g.Dimension + 1) * 2
 
@@ -114,30 +111,32 @@ func (g *GloVe) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	}()
 
 	buffered := 0
-	line := make([]string, 0, g.batchSize)
+	wordIDs := make([]int, g.batchSize)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
+		word := scanner.Text()
+		if g.ToLower {
+			word = strings.ToLower(word)
+		}
+		g.Add(word)
+		wordID, _ := g.Id(word)
+		wordIDs[buffered] = wordID
 
-		if buffered < g.batchSize {
-			word := scanner.Text()
-			g.Add(word)
-			line = append(line, word)
+		if buffered < g.batchSize-1 {
 			buffered++
 			continue
 		}
 
-		if g.ToLower {
-			model.Lower(line)
-		}
-
-		g.update(line)
+		g.update(wordIDs)
 		buffered = 0
-		line = line[:0]
+		wordIDs = make([]int, g.batchSize)
 	}
 
-	g.update(line)
+	if buffered > 0 {
+		g.update(wordIDs[:buffered])
+	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		return nil, errors.Wrap(err, "Unable to complete scanning")
@@ -150,7 +149,7 @@ func (g *GloVe) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 }
 
 // Train trains a corpus. It assumes that Preprocess() has already been called.
-func (g *GloVe) Train(f io.ReadCloser) error {
+func (g *Glove) Train(f io.ReadCloser) error {
 	f.Close()
 	if len(g.pairs) == 0 {
 		return errors.Errorf("Must initialize model parameters by calling Preprocess")
@@ -194,7 +193,7 @@ func (g *GloVe) Train(f io.ReadCloser) error {
 	return nil
 }
 
-func (g *GloVe) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sema chan struct{}) {
+func (g *Glove) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sema chan struct{}) {
 	defer wg.Done()
 	sema <- struct{}{}
 
@@ -209,7 +208,7 @@ func (g *GloVe) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sem
 }
 
 // Save saves the word vector to outputFile.
-func (g *GloVe) Save(outputPath string) error {
+func (g *Glove) Save(outputPath string) error {
 	extractDir := func(path string) string {
 		e := strings.Split(path, "/")
 		return strings.Join(e[:len(e)-1], "/")
@@ -246,12 +245,4 @@ func (g *GloVe) Save(outputPath string) error {
 	}
 	w.WriteString(fmt.Sprintf("%v", buf.String()))
 	return nil
-}
-
-func (g *GloVe) toIDs(words []string) []int {
-	retVal := make([]int, len(words))
-	for i, w := range words {
-		retVal[i], _ = g.Id(w)
-	}
-	return retVal
 }

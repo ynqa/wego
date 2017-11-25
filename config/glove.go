@@ -14,19 +14,19 @@
 
 package config
 
-// GloVeConfig is enum of the GloVe config.
-type GloVeConfig int
+// GloveConfig is enum of the GloVe config.
+type GloveConfig int
 
-// The list of GloVeConfig.
+// The list of GloveConfig.
 const (
-	Solver GloVeConfig = iota
+	Solver GloveConfig = iota
 	Iteration
 	Alpha
 	Xmax
 	MinCount
 )
 
-// The defaults of GloVeConfig.
+// The defaults of GloveConfig.
 const (
 	DefaultSolver    string  = "sgd"
 	DefaultIteration int     = 50
@@ -35,7 +35,7 @@ const (
 	DefaultMinCount  int     = 5
 )
 
-func (g GloVeConfig) String() string {
+func (g GloveConfig) String() string {
 	switch g {
 	case Solver:
 		return "solver"

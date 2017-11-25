@@ -23,8 +23,8 @@ import (
 	"github.com/ynqa/word-embedding/model/glove"
 )
 
-// GloVeBuilder manages the members to build the Model interface.
-type GloVeBuilder struct {
+// GloveBuilder manages the members to build the Model interface.
+type GloveBuilder struct {
 	dimension        int
 	window           int
 	initLearningRate float64
@@ -40,9 +40,9 @@ type GloVeBuilder struct {
 	batchSize int
 }
 
-// NewGloVeBuilder creates *GloVeBuilder
-func NewGloVeBuilder() *GloVeBuilder {
-	return &GloVeBuilder{
+// NewGloveBuilder creates *GloveBuilder
+func NewGloveBuilder() *GloveBuilder {
+	return &GloveBuilder{
 		dimension:        config.DefaultDimension,
 		window:           config.DefaultWindow,
 		initLearningRate: config.DefaultInitLearningRate,
@@ -59,9 +59,9 @@ func NewGloVeBuilder() *GloVeBuilder {
 	}
 }
 
-// NewGloVeBuilderViper creates *GloVeBuilder using viper.
-func NewGloVeBuilderViper() *GloVeBuilder {
-	return &GloVeBuilder{
+// NewGloveBuilderViper creates *GloveBuilder using viper.
+func NewGloveBuilderViper() *GloveBuilder {
+	return &GloveBuilder{
 		dimension:        viper.GetInt(config.Dimension.String()),
 		window:           viper.GetInt(config.Window.String()),
 		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
@@ -79,79 +79,79 @@ func NewGloVeBuilderViper() *GloVeBuilder {
 }
 
 // SetDimension sets the dimension of word vector.
-func (gb *GloVeBuilder) SetDimension(dimension int) *GloVeBuilder {
+func (gb *GloveBuilder) SetDimension(dimension int) *GloveBuilder {
 	gb.dimension = dimension
 	return gb
 }
 
 // SetWindow sets the context window size.
-func (gb *GloVeBuilder) SetWindow(window int) *GloVeBuilder {
+func (gb *GloveBuilder) SetWindow(window int) *GloveBuilder {
 	gb.window = window
 	return gb
 }
 
 // SetInitLearningRate sets the initial learning rate.
-func (gb *GloVeBuilder) SetInitLearningRate(initlr float64) *GloVeBuilder {
+func (gb *GloveBuilder) SetInitLearningRate(initlr float64) *GloveBuilder {
 	gb.initLearningRate = initlr
 	return gb
 }
 
 // SetThread sets number of goroutine.
-func (gb *GloVeBuilder) SetThread(thread int) *GloVeBuilder {
+func (gb *GloveBuilder) SetThread(thread int) *GloveBuilder {
 	gb.thread = thread
 	return gb
 }
 
 // SetToLower converts the words in corpus to lowercase.
-func (gb *GloVeBuilder) SetToLower() *GloVeBuilder {
+func (gb *GloveBuilder) SetToLower() *GloveBuilder {
 	gb.toLower = true
 	return gb
 }
 
 // SetVerbose sets verbose mode.
-func (gb *GloVeBuilder) SetVerbose() *GloVeBuilder {
+func (gb *GloveBuilder) SetVerbose() *GloveBuilder {
 	gb.verbose = true
 	return gb
 }
 
 // SetSolver sets the solver.
-func (gb *GloVeBuilder) SetSolver(solver string) *GloVeBuilder {
+func (gb *GloveBuilder) SetSolver(solver string) *GloveBuilder {
 	gb.solver = solver
 	return gb
 }
 
 // SetIteration sets the number of iteration.
-func (gb *GloVeBuilder) SetIteration(iter int) *GloVeBuilder {
+func (gb *GloveBuilder) SetIteration(iter int) *GloveBuilder {
 	gb.iteration = iter
 	return gb
 }
 
 // SetAlpha sets alpha.
-func (gb *GloVeBuilder) SetAlpha(alpha float64) *GloVeBuilder {
+func (gb *GloveBuilder) SetAlpha(alpha float64) *GloveBuilder {
 	gb.alpha = alpha
 	return gb
 }
 
 // SetXmax sets x-max.
-func (gb *GloVeBuilder) SetXmax(xmax int) *GloVeBuilder {
+func (gb *GloveBuilder) SetXmax(xmax int) *GloveBuilder {
 	gb.xmax = xmax
 	return gb
 }
 
 // SetMinCount sets min count.
-func (gb *GloVeBuilder) SetMinCount(minCount int) *GloVeBuilder {
+func (gb *GloveBuilder) SetMinCount(minCount int) *GloveBuilder {
 	gb.minCount = minCount
 	return gb
 }
 
 // SetBatchSize sets batchSize
-func (gb *GloVeBuilder) SetBatchSize(batchSize int) *GloVeBuilder {
+func (gb *GloveBuilder) SetBatchSize(batchSize int) *GloveBuilder {
 	gb.batchSize = batchSize
 	return gb
 }
 
 // Build creates model.Model interface.
-func (gb *GloVeBuilder) Build() (model.Model, error) {
+func (gb *GloveBuilder) Build() (model.Model, error) {
 	cnf := model.NewConfig(gb.dimension, gb.window, gb.initLearningRate,
 		gb.thread, gb.toLower, gb.verbose)
 
@@ -165,6 +165,6 @@ func (gb *GloVeBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Invalid solver: %s not in sgd|adagrad", gb.solver)
 	}
 
-	return glove.NewGloVe(cnf, solver,
+	return glove.NewGlove(cnf, solver,
 		gb.iteration, gb.xmax, gb.alpha, gb.minCount, gb.batchSize), nil
 }
