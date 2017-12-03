@@ -21,40 +21,34 @@ import (
 	"github.com/chewxy/lingo/corpus"
 )
 
-// CofreqMap stores the co-frequency between word-word.
-type CofreqMap map[Pair]float64
-
-// Pair stores the co-frequency pair words.
-type Pair struct {
-	l1 int
-	l2 int
+func encodeBigram(l1, l2 uint64) uint64 {
+	return l1 | (l2 << 32)
 }
+
+func decodeBigram(pid uint64) (uint64, uint64) {
+	f := pid >> 32
+	return pid - (f << 32), f
+}
+
+// CofreqMap stores the co-frequency between word-word.
+type CofreqMap map[uint64]float64
 
 // PairWithFreq stores the co-frequency pair words.
 type PairWithFreq struct {
-	l1 int
-	l2 int
+	pairID uint64
 
 	f           float64
 	coefficient float64
 }
 
 func (c CofreqMap) update(l1, l2 int, distance float64) {
-	if l1 == l2 {
-		return
-	}
-
-	pp := Pair{
-		l1: l1,
-		l2: l2,
-	}
-
-	c[pp] += 1.0 / distance
+	c[encodeBigram(uint64(l1), uint64(l2))] += 1.0 / distance
 }
 
 func (c CofreqMap) toList(cps *corpus.Corpus, xmax int, alpha float64, minCount int) []PairWithFreq {
 	for p := range c {
-		if cps.IDFreq(p.l1) < minCount || cps.IDFreq(p.l2) < minCount {
+		ul1, ul2 := decodeBigram(p)
+		if cps.IDFreq(int(ul1)) < minCount || cps.IDFreq(int(ul2)) < minCount {
 			delete(c, p)
 		}
 	}
@@ -70,8 +64,7 @@ func (c CofreqMap) toList(cps *corpus.Corpus, xmax int, alpha float64, minCount 
 		}
 
 		lst[shuffle[i]] = PairWithFreq{
-			l1:          p.l1,
-			l2:          p.l2,
+			pairID:      p,
 			f:           math.Log(f),
 			coefficient: coefficient,
 		}
