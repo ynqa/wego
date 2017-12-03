@@ -199,8 +199,9 @@ func (g *Glove) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sem
 
 	for i := start; i < end; i++ {
 		p := g.pairs[i]
-		l1 := p.l1 * (g.Dimension + 1)
-		l2 := (p.l2 + g.Corpus.Size()) * (g.Dimension + 1)
+		ul1, ul2 := decodeBigram(p.pairID)
+		l1 := int(ul1) * (g.Dimension + 1)
+		l2 := (int(ul2) + g.Corpus.Size()) * (g.Dimension + 1)
 		g.costPerThread[threadID] += g.solver.trainOne(l1, l2, p.f, p.coefficient, g.weight)
 	}
 
