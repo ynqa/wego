@@ -35,7 +35,7 @@ type CofreqMap map[uint64]float64
 
 // PairWithFreq stores the co-frequency pair words.
 type PairWithFreq struct {
-	pairID uint64
+	l1, l2 int
 
 	f           float64
 	coefficient float64
@@ -63,8 +63,10 @@ func (c CofreqMap) toList(cps *corpus.Corpus, xmax int, alpha float64, minCount 
 			coefficient = math.Pow(f/float64(xmax), alpha)
 		}
 
+		ul1, ul2 := decodeBigram(p)
 		lst[shuffle[i]] = PairWithFreq{
-			pairID:      p,
+			l1:          int(ul1),
+			l2:          int(ul2),
 			f:           math.Log(f),
 			coefficient: coefficient,
 		}
