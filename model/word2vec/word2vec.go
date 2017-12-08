@@ -87,15 +87,11 @@ func (w *Word2Vec) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		line := scanner.Text()
+		word := scanner.Text()
 		if w.ToLower {
-			line = strings.ToLower(line)
+			word = strings.ToLower(word)
 		}
-
-		words := strings.Fields(line)
-		for _, word := range words {
-			w.Add(word)
-		}
+		w.Add(word)
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -122,39 +118,37 @@ func (w *Word2Vec) Train(f io.ReadCloser) error {
 	sema := make(chan struct{}, w.Thread)
 	var wg sync.WaitGroup
 
-	var buffered int
-	line := make([]string, 0, w.batchSize)
+	buffered := 0
+	wordIDs := make([]int, w.batchSize)
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
 	for scanner.Scan() {
-		if buffered < w.batchSize {
-			line = append(line, scanner.Text())
+		word := scanner.Text()
+		if w.ToLower {
+			word = strings.ToLower(word)
+		}
+		wordID, _ := w.Id(word)
+		wordIDs[buffered] = wordID
+
+		if buffered < w.batchSize-1 {
 			buffered++
 			continue
 		}
 
-		if w.ToLower {
-			model.Lower(line)
-		}
-
 		wg.Add(1)
-		wordIDs := w.toIDs(line)
 		go w.trainOneBatch(wordIDs, &wg, sema, w.mod.trainOne)
+		wordIDs = make([]int, w.batchSize)
 		buffered = 0
-		line = line[:0]
 	}
-	wg.Wait()
 
 	// Leftover processing
 	if buffered > 0 {
-		if w.ToLower {
-			model.Lower(line)
-		}
-
-		wordIDs := w.toIDs(line)
-		w.trainRemainderBatch(wordIDs, w.mod.trainOne)
+		wg.Add(1)
+		go w.trainOneBatch(wordIDs[:buffered], &wg, sema, w.mod.trainOne)
 	}
+
+	wg.Wait()
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		return errors.Wrap(err, "Unable to complete scanning")
@@ -186,27 +180,6 @@ func (w *Word2Vec) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan st
 
 	}
 	<-sema // release
-}
-
-func (w *Word2Vec) trainRemainderBatch(wordIDs []int,
-	trainOne func(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)) {
-
-	for i, wordID := range wordIDs {
-		if w.Verbose {
-			w.progress.Increment()
-		}
-		r := rand.Float64()
-		p := w.subsampleRate(wordID)
-
-		if p < r {
-			continue
-		}
-
-		lr := w.currentLearningRate
-
-		trainOne(wordIDs, i, w.vector, lr, w.opt)
-		w.cwsCh <- struct{}{} // increment wordsize
-	}
 }
 
 func (w *Word2Vec) incrementDoneWord() {
@@ -278,12 +251,4 @@ func (w *Word2Vec) updateLearningRate() float64 {
 func (w *Word2Vec) subsampleRate(wordID int) float64 {
 	z := float64(w.IDFreq(wordID)) / float64(w.TotalFreq())
 	return (math.Sqrt(z/w.subsampleThreshold) + 1.0) * w.subsampleThreshold / z
-}
-
-func (w *Word2Vec) toIDs(words []string) []int {
-	retVal := make([]int, len(words))
-	for i, word := range words {
-		retVal[i], _ = w.Id(word)
-	}
-	return retVal
 }

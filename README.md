@@ -25,7 +25,8 @@ Listed models for word embedding, and checked it already implemented.
 and their Compositionality [[pdf]](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
 - [x] GloVe
   - GloVe: Global Vectors for Word Representation [[pdf]](http://nlp.stanford.edu/pubs/glove.pdf)
-- and more...
+
+and more...
 
 ## Installation
 
