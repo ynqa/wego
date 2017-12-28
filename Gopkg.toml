@@ -27,5 +27,5 @@
   version = "1.0.18"
 
 [[constraint]]
-  branch = "master"
+  version = "v0.8.0"
   name = "gorgonia.org/tensor"

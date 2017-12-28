@@ -8,18 +8,6 @@
   version = "v2.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/chewxy/cu"
-  packages = ["."]
-  revision = "722bde9b6d36068b0f0264019852ab357ed97d31"
-
-[[projects]]
-  name = "github.com/chewxy/gorgonia"
-  packages = [".","tensor","tensor/internal/execution","tensor/internal/storage"]
-  revision = "2d5e8a7ca29c0608b7af7c8fb391f49d8d6b114e"
-  version = "v0.7.4"
-
-[[projects]]
   name = "github.com/chewxy/hm"
   packages = ["."]
   revision = "61efb3290a086d1335e8954b3734c102126818ba"
@@ -29,7 +17,7 @@
   branch = "master"
   name = "github.com/chewxy/lingo"
   packages = [".","corpus","treebank"]
-  revision = "311daca23597e20aea407445a6c8100bfca4e7f7"
+  revision = "5df599b29592fc42add176fac2873423a17691e7"
 
 [[projects]]
   name = "github.com/chewxy/math32"
@@ -38,58 +26,10 @@
   version = "v1.0.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/chewxy/vecf32"
-  packages = ["."]
-  revision = "1f59516136c1a7f1c19871d3dc5f0d9928ffbd7c"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/chewxy/vecf64"
-  packages = ["."]
-  revision = "a97a4d31b6c9343b1860ef8ce583069671265b81"
-
-[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "629574ca2a5df945712d3079857300b5e4da0236"
   version = "v1.4.2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/blas"
-  packages = [".","blas64","native","native/internal/math32"]
-  revision = "37e82626499e1df7c54aeaba0959fd6e7e8dc1e4"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/floats"
-  packages = ["."]
-  revision = "f74b330d45c56584a6ea7a27f5c64ea2900631e9"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/graph"
-  packages = [".","internal/linear","internal/ordered","internal/set","topo","traverse"]
-  revision = "1ee3caba44244c8cf869cbec9a0079f8a1f2b1c0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/internal"
-  packages = ["asm/f32","asm/f64"]
-  revision = "e57e4534cf9b3b00ef6c0175f59d8d2d34f60914"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/lapack"
-  packages = [".","lapack64","native"]
-  revision = "5ed4b826becd1807e09377508f51756586d1a98c"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/gonum/matrix"
-  packages = [".","mat64"]
-  revision = "dd6034299e4242c9f0ea36735e6d4264dfcb3f9f"
 
 [[projects]]
   branch = "master"
@@ -112,8 +52,8 @@
 [[projects]]
   name = "github.com/magiconair/properties"
   packages = ["."]
-  revision = "be5ece7dd465ab0765a9682137865547526d1dfb"
-  version = "v1.7.3"
+  revision = "d419a98cdbed11a922bf76f257b7c4be79b50e73"
+  version = "v1.7.4"
 
 [[projects]]
   name = "github.com/mattn/go-runewidth"
@@ -131,7 +71,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "a7a4c189eb47ed33ce7b35f2880070a0c82a67d4"
+  revision = "65fec0d89a572b4367094e2058d3ebe667de3b60"
 
 [[projects]]
   name = "github.com/pelletier/go-toml"
@@ -146,10 +86,10 @@
   version = "v0.8.0"
 
 [[projects]]
-  branch = "master"
   name = "github.com/spf13/afero"
   packages = [".","mem"]
-  revision = "5660eeed305fe5f69c8fc6cf899132a459a97064"
+  revision = "8d919cbe7e2627e417f3e45c3c0e489a5b7e2536"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/spf13/cast"
@@ -191,47 +131,65 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "661970f62f5897bc0cd5fdca7e087ba8a98a8fa1"
+  revision = "83801418e1b59fb1880e363299581ee543af32ca"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/text"
   packages = ["internal/gen","internal/triegen","internal/ucd","transform","unicode/cldr","unicode/norm"]
-  revision = "6eab0e8f74e86c598ec3b6fad4888e0c11482d48"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/tools"
-  packages = ["container/intsets"]
-  revision = "9b61fcc4c548d69663d915801fc4b42a43b6cd9c"
+  revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
 
 [[projects]]
   branch = "master"
   name = "gonum.org/v1/gonum"
-  packages = ["blas","blas/blas64","blas/gonum","floats","internal/asm/c128","internal/asm/f32","internal/asm/f64","internal/math32","lapack","lapack/gonum","lapack/lapack64","mat"]
-  revision = "637e7b76b9ea1ace629203817cddce3630c2ec93"
+  packages = ["blas","blas/blas64","blas/gonum","floats","graph","graph/internal/linear","graph/internal/ordered","graph/internal/set","graph/topo","graph/traverse","internal/asm/c128","internal/asm/f32","internal/asm/f64","internal/math32","lapack","lapack/gonum","lapack/lapack64","mat"]
+  revision = "cd47c93d54483f54eed45cc1e2e1264d267f326c"
 
 [[projects]]
   name = "gopkg.in/cheggaaa/pb.v1"
   packages = ["."]
-  revision = "657164d0228d6bebe316fdf725c69f131a50fb10"
-  version = "v1.0.18"
+  revision = "18d384da9bdc1e5a08fc2a62a494c321d9ae74ea"
+  version = "v1.0.19"
 
 [[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
-  revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
+  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+
+[[projects]]
+  name = "gorgonia.org/cu"
+  packages = ["."]
+  revision = "32f165836e285c14a4f78c455872d069e0cc5a7d"
+  version = "v0.8.0"
+
+[[projects]]
+  name = "gorgonia.org/gorgonia"
+  packages = ["."]
+  revision = "55787bbd182f3d621f26c0a85e7de2e6a28ba5eb"
+  version = "v0.8.0"
+
+[[projects]]
+  name = "gorgonia.org/tensor"
+  packages = [".","internal/execution","internal/storage"]
+  revision = "863b76853934d224104ae8cc08f2d27202521242"
+  version = "v0.8.0"
 
 [[projects]]
   branch = "master"
-  name = "gorgonia.org/tensor"
-  packages = [".","internal/execution","internal/storage"]
-  revision = "c6722387810e05ed35630b841faa6854fd16ba97"
+  name = "gorgonia.org/vecf32"
+  packages = ["."]
+  revision = "9c61466a81d94e61358d0a8cf77e5d76ff5de655"
+
+[[projects]]
+  branch = "master"
+  name = "gorgonia.org/vecf64"
+  packages = ["."]
+  revision = "92cacded62a76710546770b2b86b1ca82ff76614"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e98e2354a35db0da787d1efa7b3ae61b7595631a97ebb3b8f9c21cb6b4c79c71"
+  inputs-digest = "38c2aa2b83d61427a1941259a70eb59d90313f9ea14271a1801dffd54f3b1122"
   solver-name = "gps-cdcl"
   solver-version = 1
