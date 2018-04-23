@@ -58,9 +58,14 @@ type Word2Vec struct {
 // NewWord2Vec creates *Word2Vec.
 func NewWord2Vec(config *model.Config, mod Model, opt Optimizer,
 	subsampleThreshold, theta float64, batchSize int) *Word2Vec {
+
+	// WITHOUT WHITESPACE, UNKNOWN, ROOT
+	emptyOpt := func(c *corpus.Corpus) error { return nil }
+	c, _ := corpus.Construct(emptyOpt)
+
 	return &Word2Vec{
 		Config: config,
-		Corpus: corpus.New(),
+		Corpus: c,
 
 		mod: mod,
 		opt: opt,
@@ -76,13 +81,7 @@ func NewWord2Vec(config *model.Config, mod Model, opt Optimizer,
 
 // Preprocess scans the corpus once before Train to count the word frequency.
 func (w *Word2Vec) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
-	defer func() {
-		w.vector = make([]float64, w.Corpus.Size()*w.Dimension)
-		for i := 0; i < w.Corpus.Size()*w.Dimension; i++ {
-			w.vector[i] = (rand.Float64() - 0.5) / float64(w.Dimension)
-		}
-		w.opt.init(w.Corpus, w.Dimension)
-	}()
+	defer w.initialize()
 
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
@@ -102,6 +101,14 @@ func (w *Word2Vec) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 		return nil, errors.Wrap(err, "Unable to rewind file")
 	}
 	return f.(io.ReadCloser), nil
+}
+
+func (w *Word2Vec) initialize() {
+	w.vector = make([]float64, w.Corpus.Size()*w.Dimension)
+	for i := 0; i < w.Corpus.Size()*w.Dimension; i++ {
+		w.vector[i] = (rand.Float64() - 0.5) / float64(w.Dimension)
+	}
+	w.opt.init(w.Corpus, w.Dimension)
 }
 
 // Train trains a corpus. It assumes that Preprocess() has already been called

@@ -21,6 +21,7 @@ import (
 	"github.com/chewxy/lingo/corpus"
 )
 
+// The data structure is referred from https://blog.chewxy.com/2017/07/12/21-bits-english/
 func encodeBigram(l1, l2 uint64) uint64 {
 	return l1 | (l2 << 32)
 }
