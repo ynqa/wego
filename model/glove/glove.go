@@ -43,7 +43,7 @@ type Glove struct {
 
 	solver Solver
 
-	weight []float64
+	vector []float64
 
 	iteration int
 	xmax      int
@@ -97,18 +97,7 @@ func (g *Glove) update(wordIDs []int) {
 
 // Preprocess scans the corpus once before Train to count the co-frequency between word-word.
 func (g *Glove) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
-	defer func() {
-		weightSize := g.Corpus.Size() * (g.Dimension + 1) * 2
-
-		g.solver.init(weightSize)
-
-		g.weight = make([]float64, weightSize)
-		for i := 0; i < g.Corpus.Size()*(g.Dimension+1)*2; i++ {
-			g.weight[i] = rand.Float64() / float64(g.Dimension)
-		}
-
-		g.pairs = g.CofreqMap.toList(g.Corpus, g.xmax, g.alpha, g.minCount)
-	}()
+	defer g.initialize()
 
 	buffered := 0
 	wordIDs := make([]int, g.batchSize)
@@ -148,16 +137,21 @@ func (g *Glove) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
 	return f.(io.ReadCloser), nil
 }
 
+func (g *Glove) initialize() {
+	weightSize := g.Corpus.Size() * (g.Dimension + 1) * 2
+	g.solver.init(weightSize)
+	g.vector = make([]float64, weightSize)
+	for i := 0; i < g.Corpus.Size()*(g.Dimension+1)*2; i++ {
+		g.vector[i] = rand.Float64() / float64(g.Dimension)
+	}
+	g.pairs = g.CofreqMap.toList(g.Corpus, g.xmax, g.alpha, g.minCount)
+}
+
 // Train trains a corpus. It assumes that Preprocess() has already been called.
 func (g *Glove) Train(f io.ReadCloser) error {
 	f.Close()
 	if len(g.pairs) == 0 {
 		return errors.Errorf("Must initialize model parameters by calling Preprocess")
-	}
-
-	if g.Verbose {
-		fmt.Printf("The size of Corpus: %v\n", g.Corpus.Size())
-		fmt.Printf("The size of Pairs: %v\n", len(g.pairs))
 	}
 
 	numLines := len(g.pairs)
@@ -201,7 +195,7 @@ func (g *Glove) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sem
 		p := g.pairs[i]
 		l1 := p.l1 * (g.Dimension + 1)
 		l2 := (p.l2 + g.Corpus.Size()) * (g.Dimension + 1)
-		g.costPerThread[threadID] += g.solver.trainOne(l1, l2, p.f, p.coefficient, g.weight)
+		g.costPerThread[threadID] += g.solver.trainOne(l1, l2, p.f, p.coefficient, g.vector)
 	}
 
 	<-sema
@@ -239,7 +233,7 @@ func (g *Glove) Save(outputPath string) error {
 		for j := 0; j < g.Dimension; j++ {
 			l1 := i * (g.Dimension + 1)
 			l2 := (i + g.Corpus.Size()) * (g.Dimension + 1)
-			fmt.Fprintf(&buf, "%v ", g.weight[l1+j]+g.weight[l2+j])
+			fmt.Fprintf(&buf, "%v ", g.vector[l1+j]+g.vector[l2+j])
 		}
 		fmt.Fprintln(&buf)
 	}
