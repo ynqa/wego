@@ -52,7 +52,7 @@ func TestAdaGradCallBack(t *testing.T) {
 	solver := NewAdaGrad(conf)
 
 	before := solver.initLearningRate
-	solver.callback()
+	solver.postOneIter()
 	after := solver.initLearningRate
 
 	if before != after {

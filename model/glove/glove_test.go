@@ -29,7 +29,7 @@ type MockSolver struct{}
 
 func (m *MockSolver) init(weightSie int)                                                    {}
 func (m *MockSolver) trainOne(l1, l2 int, f, coefficient float64, weight []float64) float64 { return 0. }
-func (m *MockSolver) callback()                                                             {}
+func (m *MockSolver) postOneIter()                                                          {}
 
 // MockNopSeeker stores io.ReadCloser with Seek func that has nothing.
 type MockNopSeeker struct{ io.ReadCloser }

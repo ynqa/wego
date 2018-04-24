@@ -38,7 +38,7 @@ func TestSGDCallBack(t *testing.T) {
 	solver := NewSGD(conf)
 
 	before := solver.currentLearningRate
-	solver.callback()
+	solver.postOneIter()
 	after := solver.currentLearningRate
 
 	if before < after {

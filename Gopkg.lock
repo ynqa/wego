@@ -17,7 +17,7 @@
   branch = "master"
   name = "github.com/chewxy/lingo"
   packages = [".","corpus","treebank"]
-  revision = "5df599b29592fc42add176fac2873423a17691e7"
+  revision = "8f8059f5438926f7f50e8c62135b0af85376aeca"
 
 [[projects]]
   name = "github.com/chewxy/math32"
