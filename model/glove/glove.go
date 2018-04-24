@@ -59,11 +59,7 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(config *model.Config, solver Solver,
 	iteration int, xmax int, alpha float64, minCount, batchSize int) *Glove {
-
-	// WITHOUT WHITESPACE, UNKNOWN, ROOT
-	emptyOpt := func(c *corpus.Corpus) error { return nil }
-	c, _ := corpus.Construct(emptyOpt)
-
+	c, _ := corpus.Construct()
 	return &Glove{
 		Config: config,
 		Corpus: c,
@@ -154,6 +150,11 @@ func (g *Glove) Train(f io.ReadCloser) error {
 		return errors.Errorf("Must initialize model parameters by calling Preprocess")
 	}
 
+	if g.Verbose {
+		fmt.Printf("Size of Corpus: %v\n", g.Corpus.Size())
+		fmt.Printf("Size of Pair: %v\n", len(g.pairs))
+	}
+
 	numLines := len(g.pairs)
 	g.indexPerThread[0] = 0
 	g.indexPerThread[g.Thread] = numLines
@@ -174,8 +175,7 @@ func (g *Glove) Train(f io.ReadCloser) error {
 		}
 		wg.Wait()
 
-		g.solver.callback()
-
+		g.solver.postOneIter()
 		if g.Verbose {
 			for j, c := range g.costPerThread {
 				totalCost += c

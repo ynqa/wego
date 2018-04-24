@@ -18,5 +18,5 @@ package glove
 type Solver interface {
 	init(weightSize int)
 	trainOne(l1, l2 int, f, coefficient float64, weight []float64) (cost float64)
-	callback()
+	postOneIter()
 }

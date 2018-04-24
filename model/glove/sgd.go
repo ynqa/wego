@@ -61,6 +61,6 @@ func (s *SGD) trainOne(l1, l2 int, f, coefficient float64, weight []float64) flo
 	return cost
 }
 
-func (s *SGD) callback() {
+func (s *SGD) postOneIter() {
 	s.currentLearningRate *= s.shrinkage
 }

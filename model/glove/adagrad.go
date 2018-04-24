@@ -75,4 +75,4 @@ func (a *AdaGrad) trainOne(l1, l2 int, f, coefficient float64, weight []float64)
 	return cost
 }
 
-func (a *AdaGrad) callback() {}
+func (a *AdaGrad) postOneIter() {}

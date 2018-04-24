@@ -58,11 +58,7 @@ type Word2Vec struct {
 // NewWord2Vec creates *Word2Vec.
 func NewWord2Vec(config *model.Config, mod Model, opt Optimizer,
 	subsampleThreshold, theta float64, batchSize int) *Word2Vec {
-
-	// WITHOUT WHITESPACE, UNKNOWN, ROOT
-	emptyOpt := func(c *corpus.Corpus) error { return nil }
-	c, _ := corpus.Construct(emptyOpt)
-
+	c, _ := corpus.Construct()
 	return &Word2Vec{
 		Config: config,
 		Corpus: c,
