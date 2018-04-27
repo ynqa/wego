@@ -23,7 +23,7 @@ import (
 )
 
 func TestGetPath(t *testing.T) {
-	c := TestPredictModelCorpus
+	c := TestWord2VecCorpus
 	huffmanTree, err := c.HuffmanTree(5)
 
 	if err != nil {

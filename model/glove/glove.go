@@ -37,7 +37,7 @@ import (
 // Glove stores the configs for GloVe models.
 type Glove struct {
 	*model.Config
-	*corpus.CountModelCorpus
+	*corpus.GloveCorpus
 
 	solver Solver
 
@@ -55,11 +55,11 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 	xmax int, alpha float64) *Glove {
-	c := corpus.NewCountModelCorpus(f, config.ToLower, config.MinCount,
+	c := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount,
 		config.Window, co.IncDist)
 	glove := &Glove{
-		Config:           config,
-		CountModelCorpus: c,
+		Config:      config,
+		GloveCorpus: c,
 
 		solver: solver,
 

@@ -30,7 +30,7 @@ func TestNewNegativeSampling(t *testing.T) {
 
 func TestInitialize(t *testing.T) {
 	ns := NewNegativeSampling(10)
-	ns.initialize(corpus.TestPredictModelCorpus, 10)
+	ns.initialize(corpus.TestWord2VecCorpus, 10)
 
 	if len(ns.contextVector) != 3*10 {
 		t.Error("NegativeSampling: Init returns negativeTensor with length=3*10")

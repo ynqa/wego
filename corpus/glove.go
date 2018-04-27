@@ -20,38 +20,38 @@ import (
 	"github.com/ynqa/word-embedding/corpus/co"
 )
 
-// CountModelCorpus stores corpus and co-occurrences for words.
-type CountModelCorpus struct {
+// GloveCorpus stores corpus and co-occurrences for words.
+type GloveCorpus struct {
 	*core
 	cooccurrence map[uint64]float64
 }
 
-// NewCountModelCorpus creates *CountModelCorpus.
-func NewCountModelCorpus(f io.ReadCloser, toLower bool, minCount, window int,
-	incf func(l1idx, l2idx int) float64) *CountModelCorpus {
-	countModelCorpus := &CountModelCorpus{
+// NewGloveCorpus creates *GloveCorpus.
+func NewGloveCorpus(f io.ReadCloser, toLower bool, minCount, window int,
+	incf func(l1idx, l2idx int) float64) *GloveCorpus {
+	gloveCorpus := &GloveCorpus{
 		core:         newCore(),
 		cooccurrence: make(map[uint64]float64),
 	}
-	countModelCorpus.parse(f, toLower, minCount)
-	countModelCorpus.build(window, incf)
-	return countModelCorpus
+	gloveCorpus.parse(f, toLower, minCount)
+	gloveCorpus.build(window, incf)
+	return gloveCorpus
 }
 
 // Cooccurrence returns co-occurrence map for words.
-func (cc *CountModelCorpus) Cooccurrence() map[uint64]float64 {
-	return cc.cooccurrence
+func (gc *GloveCorpus) Cooccurrence() map[uint64]float64 {
+	return gc.cooccurrence
 }
 
-func (cc *CountModelCorpus) build(window int, incf func(l1idx, l2idx int) float64) {
-	for i := 0; i < len(cc.document); i++ {
+func (gc *GloveCorpus) build(window int, incf func(l1idx, l2idx int) float64) {
+	for i := 0; i < len(gc.document); i++ {
 		for j := i + 1; j <= i+window; j++ {
-			if j >= len(cc.document) {
+			if j >= len(gc.document) {
 				continue
 			}
 			f := incf(i, j)
-			cc.cooccurrence[co.EncodeBigram(uint64(cc.document[i]), uint64(cc.document[j]))] += f
-			cc.cooccurrence[co.EncodeBigram(uint64(cc.document[j]), uint64(cc.document[i]))] += f
+			gc.cooccurrence[co.EncodeBigram(uint64(gc.document[i]), uint64(gc.document[j]))] += f
+			gc.cooccurrence[co.EncodeBigram(uint64(gc.document[j]), uint64(gc.document[i]))] += f
 		}
 	}
 }

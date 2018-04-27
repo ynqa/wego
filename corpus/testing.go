@@ -28,6 +28,6 @@ var (
 	dimension = 5
 	text      = "a b b c c c c"
 	fake      = fakeNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
-	// TestPredictModelCorpus is mock for test.
-	TestPredictModelCorpus = NewPredictModelCorpus(fake, true, 0)
+	// TestWord2VecCorpus is mock for test.
+	TestWord2VecCorpus = NewWord2VecCorpus(fake, true, 0)
 )

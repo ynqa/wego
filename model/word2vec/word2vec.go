@@ -36,7 +36,7 @@ import (
 // Word2Vec stores all common configs for Word2Vec models.
 type Word2Vec struct {
 	*model.Config
-	*corpus.PredictModelCorpus
+	*corpus.Word2VecCorpus
 
 	mod Model
 	opt Optimizer
@@ -60,10 +60,10 @@ type Word2Vec struct {
 // NewWord2Vec creates *Word2Vec.
 func NewWord2Vec(f io.ReadCloser, config *model.Config, mod Model, opt Optimizer,
 	subsampleThreshold, theta float64, batchSize int) *Word2Vec {
-	c := corpus.NewPredictModelCorpus(f, config.ToLower, config.MinCount)
+	c := corpus.NewWord2VecCorpus(f, config.ToLower, config.MinCount)
 	word2vec := &Word2Vec{
-		Config:             config,
-		PredictModelCorpus: c,
+		Config:         config,
+		Word2VecCorpus: c,
 
 		mod: mod,
 		opt: opt,
@@ -96,7 +96,7 @@ func (w *Word2Vec) initialize() {
 	}
 
 	// Initialize optimizer.
-	w.opt.initialize(w.PredictModelCorpus, w.Dimension)
+	w.opt.initialize(w.Word2VecCorpus, w.Dimension)
 }
 
 // Train trains a corpus.

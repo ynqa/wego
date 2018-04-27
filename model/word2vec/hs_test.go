@@ -30,7 +30,7 @@ func TestNewHierarchicalSoftmax(t *testing.T) {
 
 func TestHSInit(t *testing.T) {
 	hs := NewHierarchicalSoftmax(10)
-	hs.initialize(corpus.TestPredictModelCorpus, 10)
+	hs.initialize(corpus.TestWord2VecCorpus, 10)
 
 	if len(hs.nodeMap) != 3 {
 		t.Error("HierarchicalSoftmax: Init returns nodeMap with length=3")

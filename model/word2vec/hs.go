@@ -38,7 +38,7 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	return hs
 }
 
-func (hs *HierarchicalSoftmax) initialize(c *corpus.PredictModelCorpus, dimension int) (err error) {
+func (hs *HierarchicalSoftmax) initialize(c *corpus.Word2VecCorpus, dimension int) (err error) {
 	hs.vocabulary = c.Size()
 	hs.dimension = dimension
 	hs.nodeMap, err = c.HuffmanTree(dimension)

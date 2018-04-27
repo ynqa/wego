@@ -20,27 +20,27 @@ import (
 	"github.com/ynqa/word-embedding/corpus/node"
 )
 
-// PredictModelCorpus stores corpus itself by integer word id list.
-type PredictModelCorpus struct {
+// Word2VecCorpus stores corpus itself by integer word id list.
+type Word2VecCorpus struct {
 	*core
 }
 
-// NewPredictModelCorpus creates *PredictModelCorpus.
-func NewPredictModelCorpus(f io.ReadCloser, toLower bool, minCount int) *PredictModelCorpus {
-	predictModelCorpus := &PredictModelCorpus{
+// NewWord2VecCorpus creates *Word2VecCorpus.
+func NewWord2VecCorpus(f io.ReadCloser, toLower bool, minCount int) *Word2VecCorpus {
+	word2VecCorpus := &Word2VecCorpus{
 		core: newCore(),
 	}
-	predictModelCorpus.parse(f, toLower, minCount)
-	return predictModelCorpus
+	word2VecCorpus.parse(f, toLower, minCount)
+	return word2VecCorpus
 }
 
 // HuffmanTree builds word nodes map.
-func (pc *PredictModelCorpus) HuffmanTree(dimension int) (map[int]*node.Node, error) {
-	ns := make(node.Nodes, 0, pc.Size())
+func (wc *Word2VecCorpus) HuffmanTree(dimension int) (map[int]*node.Node, error) {
+	ns := make(node.Nodes, 0, wc.Size())
 	nm := make(map[int]*node.Node)
-	for i := 0; i < pc.Size(); i++ {
+	for i := 0; i < wc.Size(); i++ {
 		n := new(node.Node)
-		n.Value = pc.IDFreq(i)
+		n.Value = wc.IDFreq(i)
 		nm[i] = n
 		ns = append(ns, n)
 	}
