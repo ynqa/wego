@@ -15,37 +15,29 @@
 package main
 
 import (
-	"os"
-
 	"github.com/ynqa/word-embedding/builder"
 )
 
 func main() {
 	b := builder.NewWord2VecBuilder()
 
-	b.SetDimension(10).
-		SetWindow(5).
-		SetModel("cbow").
-		SetOptimizer("ns").
-		SetNegativeSampleSize(5).
-		SetVerbose()
+	b.InputFile("text8").
+		Dimension(10).
+		Window(5).
+		Model("cbow").
+		Optimizer("ns").
+		NegativeSampleSize(5).
+		Verbose()
 
 	m, err := b.Build()
-
 	if err != nil {
 		// Failed to build word2vec.
 	}
 
-	inputFile, _ := os.Open("text8")
-
-	f, err := m.Preprocess(inputFile)
-
-	if err != nil {
-		// Failed to Preprocess.
-	}
-
 	// Start to Train.
-	m.Train(f)
+	if err = m.Train(); err != nil {
+		// Failed to train by word2vec.
+	}
 
 	// Save word vectors to a text file.
 	m.Save("example.txt")
