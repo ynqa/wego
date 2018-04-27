@@ -14,10 +14,6 @@
 
 package co
 
-import (
-	"math"
-)
-
 // The data structure for co-occurrence is referred from:
 //   https://blog.chewxy.com/2017/07/12/21-bits-english/
 
@@ -30,14 +26,4 @@ func EncodeBigram(l1, l2 uint64) uint64 {
 func DecodeBigram(pid uint64) (uint64, uint64) {
 	f := pid >> 32
 	return pid - (f << 32), f
-}
-
-// Inc is the function for increment co-occurrence.
-func Inc(l1, l2 int) float64 {
-	return 1.
-}
-
-// IncDist is the function for increment co-occurrence with scaled by distance.
-func IncDist(l1, l2 int) float64 {
-	return 1. / math.Abs(float64(l1-l2))
 }

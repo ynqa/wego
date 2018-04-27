@@ -16,6 +16,7 @@ package corpus
 
 import (
 	"io"
+	"math"
 
 	"github.com/ynqa/word-embedding/corpus/co"
 )
@@ -27,14 +28,13 @@ type GloveCorpus struct {
 }
 
 // NewGloveCorpus creates *GloveCorpus.
-func NewGloveCorpus(f io.ReadCloser, toLower bool, minCount, window int,
-	incf func(l1idx, l2idx int) float64) *GloveCorpus {
+func NewGloveCorpus(f io.ReadCloser, toLower bool, minCount, window int) *GloveCorpus {
 	gloveCorpus := &GloveCorpus{
 		core:         newCore(),
 		cooccurrence: make(map[uint64]float64),
 	}
 	gloveCorpus.parse(f, toLower, minCount)
-	gloveCorpus.build(window, incf)
+	gloveCorpus.build(window)
 	return gloveCorpus
 }
 
@@ -43,13 +43,13 @@ func (gc *GloveCorpus) Cooccurrence() map[uint64]float64 {
 	return gc.cooccurrence
 }
 
-func (gc *GloveCorpus) build(window int, incf func(l1idx, l2idx int) float64) {
+func (gc *GloveCorpus) build(window int) {
 	for i := 0; i < len(gc.document); i++ {
 		for j := i + 1; j <= i+window; j++ {
 			if j >= len(gc.document) {
 				continue
 			}
-			f := incf(i, j)
+			f := 1. / math.Abs(float64(i-j))
 			gc.cooccurrence[co.EncodeBigram(uint64(gc.document[i]), uint64(gc.document[j]))] += f
 			gc.cooccurrence[co.EncodeBigram(uint64(gc.document[j]), uint64(gc.document[i]))] += f
 		}

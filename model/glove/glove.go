@@ -55,8 +55,7 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 	xmax int, alpha float64) *Glove {
-	c := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount,
-		config.Window, co.IncDist)
+	c := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount, config.Window)
 	glove := &Glove{
 		Config:      config,
 		GloveCorpus: c,
