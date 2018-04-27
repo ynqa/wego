@@ -37,7 +37,7 @@ func NewAdaGrad(c *model.Config) *AdaGrad {
 	}
 }
 
-func (a *AdaGrad) init(weightSize int) {
+func (a *AdaGrad) initialize(weightSize int) {
 	a.gradsq = make([]float64, weightSize)
 
 	for i := 0; i < weightSize; i++ {

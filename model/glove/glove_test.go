@@ -15,52 +15,16 @@
 package glove
 
 import (
-	"bytes"
-	"io"
-	"io/ioutil"
-	"testing"
-
 	"github.com/ynqa/word-embedding/config"
 	"github.com/ynqa/word-embedding/model"
 )
 
-// MockSolver satisfies the interface of Solver.
-type MockSolver struct{}
-
-func (m *MockSolver) init(weightSie int)                                                    {}
-func (m *MockSolver) trainOne(l1, l2 int, f, coefficient float64, weight []float64) float64 { return 0. }
-func (m *MockSolver) postOneIter()                                                          {}
-
-// MockNopSeeker stores io.ReadCloser with Seek func that has nothing.
-type MockNopSeeker struct{ io.ReadCloser }
-
-func (n MockNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
-
-var (
-	text = "A B B C C C C"
-	conf = model.NewConfig(
-		config.DefaultDimension,
-		config.DefaultWindow,
-		config.DefaultInitLearningRate,
-		config.DefaultThread,
-		config.DefaultToLower,
-		config.DefaultVerbose,
-	)
-	mockSolver    = new(MockSolver)
-	mockNopSeeker = MockNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
-)
-
-func TestGlovePreprocess(t *testing.T) {
-	testGlove := NewGlove(
-		conf,
-		mockSolver,
-		config.DefaultIteration,
-		config.DefaultXmax,
-		config.DefaultAlpha,
-		config.DefaultMinCount,
-		config.DefaultBatchSize,
-	)
-	if _, err := testGlove.Preprocess(mockNopSeeker); err != nil {
-		t.Error("Word2Vec: Preprocess returns error")
-	}
-}
+var conf = model.NewConfig(
+	config.DefaultDimension,
+	config.DefaultIteration,
+	config.DefaultMinCount,
+	config.DefaultThread,
+	config.DefaultWindow,
+	config.DefaultInitLearningRate,
+	config.DefaultToLower,
+	config.DefaultVerbose)

@@ -25,131 +25,113 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
-	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
+	"gopkg.in/cheggaaa/pb.v1"
 
+	"github.com/ynqa/word-embedding/corpus"
+	"github.com/ynqa/word-embedding/corpus/co"
 	"github.com/ynqa/word-embedding/model"
 )
 
 // Glove stores the configs for GloVe models.
 type Glove struct {
 	*model.Config
-	*corpus.Corpus
-
-	CofreqMap
-	pairs []PairWithFreq
+	*corpus.CountModelCorpus
 
 	solver Solver
 
+	pairs  []pairWithFreq
 	vector []float64
 
-	iteration int
-	xmax      int
-	alpha     float64
+	xmax  int
+	alpha float64
 
-	minCount  int
-	batchSize int
-
-	costPerThread  []float64
 	indexPerThread []int
+
+	progress *pb.ProgressBar
 }
 
 // NewGlove creates *Glove.
-func NewGlove(config *model.Config, solver Solver,
-	iteration int, xmax int, alpha float64, minCount, batchSize int) *Glove {
-	c, _ := corpus.Construct()
-	return &Glove{
-		Config: config,
-		Corpus: c,
-
-		CofreqMap: make(CofreqMap),
+func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
+	xmax int, alpha float64) *Glove {
+	c := corpus.NewCountModelCorpus(f, config.ToLower, config.MinCount,
+		config.Window, co.IncDist)
+	glove := &Glove{
+		Config:           config,
+		CountModelCorpus: c,
 
 		solver: solver,
 
-		iteration: iteration,
-		alpha:     alpha,
-		xmax:      xmax,
+		alpha: alpha,
+		xmax:  xmax,
 
-		minCount:  minCount,
-		batchSize: batchSize,
-
-		costPerThread:  make([]float64, config.Thread),
 		indexPerThread: make([]int, config.Thread+1),
 	}
+	glove.initialize()
+	return glove
 }
 
-func (g *Glove) update(wordIDs []int) {
-	for i := 0; i < len(wordIDs); i++ {
-		for j := i - g.Config.Window; j <= i+g.Config.Window; j++ {
-			if i == j || j < 0 || j >= len(wordIDs) {
-				continue
-			}
-			g.CofreqMap.update(wordIDs[i], wordIDs[j], math.Abs(float64(i-j)))
-		}
-	}
+type pairWithFreq struct {
+	l1, l2         int
+	f, coefficient float64
 }
 
-// Preprocess scans the corpus once before Train to count the co-frequency between word-word.
-func (g *Glove) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
-	defer g.initialize()
+func (g *Glove) buildPairs() {
+	coo := g.Cooccurrence()
+	g.pairs = make([]pairWithFreq, len(coo))
+	shuffle := rand.Perm(len(coo))
 
-	buffered := 0
-	wordIDs := make([]int, g.batchSize)
+	if g.Verbose {
+		fmt.Println("Build pairs from corpus:")
+		g.progress = pb.New(len(coo)).SetWidth(80)
+		g.progress.Start()
+	}
 
-	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		word := scanner.Text()
-		if g.ToLower {
-			word = strings.ToLower(word)
-		}
-		g.Add(word)
-		wordID, _ := g.Id(word)
-		wordIDs[buffered] = wordID
-
-		if buffered < g.batchSize-1 {
-			buffered++
-			continue
+	i := 0
+	for p, f := range coo {
+		coefficient := 1.0
+		if f < float64(g.xmax) {
+			coefficient = math.Pow(f/float64(g.xmax), g.alpha)
 		}
 
-		g.update(wordIDs)
-		buffered = 0
-		wordIDs = make([]int, g.batchSize)
+		ul1, ul2 := co.DecodeBigram(p)
+		g.pairs[shuffle[i]] = pairWithFreq{
+			l1:          int(ul1),
+			l2:          int(ul2),
+			f:           math.Log(f),
+			coefficient: coefficient,
+		}
+		i++
+		if g.Verbose {
+			g.progress.Increment()
+		}
 	}
-
-	if buffered > 0 {
-		g.update(wordIDs[:buffered])
+	if g.Verbose {
+		g.progress.Finish()
 	}
-
-	if err := scanner.Err(); err != nil && err != io.EOF {
-		return nil, errors.Wrap(err, "Unable to complete scanning")
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		return nil, errors.Wrap(err, "Unable to rewind file")
-	}
-	return f.(io.ReadCloser), nil
 }
 
 func (g *Glove) initialize() {
+	// Build pairs.
+	g.buildPairs()
+
 	weightSize := g.Corpus.Size() * (g.Dimension + 1) * 2
-	g.solver.init(weightSize)
+	// Initialize word vector.
 	g.vector = make([]float64, weightSize)
 	for i := 0; i < g.Corpus.Size()*(g.Dimension+1)*2; i++ {
 		g.vector[i] = rand.Float64() / float64(g.Dimension)
 	}
-	g.pairs = g.CofreqMap.toList(g.Corpus, g.xmax, g.alpha, g.minCount)
+
+	// Initialize solver.
+	g.solver.initialize(weightSize)
 }
 
-// Train trains a corpus. It assumes that Preprocess() has already been called.
-func (g *Glove) Train(f io.ReadCloser) error {
-	f.Close()
-	if len(g.pairs) == 0 {
+// Train trains a corpus.
+func (g *Glove) Train() error {
+	if len(g.pairs) <= 0 {
 		return errors.Errorf("Must initialize model parameters by calling Preprocess")
 	}
-
 	if g.Verbose {
 		fmt.Printf("Size of Corpus: %v\n", g.Corpus.Size())
 		fmt.Printf("Size of Pair: %v\n", len(g.pairs))
@@ -162,42 +144,40 @@ func (g *Glove) Train(f io.ReadCloser) error {
 		g.indexPerThread[i] = g.indexPerThread[i-1] + int(math.Trunc(float64((numLines+i)/g.Thread)))
 	}
 
-	g.costPerThread = make([]float64, g.Thread)
-
 	sema := make(chan struct{}, g.Thread)
 	var wg sync.WaitGroup
-
-	for i := 0; i < g.iteration; i++ {
-		totalCost := 0.
+	for i := 1; i <= g.Iteration; i++ {
+		if g.Verbose {
+			fmt.Printf("%d-th:\n", i)
+			g.progress = pb.New(len(g.pairs)).SetWidth(80)
+			g.progress.Start()
+		}
 		for j := 0; j < g.Thread; j++ {
 			wg.Add(1)
-			go g.trainPerThread(j, g.indexPerThread[j], g.indexPerThread[j+1], &wg, sema)
+			go g.trainPerThread(g.indexPerThread[j], g.indexPerThread[j+1], &wg, sema)
 		}
 		wg.Wait()
-
 		g.solver.postOneIter()
 		if g.Verbose {
-			for j, c := range g.costPerThread {
-				totalCost += c
-				g.costPerThread[j] = 0.
-			}
-			fmt.Printf("%v-th iteration cost: %v at %v\n", i+1, totalCost/float64(len(g.pairs)), time.Now())
+			g.progress.Finish()
 		}
 	}
 	return nil
 }
 
-func (g *Glove) trainPerThread(threadID, start, end int, wg *sync.WaitGroup, sema chan struct{}) {
+func (g *Glove) trainPerThread(start, end int, wg *sync.WaitGroup, sema chan struct{}) {
 	defer wg.Done()
 	sema <- struct{}{}
-
 	for i := start; i < end; i++ {
+		if g.Verbose {
+			g.progress.Increment()
+		}
+
 		p := g.pairs[i]
 		l1 := p.l1 * (g.Dimension + 1)
 		l2 := (p.l2 + g.Corpus.Size()) * (g.Dimension + 1)
-		g.costPerThread[threadID] += g.solver.trainOne(l1, l2, p.f, p.coefficient, g.vector)
+		g.solver.trainOne(l1, l2, p.f, p.coefficient, g.vector)
 	}
-
 	<-sema
 }
 

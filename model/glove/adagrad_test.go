@@ -41,7 +41,7 @@ func TestNewAdaGrad(t *testing.T) {
 func TestAdaGradInit(t *testing.T) {
 	solver := NewAdaGrad(conf)
 
-	solver.init(100)
+	solver.initialize(100)
 
 	if len(solver.gradsq) != 100 {
 		t.Errorf("AdaGrad: after init, len(gradsq)=100: %v", len(solver.gradsq))

@@ -36,7 +36,7 @@ func NewSGD(c *model.Config) *SGD {
 	}
 }
 
-func (s *SGD) init(weightSize int) {}
+func (s *SGD) initialize(weightSize int) {}
 
 func (s *SGD) trainOne(l1, l2 int, f, coefficient float64, weight []float64) float64 {
 	var diff, cost float64
