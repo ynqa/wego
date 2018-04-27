@@ -15,11 +15,11 @@
 package word2vec
 
 import (
-	"github.com/chewxy/lingo/corpus"
+	"github.com/ynqa/word-embedding/corpus"
 )
 
 // Optimizer is the interface to initialize after scanning corpus once, and update the word vector.
 type Optimizer interface {
-	init(c *corpus.Corpus, dimension int) error
+	initialize(c *corpus.PredictModelCorpus, dimension int) error
 	update(targetID int, contextVector, poolVector []float64, learningRate float64)
 }

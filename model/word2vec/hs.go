@@ -15,13 +15,14 @@
 package word2vec
 
 import (
-	"github.com/chewxy/lingo/corpus"
+	"github.com/ynqa/word-embedding/corpus"
+	"github.com/ynqa/word-embedding/corpus/node"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
 type HierarchicalSoftmax struct {
 	*SigmoidTable
-	nodeMap  map[int]*Node
+	nodeMap  map[int]*node.Node
 	maxDepth int
 
 	vocabulary int
@@ -37,24 +38,21 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	return hs
 }
 
-// Init initializes the huffman tree.
-func (hs *HierarchicalSoftmax) init(c *corpus.Corpus, dimension int) (err error) {
+func (hs *HierarchicalSoftmax) initialize(c *corpus.PredictModelCorpus, dimension int) (err error) {
 	hs.vocabulary = c.Size()
 	hs.dimension = dimension
-
-	hs.nodeMap, err = newHuffmanTree(c, dimension)
+	hs.nodeMap, err = c.HuffmanTree(dimension)
 	return
 }
 
-// Update updates the word vector using the huffman tree.
 func (hs *HierarchicalSoftmax) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
-	path := hs.nodeMap[targetID].getPath()
+	path := hs.nodeMap[targetID].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
 
-		childCode := path[p+1].code
+		childCode := path[p+1].Code
 
-		hs.gradUpd(childCode, learningRate, relayPoint.vector, poolVector, contextVector)
+		hs.gradUpd(childCode, learningRate, relayPoint.Vector, poolVector, contextVector)
 
 		if hs.maxDepth > 0 && p >= hs.maxDepth {
 			break

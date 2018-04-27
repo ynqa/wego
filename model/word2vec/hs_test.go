@@ -16,6 +16,8 @@ package word2vec
 
 import (
 	"testing"
+
+	"github.com/ynqa/word-embedding/corpus"
 )
 
 func TestNewHierarchicalSoftmax(t *testing.T) {
@@ -28,7 +30,7 @@ func TestNewHierarchicalSoftmax(t *testing.T) {
 
 func TestHSInit(t *testing.T) {
 	hs := NewHierarchicalSoftmax(10)
-	hs.init(newTestCorpus(), 10)
+	hs.initialize(corpus.TestPredictModelCorpus, 10)
 
 	if len(hs.nodeMap) != 3 {
 		t.Error("HierarchicalSoftmax: Init returns nodeMap with length=3")
