@@ -15,21 +15,28 @@
 package builder
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/word-embedding/config"
 	"github.com/ynqa/word-embedding/model"
 	"github.com/ynqa/word-embedding/model/word2vec"
+	"github.com/ynqa/word-embedding/validate"
 )
 
 // Word2VecBuilder manages the members to build the Model interface.
 // TODO: Validate the fields on Build called.
 type Word2VecBuilder struct {
+	inputFile string
+
 	dimension        int
+	iteration        int
+	thread           int
+	minCount         int
 	window           int
 	initLearningRate float64
-	thread           int
 	dtype            string
 	toLower          bool
 	verbose          bool
@@ -46,10 +53,14 @@ type Word2VecBuilder struct {
 // NewWord2VecBuilder creates *Word2VecBuilder.
 func NewWord2VecBuilder() *Word2VecBuilder {
 	return &Word2VecBuilder{
+		inputFile: config.DefaultInputFile,
+
 		dimension:        config.DefaultDimension,
+		iteration:        config.DefaultIteration,
+		minCount:         config.DefaultMinCount,
+		thread:           config.DefaultThread,
 		window:           config.DefaultWindow,
 		initLearningRate: config.DefaultInitLearningRate,
-		thread:           config.DefaultThread,
 		toLower:          config.DefaultToLower,
 		verbose:          config.DefaultVerbose,
 
@@ -66,10 +77,14 @@ func NewWord2VecBuilder() *Word2VecBuilder {
 // NewWord2VecBuilderViper creates *Word2VecBuilder using viper.
 func NewWord2VecBuilderViper() *Word2VecBuilder {
 	return &Word2VecBuilder{
+		inputFile: viper.GetString(config.InputFile.String()),
+
 		dimension:        viper.GetInt(config.Dimension.String()),
+		iteration:        viper.GetInt(config.Iteration.String()),
+		minCount:         viper.GetInt(config.MinCount.String()),
+		thread:           viper.GetInt(config.Thread.String()),
 		window:           viper.GetInt(config.Window.String()),
 		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
-		thread:           viper.GetInt(config.Thread.String()),
 		toLower:          viper.GetBool(config.ToLower.String()),
 		verbose:          viper.GetBool(config.Verbose.String()),
 
@@ -83,88 +98,115 @@ func NewWord2VecBuilderViper() *Word2VecBuilder {
 	}
 }
 
-// SetDimension sets the dimension of word vector.
-func (wb *Word2VecBuilder) SetDimension(dimension int) *Word2VecBuilder {
+// InputFile sets the input file string.
+func (wb *Word2VecBuilder) InputFile(inputFile string) *Word2VecBuilder {
+	wb.inputFile = inputFile
+	return wb
+}
+
+// Dimension sets the dimension of word vector.
+func (wb *Word2VecBuilder) Dimension(dimension int) *Word2VecBuilder {
 	wb.dimension = dimension
 	return wb
 }
 
-// SetWindow sets the context window size.
-func (wb *Word2VecBuilder) SetWindow(window int) *Word2VecBuilder {
-	wb.window = window
+// Iteration sets the number of iteration.
+func (wb *Word2VecBuilder) Iteration(iter int) *Word2VecBuilder {
+	wb.iteration = iter
 	return wb
 }
 
-// SetInitLearningRate sets the initial learning rate.
-func (wb *Word2VecBuilder) SetInitLearningRate(initlr float64) *Word2VecBuilder {
-	wb.initLearningRate = initlr
+// MinCount sets min count.
+func (wb *Word2VecBuilder) MinCount(minCount int) *Word2VecBuilder {
+	wb.minCount = minCount
 	return wb
 }
 
-// SetThread sets number of goroutine.
-func (wb *Word2VecBuilder) SetThread(thread int) *Word2VecBuilder {
+// Thread sets number of goroutine.
+func (wb *Word2VecBuilder) Thread(thread int) *Word2VecBuilder {
 	wb.thread = thread
 	return wb
 }
 
-// SetToLower converts the words in corpus to lowercase.
-func (wb *Word2VecBuilder) SetToLower() *Word2VecBuilder {
+// Window sets the context window size.
+func (wb *Word2VecBuilder) Window(window int) *Word2VecBuilder {
+	wb.window = window
+	return wb
+}
+
+// InitLearningRate sets the initial learning rate.
+func (wb *Word2VecBuilder) InitLearningRate(initlr float64) *Word2VecBuilder {
+	wb.initLearningRate = initlr
+	return wb
+}
+
+// ToLower converts the words in corpus to lowercase.
+func (wb *Word2VecBuilder) ToLower() *Word2VecBuilder {
 	wb.toLower = true
 	return wb
 }
 
-// SetVerbose sets verbose mode.
-func (wb *Word2VecBuilder) SetVerbose() *Word2VecBuilder {
+// Verbose sets verbose mode.
+func (wb *Word2VecBuilder) Verbose() *Word2VecBuilder {
 	wb.verbose = true
 	return wb
 }
 
-// SetModel sets the model of Word2Vec. One of: cbow|skip-gram
-func (wb *Word2VecBuilder) SetModel(model string) *Word2VecBuilder {
+// Model sets the model of Word2Vec. One of: cbow|skip-gram
+func (wb *Word2VecBuilder) Model(model string) *Word2VecBuilder {
 	wb.model = model
 	return wb
 }
 
-// SetOptimizer sets the optimizer of Word2Vec. One of: hs|ns
-func (wb *Word2VecBuilder) SetOptimizer(optimizer string) *Word2VecBuilder {
+// Optimizer sets the optimizer of Word2Vec. One of: hs|ns
+func (wb *Word2VecBuilder) Optimizer(optimizer string) *Word2VecBuilder {
 	wb.optimizer = optimizer
 	return wb
 }
 
-// SetMaxDepth sets the number of times to track huffman tree.
-func (wb *Word2VecBuilder) SetMaxDepth(maxDepth int) *Word2VecBuilder {
+// MaxDepth sets the number of times to track huffman tree.
+func (wb *Word2VecBuilder) MaxDepth(maxDepth int) *Word2VecBuilder {
 	wb.maxDepth = maxDepth
 	return wb
 }
 
-// SetNegativeSampleSize sets the number of the samples as negative.
-func (wb *Word2VecBuilder) SetNegativeSampleSize(size int) *Word2VecBuilder {
+// NegativeSampleSize sets the number of the samples as negative.
+func (wb *Word2VecBuilder) NegativeSampleSize(size int) *Word2VecBuilder {
 	wb.negativeSampleSize = size
 	return wb
 }
 
-// SetTheta sets the lower limit of learning rate (lr >= initlr * theta).
-func (wb *Word2VecBuilder) SetTheta(theta float64) *Word2VecBuilder {
+// Theta sets the lower limit of learning rate (lr >= initlr * theta).
+func (wb *Word2VecBuilder) Theta(theta float64) *Word2VecBuilder {
 	wb.theta = theta
 	return wb
 }
 
-// SetBatchSize sets the batch size to update learning rate.
-func (wb *Word2VecBuilder) SetBatchSize(batchSize int) *Word2VecBuilder {
+// BatchSize sets the batch size to update learning rate.
+func (wb *Word2VecBuilder) BatchSize(batchSize int) *Word2VecBuilder {
 	wb.batchSize = batchSize
 	return wb
 }
 
-// SetSubSampleThreshold sets the threshold for subsampling.
-func (wb *Word2VecBuilder) SetSubSampleThreshold(threshold float64) *Word2VecBuilder {
+// SubSampleThreshold sets the threshold for subsampling.
+func (wb *Word2VecBuilder) SubSampleThreshold(threshold float64) *Word2VecBuilder {
 	wb.subsampleThreshold = threshold
 	return wb
 }
 
 // Build creates model.Model interface.
 func (wb *Word2VecBuilder) Build() (model.Model, error) {
-	cnf := model.NewConfig(wb.dimension, wb.window, wb.initLearningRate,
-		wb.thread, wb.toLower, wb.verbose)
+	if !validate.FileExists(wb.inputFile) {
+		return nil, errors.Errorf("Not such a file %s", wb.inputFile)
+	}
+
+	input, err := os.Open(wb.inputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	cnf := model.NewConfig(wb.dimension, wb.iteration, wb.minCount, wb.thread, wb.window,
+		wb.initLearningRate, wb.toLower, wb.verbose)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {
@@ -186,6 +228,6 @@ func (wb *Word2VecBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Invalid model: %s not in cbow|skip-gram", wb.model)
 	}
 
-	return word2vec.NewWord2Vec(cnf, mod, opt,
+	return word2vec.NewWord2Vec(input, cnf, mod, opt,
 		wb.subsampleThreshold, wb.theta, wb.batchSize), nil
 }

@@ -18,108 +18,108 @@ import (
 	"testing"
 )
 
-func TestGloveSetDimension(t *testing.T) {
+func TestGloveInputFile(t *testing.T) {
 	b := &GloveBuilder{}
-	b.SetDimension(100)
+	b.InputFile("inputfile")
+
+	if b.inputFile != "inputfile" {
+		t.Errorf("Expected builder.inputFile=inputfile: %v", b.inputFile)
+	}
+}
+
+func TestGloveDimension(t *testing.T) {
+	b := &GloveBuilder{}
+	b.Dimension(100)
 
 	if b.dimension != 100 {
 		t.Errorf("Expected builder.alpha=0.1: %v", b.alpha)
 	}
 }
 
-func TestGloveSetWindow(t *testing.T) {
+func TestGloveIteration(t *testing.T) {
 	b := &GloveBuilder{}
-	b.SetWindow(10)
-
-	if b.window != 10 {
-		t.Errorf("Expected builder.window=10: %v", b.window)
-	}
-}
-
-func TestGloveSetInitLearningRate(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetInitLearningRate(0.001)
-
-	if b.initLearningRate != 0.001 {
-		t.Errorf("Expected builder.initLearningRate=0.001: %v", b.initLearningRate)
-	}
-}
-
-func TestGloveSetToLower(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetToLower()
-
-	if !b.toLower {
-		t.Errorf("Expected builder.lower=true: %v", b.toLower)
-	}
-}
-
-func TestGloveSetVerbose(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetVerbose()
-
-	if !b.verbose {
-		t.Errorf("Expected builder.verbose=true: %v", b.verbose)
-	}
-}
-
-func TestGloveSetSolver(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetSolver("adagrad")
-
-	if b.solver != "adagrad" {
-		t.Errorf("Expected builder.solver=adagrad: %v", b.solver)
-	}
-}
-
-func TestGloveSetIteration(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetIteration(50)
+	b.Iteration(50)
 
 	if b.iteration != 50 {
 		t.Errorf("Expected builder.iteration=50: %v", b.iteration)
 	}
 }
 
-func TestGloveSetAlpha(t *testing.T) {
+func TestGloveMinCount(t *testing.T) {
 	b := &GloveBuilder{}
-	b.SetAlpha(0.1)
-
-	if b.alpha != 0.1 {
-		t.Errorf("Expected builder.alpha=0.1: %v", b.alpha)
-	}
-}
-
-func TestGloveSetXmax(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetXmax(10)
-
-	if b.xmax != 10 {
-		t.Errorf("Expected builder.alpha=10: %v", b.xmax)
-	}
-}
-
-func TestGloveSetMinCount(t *testing.T) {
-	b := &GloveBuilder{}
-	b.SetMinCount(10)
+	b.MinCount(10)
 
 	if b.minCount != 10 {
 		t.Errorf("Expected builder.minCount=10: %v", b.minCount)
 	}
 }
 
-func TestGloveSetBatchSize(t *testing.T) {
+func TestGloveWindow(t *testing.T) {
 	b := &GloveBuilder{}
-	b.SetBatchSize(2048)
+	b.Window(10)
 
-	if b.batchSize != 2048 {
-		t.Errorf("Expected builder.batchSize=2048: %v", b.batchSize)
+	if b.window != 10 {
+		t.Errorf("Expected builder.window=10: %v", b.window)
+	}
+}
+
+func TestGloveInitLearningRate(t *testing.T) {
+	b := &GloveBuilder{}
+	b.InitLearningRate(0.001)
+
+	if b.initLearningRate != 0.001 {
+		t.Errorf("Expected builder.initLearningRate=0.001: %v", b.initLearningRate)
+	}
+}
+
+func TestGloveToLower(t *testing.T) {
+	b := &GloveBuilder{}
+	b.ToLower()
+
+	if !b.toLower {
+		t.Errorf("Expected builder.lower=true: %v", b.toLower)
+	}
+}
+
+func TestGloveVerbose(t *testing.T) {
+	b := &GloveBuilder{}
+	b.Verbose()
+
+	if !b.verbose {
+		t.Errorf("Expected builder.verbose=true: %v", b.verbose)
+	}
+}
+
+func TestGloveSolver(t *testing.T) {
+	b := &GloveBuilder{}
+	b.Solver("adagrad")
+
+	if b.solver != "adagrad" {
+		t.Errorf("Expected builder.solver=adagrad: %v", b.solver)
+	}
+}
+
+func TestGloveAlpha(t *testing.T) {
+	b := &GloveBuilder{}
+	b.Alpha(0.1)
+
+	if b.alpha != 0.1 {
+		t.Errorf("Expected builder.alpha=0.1: %v", b.alpha)
+	}
+}
+
+func TestGloveXmax(t *testing.T) {
+	b := &GloveBuilder{}
+	b.Xmax(10)
+
+	if b.xmax != 10 {
+		t.Errorf("Expected builder.alpha=10: %v", b.xmax)
 	}
 }
 
 func TestGloveInvalidSolverBuild(t *testing.T) {
 	b := &GloveBuilder{}
-	b.SetSolver("fake_solver")
+	b.Solver("fake_solver")
 
 	if _, err := b.Build(); err == nil {
 		t.Errorf("Expected to fail building with invalid solver except for sgd|adagrad: %v", b.solver)
