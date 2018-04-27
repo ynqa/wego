@@ -79,38 +79,18 @@ func word2vecBind(cmd *cobra.Command) {
 }
 
 func runWord2Vec() error {
-	inputFile := viper.GetString(config.InputFile.String())
-
-	if !validate.FileExists(inputFile) {
-		return errors.Errorf("Not such a file %s", inputFile)
-	}
-
 	outputFile := viper.GetString(config.OutputFile.String())
-
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
 
 	w2v := builder.NewWord2VecBuilderViper()
-
 	mod, err := w2v.Build()
 	if err != nil {
 		return err
 	}
-
-	file, err := os.Open(inputFile)
-	if err != nil {
+	if err := mod.Train(); err != nil {
 		return err
 	}
-
-	f, err := mod.Preprocess(file)
-	if err != nil {
-		return err
-	}
-
-	if err := mod.Train(f); err != nil {
-		return err
-	}
-
 	return mod.Save(outputFile)
 }

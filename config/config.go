@@ -26,9 +26,11 @@ const (
 	InputFile Config = iota
 	OutputFile
 	Dimension
+	Iteration
+	MinCount
+	Thread
 	Window
 	InitLearningRate
-	Thread
 	Prof
 	ToLower
 	Verbose
@@ -39,6 +41,8 @@ const (
 	DefaultInputFile        string  = "example/input.txt"
 	DefaultOutputFile       string  = "example/word_vectors.txt"
 	DefaultDimension        int     = 10
+	DefaultIteration        int     = 15
+	DefaultMinCount         int     = 5
 	DefaultWindow           int     = 5
 	DefaultInitLearningRate float64 = 0.025
 	DefaultProf             bool    = false
@@ -57,12 +61,16 @@ func (c Config) String() string {
 		return "outputFile"
 	case Dimension:
 		return "dimension"
+	case Iteration:
+		return "iter"
+	case MinCount:
+		return "min-count"
+	case Thread:
+		return "thread"
 	case Window:
 		return "window"
 	case InitLearningRate:
 		return "initlr"
-	case Thread:
-		return "thread"
 	case Prof:
 		return "prof"
 	case ToLower:

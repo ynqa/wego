@@ -36,20 +36,12 @@ func TestGloveConfigString(t *testing.T) {
 			expect: "solver",
 		},
 		{
-			input:  Iteration,
-			expect: "iter",
-		},
-		{
 			input:  Alpha,
 			expect: "alpha",
 		},
 		{
 			input:  Xmax,
 			expect: "xmax",
-		},
-		{
-			input:  MinCount,
-			expect: "min-count",
 		},
 	}
 
