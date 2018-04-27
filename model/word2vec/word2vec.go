@@ -26,161 +26,133 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
 	"gopkg.in/cheggaaa/pb.v1"
 
+	"github.com/ynqa/word-embedding/corpus"
 	"github.com/ynqa/word-embedding/model"
 )
 
 // Word2Vec stores all common configs for Word2Vec models.
 type Word2Vec struct {
 	*model.Config
-	*corpus.Corpus
+	*corpus.PredictModelCorpus
 
 	mod Model
 	opt Optimizer
 
 	subsampleThreshold float64
+	subSamples         []float64
 	batchSize          int
 	theta              float64
 
 	vector []float64
 
+	indexPerThread      []int
 	trainedWords        int
 	currentLearningRate float64
-	progress            *pb.ProgressBar
-
 	// concurrency stuff
 	cwsCh chan struct{}
+
+	progress *pb.ProgressBar
 }
 
 // NewWord2Vec creates *Word2Vec.
-func NewWord2Vec(config *model.Config, mod Model, opt Optimizer,
+func NewWord2Vec(f io.ReadCloser, config *model.Config, mod Model, opt Optimizer,
 	subsampleThreshold, theta float64, batchSize int) *Word2Vec {
-	c, _ := corpus.Construct()
-	return &Word2Vec{
-		Config: config,
-		Corpus: c,
+	c := corpus.NewPredictModelCorpus(f, config.ToLower, config.MinCount)
+	word2vec := &Word2Vec{
+		Config:             config,
+		PredictModelCorpus: c,
 
 		mod: mod,
 		opt: opt,
 
-		subsampleThreshold: subsampleThreshold,
-		batchSize:          batchSize,
-		theta:              theta,
-
+		subsampleThreshold:  subsampleThreshold,
+		batchSize:           batchSize,
+		theta:               theta,
 		currentLearningRate: config.InitLearningRate,
-		cwsCh:               make(chan struct{}),
-	}
-}
 
-// Preprocess scans the corpus once before Train to count the word frequency.
-func (w *Word2Vec) Preprocess(f io.ReadSeeker) (io.ReadCloser, error) {
-	defer w.initialize()
-
-	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		word := scanner.Text()
-		if w.ToLower {
-			word = strings.ToLower(word)
-		}
-		w.Add(word)
+		indexPerThread: make([]int, config.Thread+1),
+		cwsCh:          make(chan struct{}),
 	}
-
-	if err := scanner.Err(); err != nil && err != io.EOF {
-		return nil, errors.Wrap(err, "Unable to complete scanning")
-	}
-
-	if _, err := f.Seek(0, 0); err != nil {
-		return nil, errors.Wrap(err, "Unable to rewind file")
-	}
-	return f.(io.ReadCloser), nil
+	word2vec.initialize()
+	return word2vec
 }
 
 func (w *Word2Vec) initialize() {
+	// Store subsumple before training.
+	w.subSamples = make([]float64, w.Corpus.Size())
+	for i := 0; i < w.Corpus.Size(); i++ {
+		z := float64(w.IDFreq(i)) / float64(w.TotalFreq())
+		w.subSamples[i] = (math.Sqrt(z/w.subsampleThreshold) + 1.0) *
+			w.subsampleThreshold / z
+	}
+
+	// Initialize word vector.
 	w.vector = make([]float64, w.Corpus.Size()*w.Dimension)
 	for i := 0; i < w.Corpus.Size()*w.Dimension; i++ {
 		w.vector[i] = (rand.Float64() - 0.5) / float64(w.Dimension)
 	}
-	w.opt.init(w.Corpus, w.Dimension)
+
+	// Initialize optimizer.
+	w.opt.initialize(w.PredictModelCorpus, w.Dimension)
 }
 
-// Train trains a corpus. It assumes that Preprocess() has already been called
-func (w *Word2Vec) Train(f io.ReadCloser) error {
-	if w.Verbose {
-		w.startTraining()
-		defer w.endTraining()
+// Train trains a corpus.
+func (w *Word2Vec) Train() error {
+	doc := w.Document()
+	if len(doc) <= 0 {
+		return errors.New("No words for training")
 	}
 
-	defer f.Close()
+	numWords := len(doc)
+	w.indexPerThread[0] = 0
+	w.indexPerThread[w.Thread] = numWords
+	for i := 1; i < w.Thread; i++ {
+		w.indexPerThread[i] = w.indexPerThread[i-1] + int(math.Trunc(float64((numWords+i)/w.Thread)))
+	}
 
-	go w.incrementDoneWord()
-
-	sema := make(chan struct{}, w.Thread)
-	var wg sync.WaitGroup
-
-	buffered := 0
-	wordIDs := make([]int, w.batchSize)
-
-	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanWords)
-	for scanner.Scan() {
-		word := scanner.Text()
-		if w.ToLower {
-			word = strings.ToLower(word)
+	for i := 1; i <= w.Iteration; i++ {
+		if w.Verbose {
+			fmt.Printf("%d-th:\n", i)
+			w.progress = pb.New(len(doc)).SetWidth(80)
+			w.progress.Start()
 		}
-		wordID, _ := w.Id(word)
-		wordIDs[buffered] = wordID
+		go w.incrementDoneWord()
 
-		if buffered < w.batchSize-1 {
-			buffered++
-			continue
+		sema := make(chan struct{}, w.Thread)
+		var wg sync.WaitGroup
+
+		for j := 0; j < w.Thread; j++ {
+			wg.Add(1)
+			go w.trainPerThread(doc[w.indexPerThread[j]:w.indexPerThread[j+1]], &wg, sema, w.mod.trainOne)
 		}
-
-		wg.Add(1)
-		go w.trainOneBatch(wordIDs, &wg, sema, w.mod.trainOne)
-		wordIDs = make([]int, w.batchSize)
-		buffered = 0
+		wg.Wait()
+		if w.Verbose {
+			w.progress.Finish()
+		}
 	}
-
-	// Leftover processing
-	if buffered > 0 {
-		wg.Add(1)
-		go w.trainOneBatch(wordIDs[:buffered], &wg, sema, w.mod.trainOne)
-	}
-
-	wg.Wait()
-
-	if err := scanner.Err(); err != nil && err != io.EOF {
-		return errors.Wrap(err, "Unable to complete scanning")
-	}
-
 	return nil
 }
 
-func (w *Word2Vec) trainOneBatch(wordIDs []int, wg *sync.WaitGroup, sema chan struct{},
+func (w *Word2Vec) trainPerThread(doc []int, wg *sync.WaitGroup, sema chan struct{},
 	trainOne func(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)) {
-
 	defer wg.Done()
 	sema <- struct{}{} // get lock
-	for i, wordID := range wordIDs {
+	for i, d := range doc {
 		if w.Verbose {
 			w.progress.Increment()
 		}
 
 		r := rand.Float64()
-		p := w.subsampleRate(wordID)
-
+		p := w.subSamples[d]
 		if p < r {
 			continue
 		}
-
 		lr := w.currentLearningRate
-		trainOne(wordIDs, i, w.vector, lr, w.opt)
+		trainOne(doc, i, w.vector, lr, w.opt)
 		w.cwsCh <- struct{}{} // increment wordsize
-
 	}
 	<-sema // release
 }
@@ -234,24 +206,10 @@ func (w *Word2Vec) Save(outputPath string) error {
 	return nil
 }
 
-func (w *Word2Vec) startTraining() {
-	w.progress = pb.New(w.TotalFreq()).SetWidth(80)
-	w.progress.Start()
-}
-
-func (w *Word2Vec) endTraining() {
-	w.progress.Finish()
-}
-
 func (w *Word2Vec) updateLearningRate() float64 {
 	lr := w.InitLearningRate * (1.0 - float64(w.trainedWords)/float64(w.TotalFreq()))
 	if lr < w.InitLearningRate*w.theta {
 		lr = w.InitLearningRate * w.theta
 	}
 	return lr
-}
-
-func (w *Word2Vec) subsampleRate(wordID int) float64 {
-	z := float64(w.IDFreq(wordID)) / float64(w.TotalFreq())
-	return (math.Sqrt(z/w.subsampleThreshold) + 1.0) * w.subsampleThreshold / z
 }

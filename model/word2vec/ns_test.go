@@ -16,6 +16,8 @@ package word2vec
 
 import (
 	"testing"
+
+	"github.com/ynqa/word-embedding/corpus"
 )
 
 func TestNewNegativeSampling(t *testing.T) {
@@ -26,9 +28,9 @@ func TestNewNegativeSampling(t *testing.T) {
 	}
 }
 
-func TestNSInit(t *testing.T) {
+func TestInitialize(t *testing.T) {
 	ns := NewNegativeSampling(10)
-	ns.init(newTestCorpus(), 10)
+	ns.initialize(corpus.TestPredictModelCorpus, 10)
 
 	if len(ns.contextVector) != 3*10 {
 		t.Error("NegativeSampling: Init returns negativeTensor with length=3*10")

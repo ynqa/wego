@@ -15,7 +15,7 @@
 package word2vec
 
 import (
-	"github.com/chewxy/lingo/corpus"
+	"github.com/ynqa/word-embedding/corpus"
 )
 
 // NegativeSampling is a piece of Word2Vec optimizer.
@@ -37,15 +37,13 @@ func NewNegativeSampling(sampleSize int) *NegativeSampling {
 	return ns
 }
 
-// Init initializes the negative vector.
-func (ns *NegativeSampling) init(c *corpus.Corpus, dimension int) (err error) {
+func (ns *NegativeSampling) initialize(c *corpus.PredictModelCorpus, dimension int) (err error) {
 	ns.vocabulary = c.Size()
 	ns.dimension = dimension
 	ns.contextVector = make([]float64, ns.vocabulary*ns.dimension)
 	return
 }
 
-// Update updates the word vector using the negative vector.
 func (ns *NegativeSampling) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
 
 	var label int
