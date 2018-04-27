@@ -2,7 +2,7 @@
 
 ## Word2Vec
 
-Word2Vec is the generic term below modules:
+Word2Vec is composed of the following modules:
 
 Model:
 - Skip-Gram
@@ -26,8 +26,10 @@ Flags:
   -h, --help                Help for word2vec
       --initlr float        Set the initial learning rate (default 0.025)
   -i, --inputFile string    Set the input file path to load corpus (default "example/input.txt")
+      --iter int            Set the iteration (default 15)
       --lower               Whether the words on corpus convert to lowercase or not
       --maxDepth int        Set the number of times to track huffman tree, max-depth=0 means to track full path from root to word (using only hierarchical softmax)
+      --min-count int       Set the min count to filter rare words (default 5)
       --model string        Set the model of Word2Vec. One of: cbow|skip-gram (default "cbow")
       --optimizer string    Set the optimizer of Word2Vec. One of: hs|ns (default "hs")
   -o, --outputFile string   Set the output file path to save word vectors (default "example/word_vectors.txt")
@@ -43,7 +45,6 @@ Flags:
 ## GloVe
 
 GloVe is weighted matrix factorization model for co-occurrence map between words.
-For optimization, preparing SGD, and AdaGrad.
 
 ### Usage
 
@@ -55,12 +56,11 @@ Usage:
 
 Flags:
       --alpha float         Set alpha (default 0.75)
-      --batchSize int       Set the batch size to buffer words referred as chunk (default 10000)
   -d, --dimension int       Set the dimension of word vector (default 10)
   -h, --help                Help for glove
       --initlr float        Set the initial learning rate (default 0.025)
   -i, --inputFile string    Set the input file path to load corpus (default "example/input.txt")
-      --iter int            Set the iteration (default 50)
+      --iter int            Set the iteration (default 15)
       --lower               Whether the words on corpus convert to lowercase or not
       --min-count int       Set the min count to filter rare words (default 5)
   -o, --outputFile string   Set the output file path to save word vectors (default "example/word_vectors.txt")
