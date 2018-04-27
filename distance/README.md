@@ -21,8 +21,6 @@ Flags:
 
 ## Example
 
-For instance, after running [demo](https://github.com/ynqa/word-embedding#demo). The results are not always the same.
-
 ```
 $ go run main.go distance -i example/word_vectors_sg.txt microsoft
     RANK |   WORD    |  COSINE

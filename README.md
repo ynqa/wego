@@ -4,9 +4,9 @@
 [![GoDoc](https://godoc.org/github.com/ynqa/word-embedding?status.svg)](https://godoc.org/github.com/ynqa/word-embedding)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/word-embedding)](https://goreportcard.com/report/github.com/ynqa/word-embedding)
 
-This is an implementation of word embedding (a.k.a word representation) models in Golang.
+This is the implementation of word embedding (a.k.a word representation) models in Golang.
 
-## Details
+## Word Embedding
 
 Word embedding makes word's meaning, structure, and concept mapping into vector space with low dimension. For representative instance:
 
@@ -14,12 +14,9 @@ Word embedding makes word's meaning, structure, and concept mapping into vector 
 Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
 ```
 
-Like this example, it could calculate word meaning by arithmetic operations between vectors.
+Like this example, the models generate the vectors that could calculate word meaning by arithmetic operations for other vectors.
 
-## Features
-Listed models for word embedding, and checked it already implemented.
-
-### Models
+## Models
 - [x] Word2Vec
   - Distributed Representations of Words and Phrases
 and their Compositionality [[pdf]](https://papers.nips.cc/paper/5021-distributed-representations-of-words-and-phrases-and-their-compositionality.pdf)
