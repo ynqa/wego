@@ -17,20 +17,24 @@ package model
 // Config stores the common config.
 type Config struct {
 	Dimension        int
+	Iteration        int
+	MinCount         int
+	Thread           int
 	Window           int
 	InitLearningRate float64
-	Thread           int
 	ToLower          bool
 	Verbose          bool
 }
 
 // NewConfig creates *Config
-func NewConfig(dimension, window int, initlr float64, thread int, toLower, verbose bool) *Config {
+func NewConfig(dimension, iteration, minCount, thread, window int, initlr float64, toLower, verbose bool) *Config {
 	return &Config{
 		Dimension:        dimension,
+		Iteration:        iteration,
+		MinCount:         minCount,
+		Thread:           thread,
 		Window:           window,
 		InitLearningRate: initlr,
-		Thread:           thread,
 		ToLower:          toLower,
 		Verbose:          verbose,
 	}
