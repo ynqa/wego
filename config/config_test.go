@@ -44,6 +44,14 @@ func TestConfigString(t *testing.T) {
 			expect: "dimension",
 		},
 		{
+			input:  Iteration,
+			expect: "iter",
+		},
+		{
+			input:  MinCount,
+			expect: "min-count",
+		},
+		{
 			input:  Window,
 			expect: "window",
 		},

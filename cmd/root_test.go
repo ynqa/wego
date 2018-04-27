@@ -21,7 +21,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const configFlagSize = 9
+const configFlagSize = 11
 
 func TestConfigFlagSet(t *testing.T) {
 	fs := ConfigFlagSet()

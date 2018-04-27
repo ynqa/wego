@@ -55,60 +55,31 @@ func init() {
 	GloveCmd.Flags().BoolP("help", "h", false, "Help for "+GloveCmd.Name())
 	GloveCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
 		"Set the solver of GloVe. One of: sgd|adagrad")
-	GloveCmd.Flags().Int(config.Iteration.String(), config.DefaultIteration,
-		"Set the iteration")
 	GloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
 		"Set alpha")
 	GloveCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
 		"Set xmax")
-	GloveCmd.Flags().Int(config.MinCount.String(), config.DefaultMinCount,
-		"Set the min count to filter rare words")
-	GloveCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
-		"Set the batch size to buffer words referred as chunk")
 }
 
 func gloveBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Solver.String(), cmd.Flags().Lookup(config.Solver.String()))
-	viper.BindPFlag(config.Iteration.String(), cmd.Flags().Lookup(config.Iteration.String()))
 	viper.BindPFlag(config.Alpha.String(), cmd.Flags().Lookup(config.Alpha.String()))
 	viper.BindPFlag(config.Xmax.String(), cmd.Flags().Lookup(config.Xmax.String()))
-	viper.BindPFlag(config.MinCount.String(), cmd.Flags().Lookup(config.MinCount.String()))
-	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 }
 
 func runGlove() error {
-	inputFile := viper.GetString(config.InputFile.String())
-
-	if !validate.FileExists(inputFile) {
-		return errors.Errorf("Not such a file %s", inputFile)
-	}
-
 	outputFile := viper.GetString(config.OutputFile.String())
-
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
 
 	glove := builder.NewGloveBuilderViper()
-
 	mod, err := glove.Build()
 	if err != nil {
 		return err
 	}
-
-	file, err := os.Open(inputFile)
-	if err != nil {
+	if err := mod.Train(); err != nil {
 		return err
 	}
-
-	f, err := mod.Preprocess(file)
-	if err != nil {
-		return err
-	}
-
-	if err := mod.Train(f); err != nil {
-		return err
-	}
-
 	return mod.Save(outputFile)
 }

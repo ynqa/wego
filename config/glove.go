@@ -20,33 +20,25 @@ type GloveConfig int
 // The list of GloveConfig.
 const (
 	Solver GloveConfig = iota
-	Iteration
 	Alpha
 	Xmax
-	MinCount
 )
 
 // The defaults of GloveConfig.
 const (
-	DefaultSolver    string  = "sgd"
-	DefaultIteration int     = 50
-	DefaultAlpha     float64 = 0.75
-	DefaultXmax      int     = 100
-	DefaultMinCount  int     = 5
+	DefaultSolver string  = "sgd"
+	DefaultAlpha  float64 = 0.75
+	DefaultXmax   int     = 100
 )
 
 func (g GloveConfig) String() string {
 	switch g {
 	case Solver:
 		return "solver"
-	case Iteration:
-		return "iter"
 	case Alpha:
 		return "alpha"
 	case Xmax:
 		return "xmax"
-	case MinCount:
-		return "min-count"
 	default:
 		return "unknown"
 	}

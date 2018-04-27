@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const gloveFlagSize = 6
+const gloveFlagSize = 3
 
 func TestGloveBind(t *testing.T) {
 	defer viper.Reset()
