@@ -14,13 +14,9 @@
 
 package model
 
-import (
-	"io"
-)
-
 // Model is the interface of Preprocess, Train, Save.
 type Model interface {
-	Preprocess(f io.ReadSeeker) (io.ReadCloser, error)
-	Train(f io.ReadCloser) error
+	// TODO: Enable to train added files.
+	Train() error
 	Save(outputFile string) error
 }
