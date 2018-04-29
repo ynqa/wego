@@ -35,7 +35,7 @@ $ bin/word-embedding -h
 ## Usage
 
 ```
-The tools embedding words into vector space
+tools for embedding words into vector space
 
 Usage:
   word-embedding [flags]
@@ -43,12 +43,14 @@ Usage:
 
 Available Commands:
   distance    Estimate the distance between words
-  glove       Embed words using glove
+  glove       GloVe: Global Vectors for Word Representation
   help        Help about any command
-  word2vec    Embed words using word2vec
+  word2vec    Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
 Flags:
-  -h, --help   Help for word-embedding
+  -h, --help   help for word-embedding
+
+Use "word-embedding [command] --help" for more information about a command.
 ```
 
 For more information about each sub-command, see below:

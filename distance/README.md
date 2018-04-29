@@ -1,6 +1,6 @@
 # Distance
 
-Calculate the cosine similarity between words.
+The implementation to calculate the cosine similarity between words.
 
 ## Usage
 
@@ -14,9 +14,9 @@ Examples:
   word-embedding distance -i example/word_vectors.txt microsoft
 
 Flags:
-  -h, --help               Help for distance
-  -i, --inputFile string   Set the input file path to load word vector list (default "example/input.txt")
-  -r, --rank int           How many the most similar words will be displayed (default 10)
+  -h, --help               help for distance
+  -i, --inputFile string   input file path for trained word vector (default "example/input.txt")
+  -r, --rank int           how many the most similar words will be displayed (default 10)
 ```
 
 ## Example
