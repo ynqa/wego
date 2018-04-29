@@ -14,7 +14,7 @@
 
 package word2vec
 
-// Model is the interface to learn word vector.
+// Model is the interface to train a word vector.
 type Model interface {
-	trainOne(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)
+	trainOne(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)
 }

@@ -27,11 +27,10 @@ import (
 	"github.com/ynqa/word-embedding/validate"
 )
 
-// GloveCmd is for Glove command.
+// GloveCmd is the subcommand for Glove.
 var GloveCmd = &cobra.Command{
 	Use:   "glove",
-	Short: "Embed words using glove",
-	Long:  "Embed words using glove",
+	Short: "GloVe: Global Vectors for Word Representation",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		configBind(cmd)
 		gloveBind(cmd)
@@ -46,34 +45,33 @@ var GloveCmd = &cobra.Command{
 			defer pprof.StopCPUProfile()
 		}
 
-		return runGlove()
+		return executeGlove()
 	},
 }
 
 func init() {
 	GloveCmd.Flags().AddFlagSet(ConfigFlagSet())
-	GloveCmd.Flags().BoolP("help", "h", false, "Help for "+GloveCmd.Name())
 	GloveCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
-		"Set the solver of GloVe. One of: sgd|adagrad")
-	GloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
-		"Set alpha")
+		"solver for GloVe objective. One of: sgd|adagrad")
 	GloveCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
-		"Set xmax")
+		"specifying cutoff in weighting function")
+	GloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
+		"exponent of weighting function")
 }
 
 func gloveBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Solver.String(), cmd.Flags().Lookup(config.Solver.String()))
-	viper.BindPFlag(config.Alpha.String(), cmd.Flags().Lookup(config.Alpha.String()))
 	viper.BindPFlag(config.Xmax.String(), cmd.Flags().Lookup(config.Xmax.String()))
+	viper.BindPFlag(config.Alpha.String(), cmd.Flags().Lookup(config.Alpha.String()))
 }
 
-func runGlove() error {
+func executeGlove() error {
 	outputFile := viper.GetString(config.OutputFile.String())
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
 
-	glove := builder.NewGloveBuilderViper()
+	glove := builder.NewGloveBuilderFromViper()
 	mod, err := glove.Build()
 	if err != nil {
 		return err

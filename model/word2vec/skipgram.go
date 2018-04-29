@@ -18,51 +18,47 @@ import (
 	"github.com/ynqa/word-embedding/model"
 )
 
-// SkipGram is a piece of Word2Vec model.
+// SkipGram behaviors as one of Word2vec solver.
 type SkipGram struct {
 	pools chan []float64
 
-	window    int
 	dimension int
+	window    int
 }
 
 // NewSkipGram creates *SkipGram
-func NewSkipGram(c *model.Config) *SkipGram {
-	pools := make(chan []float64, c.Thread)
-	for i := 0; i < c.Thread; i++ {
-		pools <- make([]float64, c.Dimension)
+func NewSkipGram(dimension, window, threadSize int) *SkipGram {
+	pools := make(chan []float64, threadSize)
+	for i := 0; i < threadSize; i++ {
+		pools <- make([]float64, dimension)
 	}
 	return &SkipGram{
 		pools: pools,
 
-		window:    c.Window,
-		dimension: c.Dimension,
+		dimension: dimension,
+		window:    window,
 	}
 }
 
-func (s *SkipGram) trainOne(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer) {
-	// grab poolvector from pool
+func (s *SkipGram) trainOne(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer) {
 	pool := <-s.pools
-	targetID := wordIDs[wordIndex]
-	shr := nextRandom(s.window)
-	for a := shr; a < s.window*2+1-shr; a++ {
+	word := document[wordIndex]
+	shrinkage := model.NextRandom(s.window)
+	for a := shrinkage; a < s.window*2+1-shrinkage; a++ {
 		if a == s.window {
 			continue
 		}
 		c := wordIndex - s.window + a
-		if c < 0 || c >= len(wordIDs) {
+		if c < 0 || c >= len(document) {
 			continue
 		}
-		contextID := wordIDs[c]
-
+		context := document[c]
 		for i := 0; i < s.dimension; i++ {
 			pool[i] = 0.0
 		}
-
-		optimizer.update(targetID, wordVector[contextID*s.dimension:contextID*s.dimension+s.dimension], pool, lr)
-
+		optimizer.update(word, lr, wordVector[context*s.dimension:context*s.dimension+s.dimension], pool)
 		for i := 0; i < s.dimension; i++ {
-			wordVector[contextID*s.dimension+i] += pool[i]
+			wordVector[context*s.dimension+i] += pool[i]
 		}
 	}
 	s.pools <- pool

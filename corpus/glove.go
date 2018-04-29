@@ -18,6 +18,8 @@ import (
 	"io"
 	"math"
 
+	"github.com/pkg/errors"
+
 	"github.com/ynqa/word-embedding/corpus/co"
 )
 
@@ -28,14 +30,16 @@ type GloveCorpus struct {
 }
 
 // NewGloveCorpus creates *GloveCorpus.
-func NewGloveCorpus(f io.ReadCloser, toLower bool, minCount, window int) *GloveCorpus {
+func NewGloveCorpus(f io.ReadCloser, toLower bool, minCount, window int) (*GloveCorpus, error) {
 	gloveCorpus := &GloveCorpus{
 		core:         newCore(),
 		cooccurrence: make(map[uint64]float64),
 	}
-	gloveCorpus.parse(f, toLower, minCount)
+	if err := gloveCorpus.parse(f, toLower, minCount); err != nil {
+		return nil, errors.Wrap(err, "Unable to generate *GloveCorpus")
+	}
 	gloveCorpus.build(window)
-	return gloveCorpus
+	return gloveCorpus, nil
 }
 
 // Cooccurrence returns co-occurrence map for words.

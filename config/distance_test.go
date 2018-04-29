@@ -18,29 +18,29 @@ import (
 	"testing"
 )
 
-func TestInvalidSimilarityConfigString(t *testing.T) {
+func TestInvalidDistanceConfigString(t *testing.T) {
 	var Fake DistanceConfig = 1024
 
 	if Fake.String() != "unknown" {
-		t.Errorf("Fake should be not registered in SimilarityConfig: %v", Fake.String())
+		t.Errorf("Fake should be not registered in DistanceConfig: %v", Fake.String())
 	}
 }
 
-func TestSimilarityConfigString(t *testing.T) {
+func TestDistanceConfigString(t *testing.T) {
 	testCases := []struct {
-		input  DistanceConfig
-		expect string
+		input    DistanceConfig
+		expected string
 	}{
 		{
-			input:  Rank,
-			expect: "rank",
+			input:    Rank,
+			expected: "rank",
 		},
 	}
 
 	for _, testCase := range testCases {
 		actual := testCase.input.String()
-		if actual != testCase.expect {
-			t.Errorf("SimilarityConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expect, actual)
+		if actual != testCase.expected {
+			t.Errorf("DistanceConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
 		}
 	}
 }

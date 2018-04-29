@@ -25,7 +25,7 @@ import (
 	"github.com/ynqa/word-embedding/distance"
 )
 
-// DistanceCmd is the command for calculation of similarity.
+// DistanceCmd is the subcommand to estimate similarity.
 var DistanceCmd = &cobra.Command{
 	Use:     "distance",
 	Short:   "Estimate the distance between words",
@@ -36,18 +36,17 @@ var DistanceCmd = &cobra.Command{
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
-			return runDistance(args[0])
+			return executeDistance(args[0])
 		}
 		return errors.New("Input a single word")
 	},
 }
 
 func init() {
-	DistanceCmd.Flags().BoolP("help", "h", false, "Help for "+DistanceCmd.Name())
 	DistanceCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
-		"Set the input file path to load word vector list")
+		"input file path for trained word vector")
 	DistanceCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
-		"How many the most similar words will be displayed")
+		"how many the most similar words will be displayed")
 }
 
 func distanceBind(cmd *cobra.Command) {
@@ -55,7 +54,7 @@ func distanceBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
 }
 
-func runDistance(target string) error {
+func executeDistance(target string) error {
 	inputFile := viper.GetString(config.InputFile.String())
 	rank := viper.GetInt(config.Rank.String())
 

@@ -16,44 +16,49 @@ package glove
 
 import (
 	"testing"
-
-	"github.com/ynqa/word-embedding/config"
 )
 
 func TestNewAdaGrad(t *testing.T) {
-	solver := NewAdaGrad(conf)
+	expectDimension := 10
+	expectInitlr := 0.01
+	solver := NewAdaGrad(expectDimension, expectInitlr)
 
 	if solver.gradsq != nil {
-		t.Error("AdaGrad: Initializing gradsq before Preprocess")
+		t.Error("AdaGrad: gradsq is initialized before calling initialize")
 	}
 
-	if solver.dimension != config.DefaultDimension {
+	if solver.dimension != expectDimension {
 		t.Errorf("AdaGrad: dimension=%v: %v",
-			config.DefaultDimension, solver.dimension)
+			expectDimension, solver.dimension)
 	}
 
-	if solver.initLearningRate != config.DefaultInitLearningRate {
+	if solver.initlr != expectInitlr {
 		t.Errorf("AdaGrad: initLearningRate=%v: %v",
-			config.DefaultInitLearningRate, solver.initLearningRate)
+			expectInitlr, solver.initlr)
 	}
 }
 
 func TestAdaGradInit(t *testing.T) {
-	solver := NewAdaGrad(conf)
+	dimension := 10
+	initlr := 0.01
+	solver := NewAdaGrad(dimension, initlr)
 
-	solver.initialize(100)
+	expectedVectorSize := 100
+	solver.initialize(expectedVectorSize)
 
-	if len(solver.gradsq) != 100 {
-		t.Errorf("AdaGrad: after init, len(gradsq)=100: %v", len(solver.gradsq))
+	if len(solver.gradsq) != expectedVectorSize {
+		t.Errorf("AdaGrad: after init, len(gradsq)=%v: %v", expectedVectorSize, len(solver.gradsq))
 	}
 }
 
 func TestAdaGradCallBack(t *testing.T) {
-	solver := NewAdaGrad(conf)
+	dimension := 10
+	initlr := 0.01
+	solver := NewAdaGrad(dimension, initlr)
 
-	before := solver.initLearningRate
+	before := solver.initlr
 	solver.postOneIter()
-	after := solver.initLearningRate
+	after := solver.initlr
 
 	if before != after {
 		t.Errorf("AdaGrad: without changing after callback: %v -> %v",

@@ -27,11 +27,10 @@ import (
 	"github.com/ynqa/word-embedding/validate"
 )
 
-// Word2VecCmd is the word2vec command.
-var Word2VecCmd = &cobra.Command{
+// Word2vecCmd is the subcommand for Word2vec.
+var Word2vecCmd = &cobra.Command{
 	Use:   "word2vec",
-	Short: "Embed words using word2vec",
-	Long:  "Embed words using word2vec",
+	Short: "Word2Vec: Continuous Bag-of-Words and Skip-gram model",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		configBind(cmd)
 		word2vecBind(cmd)
@@ -46,45 +45,45 @@ var Word2VecCmd = &cobra.Command{
 			defer pprof.StopCPUProfile()
 		}
 
-		return runWord2Vec()
+		return executeWord2vec()
 	},
 }
 
 func init() {
-	Word2VecCmd.Flags().AddFlagSet(ConfigFlagSet())
-	Word2VecCmd.Flags().BoolP("help", "h", false, "Help for "+Word2VecCmd.Name())
-	Word2VecCmd.Flags().String(config.Model.String(), config.DefaultModel,
-		"Set the model of Word2Vec. One of: cbow|skip-gram")
-	Word2VecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer,
-		"Set the optimizer of Word2Vec. One of: hs|ns")
-	Word2VecCmd.Flags().Int(config.MaxDepth.String(), config.DefaultMaxDepth,
-		"Set the number of times to track huffman tree, max-depth=0 means to track full path from root to word (using only hierarchical softmax)")
-	Word2VecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
-		"Set the number of the samples as negative (using only negative sampling)")
-	Word2VecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
-		"Set the lower limit of learning rate (lr >= initlr * theta)")
-	Word2VecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
-		"Set the batch size to update learning rate")
-	Word2VecCmd.Flags().Float64(config.SubsampleThreshold.String(), config.DefaultSubsampleThreshold,
-		"Set the threshold for subsampling")
+	Word2vecCmd.Flags().AddFlagSet(ConfigFlagSet())
+	Word2vecCmd.Flags().String(config.Model.String(), config.DefaultModel,
+		"which model does it use? one of: cbow|skip-gram")
+	Word2vecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer,
+		"which optimizer does it use? one of: hs|ns")
+	Word2vecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
+		"interval word size to update learning rate")
+	Word2vecCmd.Flags().Int(config.MaxDepth.String(), config.DefaultMaxDepth,
+		"times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
+	Word2vecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
+		"negative sample size(for negative sampling only)")
+	Word2vecCmd.Flags().Float64(config.SubsampleThreshold.String(), config.DefaultSubsampleThreshold,
+		"threshold for subsampling")
+	Word2vecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
+		"lower limit of learning rate (lr >= initlr * theta)")
 }
 
 func word2vecBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Model.String(), cmd.Flags().Lookup(config.Model.String()))
 	viper.BindPFlag(config.Optimizer.String(), cmd.Flags().Lookup(config.Optimizer.String()))
+	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 	viper.BindPFlag(config.MaxDepth.String(), cmd.Flags().Lookup(config.MaxDepth.String()))
 	viper.BindPFlag(config.NegativeSampleSize.String(), cmd.Flags().Lookup(config.NegativeSampleSize.String()))
-	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 	viper.BindPFlag(config.SubsampleThreshold.String(), cmd.Flags().Lookup(config.SubsampleThreshold.String()))
+	viper.BindPFlag(config.Theta.String(), cmd.Flags().Lookup(config.Theta.String()))
 }
 
-func runWord2Vec() error {
+func executeWord2vec() error {
 	outputFile := viper.GetString(config.OutputFile.String())
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
 
-	w2v := builder.NewWord2VecBuilderViper()
+	w2v := builder.NewWord2vecBuilderFromViper()
 	mod, err := w2v.Build()
 	if err != nil {
 		return err

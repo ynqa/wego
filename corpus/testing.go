@@ -25,9 +25,8 @@ type fakeNopSeeker struct{ io.ReadCloser }
 func (fake fakeNopSeeker) Seek(offset int64, whence int) (int64, error) { return 0, nil }
 
 var (
-	dimension = 5
-	text      = "a b b c c c c"
-	fake      = fakeNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
-	// TestWord2VecCorpus is mock for test.
-	TestWord2VecCorpus = NewWord2VecCorpus(fake, true, 0)
+	text       = "a b b c c c c"
+	fakeSeeker = fakeNopSeeker{ReadCloser: ioutil.NopCloser(bytes.NewReader([]byte(text)))}
+	// TestWord2vecCorpus is mock for test.
+	TestWord2vecCorpus, _ = NewWord2vecCorpus(fakeSeeker, true, 0)
 )

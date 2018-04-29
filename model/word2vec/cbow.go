@@ -18,77 +18,70 @@ import (
 	"github.com/ynqa/word-embedding/model"
 )
 
-// CBOW is a piece of Word2Vec model.
-type CBOW struct {
+// Cbow behaviors as one of Word2vec solver.
+type Cbow struct {
 	sums, pools chan []float64
 
-	window    int
 	dimension int
+	window    int
 }
 
-// NewCBOW creates *CBOW
-func NewCBOW(c *model.Config) *CBOW {
-	pools := make(chan []float64, c.Thread)
-	sums := make(chan []float64, c.Thread)
-
-	for i := 0; i < c.Thread; i++ {
-		pools <- make([]float64, c.Dimension)
-		sums <- make([]float64, c.Dimension)
+// NewCbow creates *Cbow
+func NewCbow(dimension, window, threadSize int) *Cbow {
+	pools := make(chan []float64, threadSize)
+	sums := make(chan []float64, threadSize)
+	for i := 0; i < threadSize; i++ {
+		pools <- make([]float64, dimension)
+		sums <- make([]float64, dimension)
 	}
-
-	return &CBOW{
+	return &Cbow{
 		sums:  sums,
 		pools: pools,
 
-		window:    c.Window,
-		dimension: c.Dimension,
+		dimension: dimension,
+		window:    window,
 	}
 }
 
-func (c *CBOW) trainOne(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer) {
+func (c *Cbow) trainOne(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer) {
 	sum := <-c.sums
 	pool := <-c.pools
-
-	targetID := wordIDs[wordIndex]
-
+	word := document[wordIndex]
 	for i := 0; i < c.dimension; i++ {
 		sum[i] = 0.0
 		pool[i] = 0.0
 	}
-	c.dowith(wordIDs, wordIndex, sum, pool, wordVector, c.initSum)
-
-	optimizer.update(targetID, sum, pool, lr)
-
-	c.dowith(wordIDs, wordIndex, sum, pool, wordVector, c.updateCtx)
-
+	c.dowith(document, wordIndex, sum, pool, wordVector, c.initSum)
+	optimizer.update(word, lr, sum, pool)
+	c.dowith(document, wordIndex, sum, pool, wordVector, c.updateContext)
 	c.sums <- sum
 	c.pools <- pool
 }
 
-func (c *CBOW) dowith(wordIDs []int, wordIndex int, sum, pool, wordVector []float64,
-	g func(contextID int, sum, pool, wordVector []float64)) {
+func (c *Cbow) dowith(document []int, wordIndex int, sum, pool, wordVector []float64,
+	opr func(context int, sum, pool, wordVector []float64)) {
 
-	shr := nextRandom(c.window)
-	for a := shr; a < c.window*2+1-shr; a++ {
+	shrinkage := model.NextRandom(c.window)
+	for a := shrinkage; a < c.window*2+1-shrinkage; a++ {
 		if a != c.window {
 			c := wordIndex - c.window + a
-			if c < 0 || c >= len(wordIDs) {
+			if c < 0 || c >= len(document) {
 				continue
 			}
-			contextID := wordIDs[c]
-			g(contextID, sum, pool, wordVector)
+			context := document[c]
+			opr(context, sum, pool, wordVector)
 		}
 	}
 }
 
-func (c *CBOW) initSum(contextID int, sum, pool, wordVector []float64) {
+func (c *Cbow) initSum(context int, sum, pool, wordVector []float64) {
 	for i := 0; i < c.dimension; i++ {
-		sum[i] += wordVector[contextID*c.dimension+i]
+		sum[i] += wordVector[context*c.dimension+i]
 	}
 }
 
-func (c *CBOW) updateCtx(contextID int, sum, pool, wordVector []float64) {
+func (c *Cbow) updateContext(context int, sum, pool, wordVector []float64) {
 	for i := 0; i < c.dimension; i++ {
-		wordVector[contextID*c.dimension+i] += pool[i]
+		wordVector[context*c.dimension+i] += pool[i]
 	}
 }

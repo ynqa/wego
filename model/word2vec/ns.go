@@ -16,6 +16,7 @@ package word2vec
 
 import (
 	"github.com/ynqa/word-embedding/corpus"
+	"github.com/ynqa/word-embedding/model"
 )
 
 // NegativeSampling is a piece of Word2Vec optimizer.
@@ -24,12 +25,11 @@ type NegativeSampling struct {
 	contextVector []float64
 	sampleSize    int
 
-	vocabulary int
 	dimension  int
+	vocabulary int
 }
 
 // NewNegativeSampling creates *NegativeSampling.
-// The negative vector is NOT built yet.
 func NewNegativeSampling(sampleSize int) *NegativeSampling {
 	ns := new(NegativeSampling)
 	ns.SigmoidTable = newSigmoidTable()
@@ -37,53 +37,47 @@ func NewNegativeSampling(sampleSize int) *NegativeSampling {
 	return ns
 }
 
-func (ns *NegativeSampling) initialize(c *corpus.Word2VecCorpus, dimension int) (err error) {
-	ns.vocabulary = c.Size()
+func (ns *NegativeSampling) initialize(cps *corpus.Word2vecCorpus, dimension int) error {
+	ns.vocabulary = cps.Size()
 	ns.dimension = dimension
 	ns.contextVector = make([]float64, ns.vocabulary*ns.dimension)
-	return
+	return nil
 }
 
-func (ns *NegativeSampling) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
-
+func (ns *NegativeSampling) update(word int, lr float64, vector, poolVector []float64) {
 	var label int
-	var ctxID int
-	var ctxVector []float64
-
+	var sample int
+	var sampleVector []float64
 	for n := -1; n < ns.sampleSize; n++ {
 		if n == -1 {
 			label = 1
-			ctxVector = ns.contextVector[targetID*ns.dimension : targetID*ns.dimension+ns.dimension]
+			sampleVector = ns.contextVector[word*ns.dimension : word*ns.dimension+ns.dimension]
 		} else {
 			label = 0
-			ctxID = nextRandom(ns.vocabulary)
-			ctxVector = ns.contextVector[ctxID*ns.dimension : ctxID*ns.dimension+ns.dimension]
-			if targetID == ctxID {
+			sample = model.NextRandom(ns.vocabulary)
+			sampleVector = ns.contextVector[sample*ns.dimension : sample*ns.dimension+ns.dimension]
+			if word == sample {
 				continue
 			}
 		}
-
-		ns.gradUpd(label, learningRate, ctxVector, contextVector, poolVector)
-
+		ns.gradUpd(label, lr, sampleVector, vector, poolVector)
 		var index int
 		if n == -1 {
-			index = targetID
+			index = word
 		} else {
-			index = ctxID
+			index = sample
 		}
-
 		for i := 0; i < ns.dimension; i++ {
-			ns.contextVector[index*ns.dimension+i] = ctxVector[i]
+			ns.contextVector[index*ns.dimension+i] = sampleVector[i]
 		}
 	}
 }
 
-func (ns *NegativeSampling) gradUpd(label int, lr float64, ctxVector, contextVector, poolVector []float64) {
+func (ns *NegativeSampling) gradUpd(label int, lr float64, sampledVector, vector, poolVector []float64) {
 	var inner float64
 	for i := 0; i < ns.dimension; i++ {
-		inner += ctxVector[i] * contextVector[i]
+		inner += sampledVector[i] * vector[i]
 	}
-
 	var g float64
 	if inner <= -ns.maxExp {
 		g = (float64(label - 0)) * lr
@@ -92,9 +86,8 @@ func (ns *NegativeSampling) gradUpd(label int, lr float64, ctxVector, contextVec
 	} else {
 		g = (float64(label) - ns.sigmoid(inner)) * lr
 	}
-
 	for i := 0; i < ns.dimension; i++ {
-		poolVector[i] += g * ctxVector[i]
-		ctxVector[i] += g * contextVector[i]
+		poolVector[i] += g * sampledVector[i]
+		sampledVector[i] += g * vector[i]
 	}
 }

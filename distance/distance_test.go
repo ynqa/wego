@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-var mockVector = `apple 1 1 1 1 1
+var testVector = `apple 1 1 1 1 1
 	banana 1 1 1 1 1
 	chocolate 0 0 0 0 0
 	dragon -1 -1 -1 -1 -1`
@@ -28,7 +28,7 @@ var mockVector = `apple 1 1 1 1 1
 func TestEstimate(t *testing.T) {
 	estimator := NewEstimator("apple", 3)
 
-	f := ioutil.NopCloser(bytes.NewReader([]byte(mockVector)))
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
 	err := estimator.Estimate(f)
 
 	if err != nil {

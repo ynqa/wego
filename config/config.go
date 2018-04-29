@@ -28,9 +28,9 @@ const (
 	Dimension
 	Iteration
 	MinCount
-	Thread
+	ThreadSize
 	Window
-	InitLearningRate
+	Initlr
 	Prof
 	ToLower
 	Verbose
@@ -38,20 +38,20 @@ const (
 
 // The defaults of Config.
 const (
-	DefaultInputFile        string  = "example/input.txt"
-	DefaultOutputFile       string  = "example/word_vectors.txt"
-	DefaultDimension        int     = 10
-	DefaultIteration        int     = 15
-	DefaultMinCount         int     = 5
-	DefaultWindow           int     = 5
-	DefaultInitLearningRate float64 = 0.025
-	DefaultProf             bool    = false
-	DefaultToLower          bool    = false
-	DefaultVerbose          bool    = false
+	DefaultInputFile  string  = "example/input.txt"
+	DefaultOutputFile string  = "example/word_vectors.txt"
+	DefaultDimension  int     = 10
+	DefaultIteration  int     = 15
+	DefaultMinCount   int     = 5
+	DefaultWindow     int     = 5
+	DefaultInitlr     float64 = 0.025
+	DefaultProf       bool    = false
+	DefaultToLower    bool    = false
+	DefaultVerbose    bool    = false
 )
 
-// DefaultThread is the same as number of CPU.
-var DefaultThread = runtime.NumCPU()
+// DefaultThreadSize is number of CPU.
+var DefaultThreadSize = runtime.NumCPU()
 
 func (c Config) String() string {
 	switch c {
@@ -65,11 +65,11 @@ func (c Config) String() string {
 		return "iter"
 	case MinCount:
 		return "min-count"
-	case Thread:
+	case ThreadSize:
 		return "thread"
 	case Window:
 		return "window"
-	case InitLearningRate:
+	case Initlr:
 		return "initlr"
 	case Prof:
 		return "prof"

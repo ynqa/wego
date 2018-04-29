@@ -20,60 +20,84 @@ import (
 
 func TestGloveInputFile(t *testing.T) {
 	b := &GloveBuilder{}
-	b.InputFile("inputfile")
 
-	if b.inputFile != "inputfile" {
-		t.Errorf("Expected builder.inputFile=inputfile: %v", b.inputFile)
+	expectedInputFile := "inputfile"
+	b.InputFile(expectedInputFile)
+
+	if b.inputFile != expectedInputFile {
+		t.Errorf("Expected builder.inputFile=%v: %v", expectedInputFile, b.inputFile)
 	}
 }
 
 func TestGloveDimension(t *testing.T) {
 	b := &GloveBuilder{}
-	b.Dimension(100)
 
-	if b.dimension != 100 {
-		t.Errorf("Expected builder.alpha=0.1: %v", b.alpha)
+	expectedDimension := 100
+	b.Dimension(expectedDimension)
+
+	if b.dimension != expectedDimension {
+		t.Errorf("Expected builder.dimension=%v: %v", expectedDimension, b.dimension)
 	}
 }
 
 func TestGloveIteration(t *testing.T) {
 	b := &GloveBuilder{}
-	b.Iteration(50)
 
-	if b.iteration != 50 {
-		t.Errorf("Expected builder.iteration=50: %v", b.iteration)
+	expectedIteration := 50
+	b.Iteration(expectedIteration)
+
+	if b.iteration != expectedIteration {
+		t.Errorf("Expected builder.iteration=%v: %v", expectedIteration, b.iteration)
 	}
 }
 
 func TestGloveMinCount(t *testing.T) {
 	b := &GloveBuilder{}
-	b.MinCount(10)
 
-	if b.minCount != 10 {
-		t.Errorf("Expected builder.minCount=10: %v", b.minCount)
+	expectedMinCount := 10
+	b.MinCount(expectedMinCount)
+
+	if b.minCount != expectedMinCount {
+		t.Errorf("Expected builder.minCount=%v: %v", expectedMinCount, b.minCount)
+	}
+}
+
+func TestGloveThreadSize(t *testing.T) {
+	b := &GloveBuilder{}
+
+	expectedThreadSize := 8
+	b.ThreadSize(expectedThreadSize)
+
+	if b.threadSize != expectedThreadSize {
+		t.Errorf("Expected builder.threadSize=%v: %v", expectedThreadSize, b.threadSize)
 	}
 }
 
 func TestGloveWindow(t *testing.T) {
 	b := &GloveBuilder{}
-	b.Window(10)
 
-	if b.window != 10 {
-		t.Errorf("Expected builder.window=10: %v", b.window)
+	expectedWindow := 10
+	b.Window(expectedWindow)
+
+	if b.window != expectedWindow {
+		t.Errorf("Expected builder.window=%v: %v", expectedWindow, b.window)
 	}
 }
 
-func TestGloveInitLearningRate(t *testing.T) {
+func TestGloveInitlr(t *testing.T) {
 	b := &GloveBuilder{}
-	b.InitLearningRate(0.001)
 
-	if b.initLearningRate != 0.001 {
-		t.Errorf("Expected builder.initLearningRate=0.001: %v", b.initLearningRate)
+	expectedInitlr := 0.001
+	b.Initlr(expectedInitlr)
+
+	if b.initlr != expectedInitlr {
+		t.Errorf("Expected builder.initlr=%v: %v", expectedInitlr, b.initlr)
 	}
 }
 
 func TestGloveToLower(t *testing.T) {
 	b := &GloveBuilder{}
+
 	b.ToLower()
 
 	if !b.toLower {
@@ -83,6 +107,7 @@ func TestGloveToLower(t *testing.T) {
 
 func TestGloveVerbose(t *testing.T) {
 	b := &GloveBuilder{}
+
 	b.Verbose()
 
 	if !b.verbose {
@@ -92,33 +117,40 @@ func TestGloveVerbose(t *testing.T) {
 
 func TestGloveSolver(t *testing.T) {
 	b := &GloveBuilder{}
-	b.Solver("adagrad")
 
-	if b.solver != "adagrad" {
-		t.Errorf("Expected builder.solver=adagrad: %v", b.solver)
-	}
-}
+	expectedSolver := "adagrad"
+	b.Solver(expectedSolver)
 
-func TestGloveAlpha(t *testing.T) {
-	b := &GloveBuilder{}
-	b.Alpha(0.1)
-
-	if b.alpha != 0.1 {
-		t.Errorf("Expected builder.alpha=0.1: %v", b.alpha)
+	if b.solver != expectedSolver {
+		t.Errorf("Expected builder.solver=%v: %v", expectedSolver, b.solver)
 	}
 }
 
 func TestGloveXmax(t *testing.T) {
 	b := &GloveBuilder{}
-	b.Xmax(10)
 
-	if b.xmax != 10 {
-		t.Errorf("Expected builder.alpha=10: %v", b.xmax)
+	expectedXmax := 10
+	b.Xmax(expectedXmax)
+
+	if b.xmax != expectedXmax {
+		t.Errorf("Expected builder.xmax=%v: %v", expectedXmax, b.xmax)
+	}
+}
+
+func TestGloveAlpha(t *testing.T) {
+	b := &GloveBuilder{}
+
+	exoectedAlpha := 0.1
+	b.Alpha(exoectedAlpha)
+
+	if b.alpha != exoectedAlpha {
+		t.Errorf("Expected builder.alpha=%v: %v", exoectedAlpha, b.alpha)
 	}
 }
 
 func TestGloveInvalidSolverBuild(t *testing.T) {
 	b := &GloveBuilder{}
+
 	b.Solver("fake_solver")
 
 	if _, err := b.Build(); err == nil {

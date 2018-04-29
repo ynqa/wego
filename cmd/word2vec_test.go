@@ -20,28 +20,28 @@ import (
 	"github.com/spf13/viper"
 )
 
-const word2vecFlagSize = 6
+const word2vecFlagSize = 7
 
-func TestWord2VecBind(t *testing.T) {
+func TestWord2vecBind(t *testing.T) {
 	defer viper.Reset()
 
-	word2vecBind(Word2VecCmd)
+	word2vecBind(Word2vecCmd)
 
-	if len(viper.AllKeys()) != 6 {
-		t.Errorf("Expected similarityBind maps %v keys: %v",
+	if len(viper.AllKeys()) != word2vecFlagSize {
+		t.Errorf("Expected word2vecBind maps %v keys: %v",
 			word2vecFlagSize,
 			viper.AllKeys())
 	}
 }
 
-func TestWord2VecCmdPreRun(t *testing.T) {
+func TestWord2vecCmdPreRun(t *testing.T) {
 	defer viper.Reset()
 
 	var empty []string
-	Word2VecCmd.PreRun(Word2VecCmd, empty)
+	Word2vecCmd.PreRun(Word2vecCmd, empty)
 
 	if len(viper.AllKeys()) != word2vecFlagSize+configFlagSize {
-		t.Errorf("Expected PreRun of Word2VecCmd maps %v keys: %v",
+		t.Errorf("Expected PreRun of Word2vecCmd maps %v keys: %v",
 			word2vecFlagSize+configFlagSize, viper.AllKeys())
 	}
 }

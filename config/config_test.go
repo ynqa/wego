@@ -28,55 +28,59 @@ func TestInvalidConfigString(t *testing.T) {
 
 func TestConfigString(t *testing.T) {
 	testCases := []struct {
-		input  Config
-		expect string
+		input    Config
+		expected string
 	}{
 		{
-			input:  InputFile,
-			expect: "inputFile",
+			input:    InputFile,
+			expected: "inputFile",
 		},
 		{
-			input:  OutputFile,
-			expect: "outputFile",
+			input:    OutputFile,
+			expected: "outputFile",
 		},
 		{
-			input:  Dimension,
-			expect: "dimension",
+			input:    Dimension,
+			expected: "dimension",
 		},
 		{
-			input:  Iteration,
-			expect: "iter",
+			input:    Iteration,
+			expected: "iter",
 		},
 		{
-			input:  MinCount,
-			expect: "min-count",
+			input:    MinCount,
+			expected: "min-count",
 		},
 		{
-			input:  Window,
-			expect: "window",
+			input:    ThreadSize,
+			expected: "thread",
 		},
 		{
-			input:  InitLearningRate,
-			expect: "initlr",
+			input:    Window,
+			expected: "window",
 		},
 		{
-			input:  Prof,
-			expect: "prof",
+			input:    Initlr,
+			expected: "initlr",
 		},
 		{
-			input:  ToLower,
-			expect: "lower",
+			input:    Prof,
+			expected: "prof",
 		},
 		{
-			input:  Verbose,
-			expect: "verbose",
+			input:    ToLower,
+			expected: "lower",
+		},
+		{
+			input:    Verbose,
+			expected: "verbose",
 		},
 	}
 
 	for _, testCase := range testCases {
 		actual := testCase.input.String()
-		if actual != testCase.expect {
-			t.Errorf("Config: %v with String() should be %v, but get %v", testCase.input, testCase.expect, actual)
+		if actual != testCase.expected {
+			t.Errorf("Config: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
 		}
 	}
 }

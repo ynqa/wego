@@ -20,6 +20,6 @@ import (
 
 // Optimizer is the interface to initialize after scanning corpus once, and update the word vector.
 type Optimizer interface {
-	initialize(c *corpus.Word2VecCorpus, dimension int) error
-	update(targetID int, contextVector, poolVector []float64, learningRate float64)
+	initialize(cps *corpus.Word2vecCorpus, dimension int) error
+	update(word int, lr float64, vector, poolVector []float64)
 }

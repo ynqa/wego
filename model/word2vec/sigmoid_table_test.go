@@ -20,7 +20,7 @@ import (
 
 func TestSigmoidOverLength(t *testing.T) {
 	table := newSigmoidTable()
-	// TODO: Fuzzy Test
+	// TODO: fuzzy testing.
 	f := table.sigmoid(3)
 	if !(f >= 0 || f <= 1) {
 		t.Errorf("Extected range between 0 < Sigmoid(x) < 1: %v", f)

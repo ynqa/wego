@@ -14,9 +14,9 @@
 
 package glove
 
-// Solver is the interface to learn parameters of GloVe.
+// Solver is the interface for training with GloVe.
 type Solver interface {
-	initialize(weightSize int)
-	trainOne(l1, l2 int, f, coefficient float64, weight []float64) (cost float64)
+	initialize(vectorSize int)
+	trainOne(l1, l2 int, f, coefficient float64, vector []float64) (cost float64)
 	postOneIter()
 }
