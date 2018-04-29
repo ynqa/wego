@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package model
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 
 func TestNextRandom(t *testing.T) {
 	// TODO: Fuzzy Test
-	r := nextRandom(5)
+	r := NextRandom(5)
 	if !(0 <= r && r < 5) {
 		t.Errorf("Extected range between 0 < nextRandom(x) < 5: %v", r)
 	}

@@ -12,12 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package model
+
+import (
+	"math"
+)
+
+// IndexPerThread creates interval of indices per thread.
+func IndexPerThread(threadSize, dataSize int) []int {
+	indexPerThread := make([]int, threadSize+1)
+	indexPerThread[0] = 0
+	indexPerThread[threadSize] = dataSize
+	for i := 1; i < threadSize; i++ {
+		indexPerThread[i] = indexPerThread[i-1] +
+			int(math.Trunc(float64((dataSize+i)/threadSize)))
+	}
+	return indexPerThread
+}
 
 var next uint64 = 1
 
-// Linear congruential generator like rand.Intn(window)
-func nextRandom(value int) int {
+// NextRandom is linear congruential generator like rand.Intn(window)
+func NextRandom(value int) int {
 	next = next*uint64(25214903917) + 11
 	return int(next % uint64(value))
 }
