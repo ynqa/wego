@@ -22,33 +22,33 @@ func TestInvalidGloveConfigString(t *testing.T) {
 	var Fake GloveConfig = 1024
 
 	if Fake.String() != "unknown" {
-		t.Errorf("Fake should be not registered in Word2VecConfig: %v", Fake.String())
+		t.Errorf("Fake should be not registered in GloveConfig: %v", Fake.String())
 	}
 }
 
 func TestGloveConfigString(t *testing.T) {
 	testCases := []struct {
-		input  GloveConfig
-		expect string
+		input    GloveConfig
+		expected string
 	}{
 		{
-			input:  Solver,
-			expect: "solver",
+			input:    Solver,
+			expected: "solver",
 		},
 		{
-			input:  Alpha,
-			expect: "alpha",
+			input:    Xmax,
+			expected: "xmax",
 		},
 		{
-			input:  Xmax,
-			expect: "xmax",
+			input:    Alpha,
+			expected: "alpha",
 		},
 	}
 
 	for _, testCase := range testCases {
 		actual := testCase.input.String()
-		if actual != testCase.expect {
-			t.Errorf("Word2VecConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expect, actual)
+		if actual != testCase.expected {
+			t.Errorf("GloveConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
 		}
 	}
 }

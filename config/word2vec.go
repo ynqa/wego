@@ -14,47 +14,47 @@
 
 package config
 
-// Word2VecConfig is enum of the Word2Vec config.
-type Word2VecConfig int
+// Word2vecConfig is enum of the Word2vec config.
+type Word2vecConfig int
 
-// The list of Word2VecConfig.
+// The list of Word2vecConfig.
 const (
-	Model Word2VecConfig = iota
+	Model Word2vecConfig = iota
 	Optimizer
+	BatchSize
 	MaxDepth
 	NegativeSampleSize
-	Theta
-	BatchSize
 	SubsampleThreshold
+	Theta
 )
 
-// The defaults of Word2VecConfig.
+// The defaults of Word2vecConfig.
 const (
 	DefaultModel              string  = "cbow"
 	DefaultOptimizer          string  = "hs"
+	DefaultBatchSize          int     = 10000
 	DefaultMaxDepth           int     = 0
 	DefaultNegativeSampleSize int     = 5
-	DefaultTheta              float64 = 1.0e-4
-	DefaultBatchSize          int     = 10000
 	DefaultSubsampleThreshold float64 = 1.0e-3
+	DefaultTheta              float64 = 1.0e-4
 )
 
-func (w Word2VecConfig) String() string {
+func (w Word2vecConfig) String() string {
 	switch w {
 	case Model:
 		return "model"
 	case Optimizer:
 		return "optimizer"
+	case BatchSize:
+		return "batchSize"
 	case MaxDepth:
 		return "maxDepth"
 	case NegativeSampleSize:
 		return "sample"
-	case Theta:
-		return "theta"
-	case BatchSize:
-		return "batchSize"
 	case SubsampleThreshold:
 		return "threshold"
+	case Theta:
+		return "theta"
 	default:
 		return "unknown"
 	}

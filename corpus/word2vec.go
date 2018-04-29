@@ -17,25 +17,29 @@ package corpus
 import (
 	"io"
 
+	"github.com/pkg/errors"
+
 	"github.com/ynqa/word-embedding/corpus/node"
 )
 
-// Word2VecCorpus stores corpus itself by integer word id list.
-type Word2VecCorpus struct {
+// Word2vecCorpus stores corpus.
+type Word2vecCorpus struct {
 	*core
 }
 
-// NewWord2VecCorpus creates *Word2VecCorpus.
-func NewWord2VecCorpus(f io.ReadCloser, toLower bool, minCount int) *Word2VecCorpus {
-	word2VecCorpus := &Word2VecCorpus{
+// NewWord2vecCorpus creates *Word2vecCorpus.
+func NewWord2vecCorpus(f io.ReadCloser, toLower bool, minCount int) (*Word2vecCorpus, error) {
+	word2vecCorpus := &Word2vecCorpus{
 		core: newCore(),
 	}
-	word2VecCorpus.parse(f, toLower, minCount)
-	return word2VecCorpus
+	if err := word2vecCorpus.parse(f, toLower, minCount); err != nil {
+		return nil, errors.Wrap(err, "Unable to generate Word2vecCorpus")
+	}
+	return word2vecCorpus, nil
 }
 
 // HuffmanTree builds word nodes map.
-func (wc *Word2VecCorpus) HuffmanTree(dimension int) (map[int]*node.Node, error) {
+func (wc *Word2vecCorpus) HuffmanTree(dimension int) (map[int]*node.Node, error) {
 	ns := make(node.Nodes, 0, wc.Size())
 	nm := make(map[int]*node.Node)
 	for i := 0; i < wc.Size(); i++ {

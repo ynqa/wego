@@ -20,25 +20,25 @@ type GloveConfig int
 // The list of GloveConfig.
 const (
 	Solver GloveConfig = iota
-	Alpha
 	Xmax
+	Alpha
 )
 
 // The defaults of GloveConfig.
 const (
 	DefaultSolver string  = "sgd"
-	DefaultAlpha  float64 = 0.75
 	DefaultXmax   int     = 100
+	DefaultAlpha  float64 = 0.75
 )
 
 func (g GloveConfig) String() string {
 	switch g {
 	case Solver:
 		return "solver"
-	case Alpha:
-		return "alpha"
 	case Xmax:
 		return "xmax"
+	case Alpha:
+		return "alpha"
 	default:
 		return "unknown"
 	}

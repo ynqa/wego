@@ -16,59 +16,52 @@ package glove
 
 import (
 	"math"
-
-	"github.com/ynqa/word-embedding/model"
 )
 
-// AdaGrad behaviors as one of GloVe solver.
+// AdaGrad behaviors as one of Glove solver.
 type AdaGrad struct {
 	dimension int
-
-	initLearningRate float64
-	gradsq           []float64
+	initlr    float64
+	gradsq    []float64
 }
 
 // NewAdaGrad creates *AdaGrad.
-func NewAdaGrad(c *model.Config) *AdaGrad {
+func NewAdaGrad(dimension int, initlr float64) *AdaGrad {
 	return &AdaGrad{
-		dimension: c.Dimension,
-
-		initLearningRate: c.InitLearningRate,
+		dimension: dimension,
+		initlr:    initlr,
 	}
 }
 
-func (a *AdaGrad) initialize(weightSize int) {
-	a.gradsq = make([]float64, weightSize)
-
-	for i := 0; i < weightSize; i++ {
+func (a *AdaGrad) initialize(vectorSize int) {
+	a.gradsq = make([]float64, vectorSize)
+	for i := 0; i < vectorSize; i++ {
 		a.gradsq[i] = 1.
 	}
 }
 
-func (a *AdaGrad) trainOne(l1, l2 int, f, coefficient float64, weight []float64) float64 {
+func (a *AdaGrad) trainOne(l1, l2 int, f, coefficient float64, vector []float64) float64 {
 	var diff, cost float64
 	for i := 0; i < a.dimension; i++ {
-		diff += weight[l1+i] * weight[l2+i]
+		diff += vector[l1+i] * vector[l2+i]
 	}
-	diff += weight[l1+a.dimension] + weight[l2+a.dimension] - f
+	diff += vector[l1+a.dimension] + vector[l2+a.dimension] - f
 	fdiff := diff * coefficient
 	cost = 0.5 * fdiff * diff
-	fdiff *= a.initLearningRate
-
+	fdiff *= a.initlr
 	for i := 0; i < a.dimension; i++ {
-		temp1 := fdiff * weight[l2+i]
-		temp2 := fdiff * weight[l1+i]
+		temp1 := fdiff * vector[l2+i]
+		temp2 := fdiff * vector[l1+i]
 		a.gradsq[l1+i] += temp1 * temp1
 		a.gradsq[l2+i] += temp2 * temp2
 
 		temp1 /= math.Sqrt(a.gradsq[l1+i])
 		temp2 /= math.Sqrt(a.gradsq[l2+i])
-		weight[l1+i] -= temp1
-		weight[l2+i] -= temp2
+		vector[l1+i] -= temp1
+		vector[l2+i] -= temp2
 	}
-
-	weight[l1+a.dimension] -= fdiff / math.Sqrt(a.gradsq[l1+a.dimension])
-	weight[l2+a.dimension] -= fdiff / math.Sqrt(a.gradsq[l2+a.dimension])
+	vector[l1+a.dimension] -= fdiff / math.Sqrt(a.gradsq[l1+a.dimension])
+	vector[l2+a.dimension] -= fdiff / math.Sqrt(a.gradsq[l2+a.dimension])
 	fdiff *= fdiff
 	a.gradsq[l1+a.dimension] += fdiff
 	a.gradsq[l2+a.dimension] += fdiff

@@ -28,7 +28,7 @@ func TestSimilarityBind(t *testing.T) {
 	distanceBind(DistanceCmd)
 
 	if len(viper.AllKeys()) != distanceFlagSize {
-		t.Errorf("Expected similarityBind maps %v keys: %v",
+		t.Errorf("Expected distanceBind maps %v keys: %v",
 			distanceFlagSize, viper.AllKeys())
 	}
 }

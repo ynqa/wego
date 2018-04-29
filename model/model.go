@@ -14,9 +14,9 @@
 
 package model
 
-// Model is the interface of Preprocess, Train, Save.
+// Model is the interface that has Train, Save.
 type Model interface {
-	// TODO: Enable to train added files.
+	// Train is function for
 	Train() error
 	Save(outputFile string) error
 }

@@ -26,8 +26,7 @@ import (
 // RootCmd is the root command for word embedding.
 var RootCmd = &cobra.Command{
 	Use:   "word-embedding",
-	Short: "The tools embedding words into vector space",
-	Long:  "The tools embedding words into vector space",
+	Short: "tools for embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return errors.New("Set sub-command from: distance|word2vec")
 	},
@@ -37,27 +36,27 @@ var RootCmd = &cobra.Command{
 func ConfigFlagSet() *pflag.FlagSet {
 	fs := pflag.NewFlagSet(RootCmd.Name(), pflag.ExitOnError)
 	fs.StringP(config.InputFile.String(), "i", config.DefaultInputFile,
-		"Set the input file path to load corpus")
+		"input file path for corpus")
 	fs.StringP(config.OutputFile.String(), "o", config.DefaultOutputFile,
-		"Set the output file path to save word vectors")
+		"output file path to save word vectors")
 	fs.IntP(config.Dimension.String(), "d", config.DefaultDimension,
-		"Set the dimension of word vector")
+		"dimension of word vector")
 	fs.Int(config.Iteration.String(), config.DefaultIteration,
-		"Set the iteration")
+		"number of iteration")
 	fs.Int(config.MinCount.String(), config.DefaultMinCount,
-		"Set the min count to filter rare words")
-	fs.Int(config.Thread.String(), config.DefaultThread,
-		"Set number of parallel")
+		"lower limit to filter rare words")
+	fs.Int(config.ThreadSize.String(), config.DefaultThreadSize,
+		"number of goroutine")
 	fs.IntP(config.Window.String(), "w", config.DefaultWindow,
-		"Set the context window size")
-	fs.Float64(config.InitLearningRate.String(), config.DefaultInitLearningRate,
-		"Set the initial learning rate")
+		"context window size")
+	fs.Float64(config.Initlr.String(), config.DefaultInitlr,
+		"initial learning rate")
 	fs.Bool(config.Prof.String(), config.DefaultProf,
-		"Profiling mode to check the performances")
+		"profiling mode to check the performances")
 	fs.Bool(config.ToLower.String(), config.DefaultToLower,
-		"Whether the words on corpus convert to lowercase or not")
+		"whether the words on corpus convert to lowercase or not")
 	fs.Bool(config.Verbose.String(), config.DefaultVerbose,
-		"Verbose mode")
+		"verbose mode")
 	return fs
 }
 
@@ -67,17 +66,16 @@ func configBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Dimension.String(), cmd.Flags().Lookup(config.Dimension.String()))
 	viper.BindPFlag(config.Iteration.String(), cmd.Flags().Lookup(config.Iteration.String()))
 	viper.BindPFlag(config.MinCount.String(), cmd.Flags().Lookup(config.MinCount.String()))
-	viper.BindPFlag(config.Thread.String(), cmd.Flags().Lookup(config.Thread.String()))
+	viper.BindPFlag(config.ThreadSize.String(), cmd.Flags().Lookup(config.ThreadSize.String()))
 	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
-	viper.BindPFlag(config.InitLearningRate.String(), cmd.Flags().Lookup(config.InitLearningRate.String()))
+	viper.BindPFlag(config.Initlr.String(), cmd.Flags().Lookup(config.Initlr.String()))
 	viper.BindPFlag(config.Prof.String(), cmd.Flags().Lookup(config.Prof.String()))
 	viper.BindPFlag(config.ToLower.String(), cmd.Flags().Lookup(config.ToLower.String()))
 	viper.BindPFlag(config.Verbose.String(), cmd.Flags().Lookup(config.Verbose.String()))
 }
 
 func init() {
-	RootCmd.Flags().BoolP("help", "h", false, "Help for "+RootCmd.Name())
-	RootCmd.AddCommand(Word2VecCmd)
+	RootCmd.AddCommand(Word2vecCmd)
 	RootCmd.AddCommand(DistanceCmd)
 	RootCmd.AddCommand(GloveCmd)
 }

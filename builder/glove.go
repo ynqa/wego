@@ -26,22 +26,25 @@ import (
 	"github.com/ynqa/word-embedding/validate"
 )
 
-// GloveBuilder manages the members to build the Model interface.
+// GloveBuilder manages the members to build Model interface.
 type GloveBuilder struct {
+	// input file path.
 	inputFile string
 
-	dimension        int
-	iteration        int
-	minCount         int
-	thread           int
-	window           int
-	initLearningRate float64
-	toLower          bool
-	verbose          bool
+	// common configs.
+	dimension  int
+	iteration  int
+	minCount   int
+	threadSize int
+	window     int
+	initlr     float64
+	toLower    bool
+	verbose    bool
 
+	// glove configs.
 	solver string
-	alpha  float64
 	xmax   int
+	alpha  float64
 }
 
 // NewGloveBuilder creates *GloveBuilder
@@ -49,54 +52,54 @@ func NewGloveBuilder() *GloveBuilder {
 	return &GloveBuilder{
 		inputFile: config.DefaultInputFile,
 
-		dimension:        config.DefaultDimension,
-		iteration:        config.DefaultIteration,
-		minCount:         config.DefaultMinCount,
-		thread:           config.DefaultThread,
-		window:           config.DefaultWindow,
-		initLearningRate: config.DefaultInitLearningRate,
-		toLower:          config.DefaultToLower,
-		verbose:          config.DefaultVerbose,
+		dimension:  config.DefaultDimension,
+		iteration:  config.DefaultIteration,
+		minCount:   config.DefaultMinCount,
+		threadSize: config.DefaultThreadSize,
+		window:     config.DefaultWindow,
+		initlr:     config.DefaultInitlr,
+		toLower:    config.DefaultToLower,
+		verbose:    config.DefaultVerbose,
 
 		solver: config.DefaultSolver,
-		alpha:  config.DefaultAlpha,
 		xmax:   config.DefaultXmax,
+		alpha:  config.DefaultAlpha,
 	}
 }
 
-// NewGloveBuilderViper creates *GloveBuilder using viper.
-func NewGloveBuilderViper() *GloveBuilder {
+// NewGloveBuilderFromViper creates *GloveBuilder from viper.
+func NewGloveBuilderFromViper() *GloveBuilder {
 	return &GloveBuilder{
 		inputFile: viper.GetString(config.InputFile.String()),
 
-		dimension:        viper.GetInt(config.Dimension.String()),
-		iteration:        viper.GetInt(config.Iteration.String()),
-		minCount:         viper.GetInt(config.MinCount.String()),
-		thread:           viper.GetInt(config.Thread.String()),
-		window:           viper.GetInt(config.Window.String()),
-		initLearningRate: viper.GetFloat64(config.InitLearningRate.String()),
-		toLower:          viper.GetBool(config.ToLower.String()),
-		verbose:          viper.GetBool(config.Verbose.String()),
+		dimension:  viper.GetInt(config.Dimension.String()),
+		iteration:  viper.GetInt(config.Iteration.String()),
+		minCount:   viper.GetInt(config.MinCount.String()),
+		threadSize: viper.GetInt(config.ThreadSize.String()),
+		window:     viper.GetInt(config.Window.String()),
+		initlr:     viper.GetFloat64(config.Initlr.String()),
+		toLower:    viper.GetBool(config.ToLower.String()),
+		verbose:    viper.GetBool(config.Verbose.String()),
 
 		solver: viper.GetString(config.Solver.String()),
-		alpha:  viper.GetFloat64(config.Alpha.String()),
 		xmax:   viper.GetInt(config.Xmax.String()),
+		alpha:  viper.GetFloat64(config.Alpha.String()),
 	}
 }
 
-// InputFile sets the input file string.
+// InputFile sets input file string.
 func (gb *GloveBuilder) InputFile(inputFile string) *GloveBuilder {
 	gb.inputFile = inputFile
 	return gb
 }
 
-// Dimension sets the dimension of word vector.
+// Dimension sets dimension of word vector.
 func (gb *GloveBuilder) Dimension(dimension int) *GloveBuilder {
 	gb.dimension = dimension
 	return gb
 }
 
-// Iteration sets the number of iteration.
+// Iteration sets number of iteration.
 func (gb *GloveBuilder) Iteration(iter int) *GloveBuilder {
 	gb.iteration = iter
 	return gb
@@ -108,25 +111,25 @@ func (gb *GloveBuilder) MinCount(minCount int) *GloveBuilder {
 	return gb
 }
 
-// Thread sets number of goroutine.
-func (gb *GloveBuilder) Thread(thread int) *GloveBuilder {
-	gb.thread = thread
+// ThreadSize sets number of goroutine.
+func (gb *GloveBuilder) ThreadSize(threadSize int) *GloveBuilder {
+	gb.threadSize = threadSize
 	return gb
 }
 
-// Window sets the context window size.
+// Window sets context window size.
 func (gb *GloveBuilder) Window(window int) *GloveBuilder {
 	gb.window = window
 	return gb
 }
 
-// InitLearningRate sets the initial learning rate.
-func (gb *GloveBuilder) InitLearningRate(initlr float64) *GloveBuilder {
-	gb.initLearningRate = initlr
+// Initlr sets initial learning rate.
+func (gb *GloveBuilder) Initlr(initlr float64) *GloveBuilder {
+	gb.initlr = initlr
 	return gb
 }
 
-// ToLower converts the words in corpus to lowercase.
+// ToLower is whether converts the words in corpus to lowercase or not.
 func (gb *GloveBuilder) ToLower() *GloveBuilder {
 	gb.toLower = true
 	return gb
@@ -138,21 +141,21 @@ func (gb *GloveBuilder) Verbose() *GloveBuilder {
 	return gb
 }
 
-// Solver sets the solver.
+// Solver sets solver.
 func (gb *GloveBuilder) Solver(solver string) *GloveBuilder {
 	gb.solver = solver
-	return gb
-}
-
-// Alpha sets alpha.
-func (gb *GloveBuilder) Alpha(alpha float64) *GloveBuilder {
-	gb.alpha = alpha
 	return gb
 }
 
 // Xmax sets x-max.
 func (gb *GloveBuilder) Xmax(xmax int) *GloveBuilder {
 	gb.xmax = xmax
+	return gb
+}
+
+// Alpha sets alpha.
+func (gb *GloveBuilder) Alpha(alpha float64) *GloveBuilder {
+	gb.alpha = alpha
 	return gb
 }
 
@@ -167,18 +170,18 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 		return nil, err
 	}
 
-	cnf := model.NewConfig(gb.dimension, gb.iteration, gb.minCount, gb.thread, gb.window,
-		gb.initLearningRate, gb.toLower, gb.verbose)
+	cnf := model.NewConfig(gb.dimension, gb.iteration, gb.minCount, gb.threadSize, gb.window,
+		gb.initlr, gb.toLower, gb.verbose)
 
 	var solver glove.Solver
 	switch gb.solver {
 	case "sgd":
-		solver = glove.NewSGD(cnf)
+		solver = glove.NewSgd(gb.dimension, gb.initlr)
 	case "adagrad":
-		solver = glove.NewAdaGrad(cnf)
+		solver = glove.NewAdaGrad(gb.dimension, gb.initlr)
 	default:
 		return nil, errors.Errorf("Invalid solver: %s not in sgd|adagrad", gb.solver)
 	}
 
-	return glove.NewGlove(input, cnf, solver, gb.xmax, gb.alpha), nil
+	return glove.NewGlove(input, cnf, solver, gb.xmax, gb.alpha)
 }

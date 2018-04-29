@@ -18,71 +18,86 @@ import (
 	"testing"
 )
 
-func TestInputFile(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.InputFile("inputfile")
+func TestWord2vecInputFile(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.inputFile != "inputfile" {
-		t.Errorf("Expected builder.inputFile=inputfile: %v", b.inputFile)
+	expectedInputFile := "inputfile"
+	b.InputFile(expectedInputFile)
+
+	if b.inputFile != expectedInputFile {
+		t.Errorf("Expected builder.inputFile=%v: %v", expectedInputFile, b.inputFile)
 	}
 }
 
-func TestDimension(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Dimension(100)
+func TestWord2vecDimension(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.dimension != 100 {
-		t.Errorf("Expected builder.dimension=100: %v", b.dimension)
+	expectedDimension := 100
+	b.Dimension(expectedDimension)
+
+	if b.dimension != expectedDimension {
+		t.Errorf("Expected builder.dimension=%v: %v", expectedDimension, b.dimension)
 	}
 }
 
-func TestIteration(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Iteration(15)
+func TestWord2vecIteration(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.iteration != 15 {
-		t.Errorf("Expected builder.iteration=15: %v", b.iteration)
+	expectedIteration := 50
+	b.Iteration(expectedIteration)
+
+	if b.iteration != expectedIteration {
+		t.Errorf("Expected builder.iteration=%v: %v", expectedIteration, b.iteration)
 	}
 }
 
-func TestMinCount(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.MinCount(5)
+func TestWord2vecMinCount(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.minCount != 5 {
-		t.Errorf("Expected builder.minCount=5: %v", b.minCount)
+	expectedMinCount := 10
+	b.MinCount(expectedMinCount)
+
+	if b.minCount != expectedMinCount {
+		t.Errorf("Expected builder.minCount=%v: %v", expectedMinCount, b.minCount)
 	}
 }
 
-func TestThread(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Thread(8)
+func TestWord2vecThreadSize(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.thread != 8 {
-		t.Errorf("Expected builder.thread=8: %v", b.thread)
+	expectedThreadSize := 8
+	b.ThreadSize(expectedThreadSize)
+
+	if b.threadSize != expectedThreadSize {
+		t.Errorf("Expected builder.threadSize=%v: %v", expectedThreadSize, b.threadSize)
 	}
 }
 
-func TestWindow(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Window(10)
+func TestWord2vecWindow(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.window != 10 {
-		t.Errorf("Expected builder.window=10: %v", b.window)
+	expectedWindow := 10
+	b.Window(expectedWindow)
+
+	if b.window != expectedWindow {
+		t.Errorf("Expected builder.window=%v: %v", expectedWindow, b.window)
 	}
 }
 
-func TestInitLearningRate(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.InitLearningRate(0.001)
+func TestWord2vecInitlr(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.initLearningRate != 0.001 {
-		t.Errorf("Expected builder.initLearningRate=0.001: %v", b.initLearningRate)
+	expectedInitlr := 0.001
+	b.Initlr(expectedInitlr)
+
+	if b.initlr != expectedInitlr {
+		t.Errorf("Expected builder.initlr=%v: %v", expectedInitlr, b.initlr)
 	}
 }
 
-func TestToLower(t *testing.T) {
-	b := &Word2VecBuilder{}
+func TestWord2vecToLower(t *testing.T) {
+	b := &Word2vecBuilder{}
+
 	b.ToLower()
 
 	if !b.toLower {
@@ -90,8 +105,9 @@ func TestToLower(t *testing.T) {
 	}
 }
 
-func TestVerbose(t *testing.T) {
-	b := &Word2VecBuilder{}
+func TestWord2vecVerbose(t *testing.T) {
+	b := &Word2vecBuilder{}
+
 	b.Verbose()
 
 	if !b.verbose {
@@ -99,71 +115,86 @@ func TestVerbose(t *testing.T) {
 	}
 }
 
-func TestModel(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Model("skip-gram")
+func TestWord2vecModel(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.model != "skip-gram" {
-		t.Errorf("Expected builder.model=skip-gram: %v", b.model)
+	expectedModel := "skip-gram"
+	b.Model(expectedModel)
+
+	if b.model != expectedModel {
+		t.Errorf("Expected builder.model=%v: %v", expectedModel, b.model)
 	}
 }
 
-func TestOptimizer(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Optimizer("ns")
+func TestWord2vecOptimizer(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.optimizer != "ns" {
-		t.Errorf("Expected builder.optimizer=ns: %v", b.optimizer)
+	expectedOptimizer := "ns"
+	b.Optimizer(expectedOptimizer)
+
+	if b.optimizer != expectedOptimizer {
+		t.Errorf("Expected builder.optimizer=%v: %v", expectedOptimizer, b.optimizer)
 	}
 }
 
-func TestMaxDepth(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.MaxDepth(40)
+func TestWord2vecBatchSize(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.maxDepth != 40 {
-		t.Errorf("Expected builder.maxDepth=40: %v", b.maxDepth)
+	expectedBatchSize := 2048
+	b.BatchSize(expectedBatchSize)
+
+	if b.batchSize != expectedBatchSize {
+		t.Errorf("Expected builder.batchSize=%v: %v", expectedBatchSize, b.batchSize)
 	}
 }
 
-func TestNegativeSampleSize(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.NegativeSampleSize(20)
+func TestWord2vecMaxDepth(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.negativeSampleSize != 20 {
-		t.Errorf("Expected builder.negativeSampleSize=20: %v", b.negativeSampleSize)
+	expectedMaxDepth := 40
+	b.MaxDepth(expectedMaxDepth)
+
+	if b.maxDepth != expectedMaxDepth {
+		t.Errorf("Expected builder.maxDepth=%v: %v", expectedMaxDepth, b.maxDepth)
 	}
 }
 
-func TestTheta(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.Theta(1.0e-5)
+func TestWord2vecNegativeSampleSize(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.theta != 1.0e-5 {
-		t.Errorf("Expected builder.theta=1.0e-5: %v", b.theta)
+	expectedNegativeSampleSize := 20
+	b.NegativeSampleSize(expectedNegativeSampleSize)
+
+	if b.negativeSampleSize != expectedNegativeSampleSize {
+		t.Errorf("Expected builder.negativeSampleSize=%v: %v", expectedNegativeSampleSize, b.negativeSampleSize)
 	}
 }
 
-func TestBatchSize(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.BatchSize(2048)
+func TestWord2vecSubSampleThreshold(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.batchSize != 2048 {
-		t.Errorf("Expected builder.batchSize=2048: %v", b.batchSize)
+	expectedSubSampleThreshold := 0.001
+	b.SubSampleThreshold(expectedSubSampleThreshold)
+
+	if b.subsampleThreshold != expectedSubSampleThreshold {
+		t.Errorf("Expected builder.subsampleThreshold=%v: %v", expectedSubSampleThreshold, b.subsampleThreshold)
 	}
 }
 
-func TestSubSampleThreshold(t *testing.T) {
-	b := &Word2VecBuilder{}
-	b.SubSampleThreshold(0.001)
+func TestWord2vecTheta(t *testing.T) {
+	b := &Word2vecBuilder{}
 
-	if b.subsampleThreshold != 0.001 {
-		t.Errorf("Expected builder.subsampleThreshold=0.001: %v", b.subsampleThreshold)
+	expectedTheta := 1.0e-5
+	b.Theta(expectedTheta)
+
+	if b.theta != expectedTheta {
+		t.Errorf("Expected builder.theta=%v: %v", expectedTheta, b.theta)
 	}
 }
 
-func TestInvalidModelBuild(t *testing.T) {
-	b := &Word2VecBuilder{}
+func TestWord2vecInvalidModelBuild(t *testing.T) {
+	b := &Word2vecBuilder{}
+
 	b.Model("fake_model")
 
 	if _, err := b.Build(); err == nil {
@@ -171,8 +202,9 @@ func TestInvalidModelBuild(t *testing.T) {
 	}
 }
 
-func TestInvalidOptimizerBuild(t *testing.T) {
-	b := &Word2VecBuilder{}
+func TestWord2vecInvalidOptimizerBuild(t *testing.T) {
+	b := &Word2vecBuilder{}
+
 	b.Optimizer("fake_optimizer")
 
 	if _, err := b.Build(); err == nil {

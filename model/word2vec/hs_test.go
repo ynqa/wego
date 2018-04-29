@@ -21,7 +21,8 @@ import (
 )
 
 func TestNewHierarchicalSoftmax(t *testing.T) {
-	hs := NewHierarchicalSoftmax(10)
+	maxDepth := 10
+	hs := NewHierarchicalSoftmax(maxDepth)
 
 	if hs.nodeMap != nil {
 		t.Error("HierarchicalSoftmax: Initializing without building huffman tree")
@@ -29,10 +30,15 @@ func TestNewHierarchicalSoftmax(t *testing.T) {
 }
 
 func TestHSInit(t *testing.T) {
-	hs := NewHierarchicalSoftmax(10)
-	hs.initialize(corpus.TestWord2VecCorpus, 10)
+	maxDepth := 10
+	hs := NewHierarchicalSoftmax(maxDepth)
 
-	if len(hs.nodeMap) != 3 {
-		t.Error("HierarchicalSoftmax: Init returns nodeMap with length=3")
+	dimension := 10
+	hs.initialize(corpus.TestWord2vecCorpus, dimension)
+
+	expectedNodeMapSize := corpus.TestWord2vecCorpus.Size()
+	if len(hs.nodeMap) != expectedNodeMapSize {
+		t.Errorf("HierarchicalSoftmax: Init returns nodeMap with length=%v: %v",
+			expectedNodeMapSize, len(hs.nodeMap))
 	}
 }

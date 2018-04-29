@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	b := builder.NewWord2VecBuilder()
+	b := builder.NewWord2vecBuilder()
 
 	b.InputFile("text8").
 		Dimension(10).

@@ -14,53 +14,44 @@
 
 package glove
 
-import (
-	"github.com/ynqa/word-embedding/model"
-)
-
-// SGD behaviors as one of GloVe solver.
-type SGD struct {
+// Sgd is stochastic gradient descent that behaviors as one of GloVe solver.
+type Sgd struct {
 	dimension int
-
-	currentLearningRate float64
-	shrinkage           float64
+	currentlr float64
+	shrinkage float64
 }
 
-// NewSGD creates *SGD.
-func NewSGD(c *model.Config) *SGD {
-	return &SGD{
-		dimension: c.Dimension,
-
-		currentLearningRate: c.InitLearningRate,
-		shrinkage:           0.9,
+// NewSgd creates *Sgd.
+func NewSgd(dimension int, initlr float64) *Sgd {
+	return &Sgd{
+		dimension: dimension,
+		currentlr: initlr,
+		shrinkage: 0.9,
 	}
 }
 
-func (s *SGD) initialize(weightSize int) {}
+func (s *Sgd) initialize(vectorSize int) {}
 
-func (s *SGD) trainOne(l1, l2 int, f, coefficient float64, weight []float64) float64 {
+func (s *Sgd) trainOne(l1, l2 int, f, coefficient float64, vector []float64) float64 {
 	var diff, cost float64
 	for i := 0; i < s.dimension; i++ {
-		diff += weight[l1+i] * weight[l2+i]
+		diff += vector[l1+i] * vector[l2+i]
 	}
-	diff += weight[l1+s.dimension] + weight[l2+s.dimension] - f
+	diff += vector[l1+s.dimension] + vector[l2+s.dimension] - f
 	fdiff := diff * coefficient
 	cost = 0.5 * fdiff * diff
-	fdiff *= s.currentLearningRate
-
+	fdiff *= s.currentlr
 	for i := 0; i < s.dimension; i++ {
-		temp1 := fdiff * weight[l2+i]
-		temp2 := fdiff * weight[l1+i]
-		weight[l1+i] -= temp1
-		weight[l2+i] -= temp2
+		temp1 := fdiff * vector[l2+i]
+		temp2 := fdiff * vector[l1+i]
+		vector[l1+i] -= temp1
+		vector[l2+i] -= temp2
 	}
-
-	weight[l1+s.dimension] -= fdiff
-	weight[l2+s.dimension] -= fdiff
-
+	vector[l1+s.dimension] -= fdiff
+	vector[l2+s.dimension] -= fdiff
 	return cost
 }
 
-func (s *SGD) postOneIter() {
-	s.currentLearningRate *= s.shrinkage
+func (s *Sgd) postOneIter() {
+	s.currentlr *= s.shrinkage
 }

@@ -26,7 +26,7 @@ type SigmoidTable struct {
 	cache        float64
 }
 
-// NewSigmoidTable creates sigmoid table, which acquires the sigmoid value f(x) from:
+// newSigmoidTable creates sigmoid table, which acquires the sigmoid value f(x) from:
 func newSigmoidTable() *SigmoidTable {
 	s := new(SigmoidTable)
 	s.expTableSize = 1000
@@ -42,7 +42,7 @@ func newSigmoidTable() *SigmoidTable {
 	return s
 }
 
-// Sigmoid returns: f(x) = (x + max_exp) * (exp_table_size / max_exp / 2)
+// sigmoid returns: f(x) = (x + max_exp) * (exp_table_size / max_exp / 2)
 // If you set x to over |max_exp|, it raises index out of range error.
 func (s *SigmoidTable) sigmoid(x float64) float64 {
 	return s.expTable[int((x+s.maxExp)*s.cache)]

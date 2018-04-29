@@ -18,53 +18,53 @@ import (
 	"testing"
 )
 
-func TestInvalidWord2VecConfigString(t *testing.T) {
-	var Fake Word2VecConfig = 1024
+func TestInvalidWord2vecConfigString(t *testing.T) {
+	var Fake Word2vecConfig = 1024
 
 	if Fake.String() != "unknown" {
-		t.Errorf("Fake should be not registered in Word2VecConfig: %v", Fake.String())
+		t.Errorf("Fake should be not registered in Word2vecConfig: %v", Fake.String())
 	}
 }
 
-func TestWord2VecConfigString(t *testing.T) {
+func TestWord2vecConfigString(t *testing.T) {
 	testCases := []struct {
-		input  Word2VecConfig
-		expect string
+		input    Word2vecConfig
+		expected string
 	}{
 		{
-			input:  Model,
-			expect: "model",
+			input:    Model,
+			expected: "model",
 		},
 		{
-			input:  Optimizer,
-			expect: "optimizer",
+			input:    Optimizer,
+			expected: "optimizer",
 		},
 		{
-			input:  MaxDepth,
-			expect: "maxDepth",
+			input:    BatchSize,
+			expected: "batchSize",
 		},
 		{
-			input:  NegativeSampleSize,
-			expect: "sample",
+			input:    MaxDepth,
+			expected: "maxDepth",
 		},
 		{
-			input:  Theta,
-			expect: "theta",
+			input:    NegativeSampleSize,
+			expected: "sample",
 		},
 		{
-			input:  BatchSize,
-			expect: "batchSize",
+			input:    SubsampleThreshold,
+			expected: "threshold",
 		},
 		{
-			input:  SubsampleThreshold,
-			expect: "threshold",
+			input:    Theta,
+			expected: "theta",
 		},
 	}
 
 	for _, testCase := range testCases {
 		actual := testCase.input.String()
-		if actual != testCase.expect {
-			t.Errorf("Word2VecConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expect, actual)
+		if actual != testCase.expected {
+			t.Errorf("Word2vecConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
 		}
 	}
 }

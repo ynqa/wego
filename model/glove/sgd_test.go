@@ -16,33 +16,35 @@ package glove
 
 import (
 	"testing"
-
-	"github.com/ynqa/word-embedding/config"
 )
 
-func TestNewSGD(t *testing.T) {
-	solver := NewSGD(conf)
+func TestNewSgd(t *testing.T) {
+	expectDimension := 10
+	expectInitlr := 0.01
+	solver := NewSgd(expectDimension, expectInitlr)
 
-	if solver.dimension != config.DefaultDimension {
-		t.Errorf("SGD: dimension=%v: %v",
-			config.DefaultDimension, solver.dimension)
+	if solver.dimension != expectDimension {
+		t.Errorf("Sgd: dimension=%v: %v",
+			expectDimension, solver.dimension)
 	}
 
-	if solver.currentLearningRate != config.DefaultInitLearningRate {
-		t.Errorf("SGD: currentLearningRate=%v: %v",
-			config.DefaultInitLearningRate, solver.currentLearningRate)
+	if solver.currentlr != expectInitlr {
+		t.Errorf("Sgd: currentlr=%v: %v",
+			expectInitlr, solver.currentlr)
 	}
 }
 
-func TestSGDCallBack(t *testing.T) {
-	solver := NewSGD(conf)
+func TestSgdCallBack(t *testing.T) {
+	dimension := 10
+	initlr := 0.01
+	solver := NewSgd(dimension, initlr)
 
-	before := solver.currentLearningRate
+	before := solver.currentlr
 	solver.postOneIter()
-	after := solver.currentLearningRate
+	after := solver.currentlr
 
 	if before < after {
-		t.Errorf("SGD: currentLearningRate is smaller than after callback: %v -> %v",
+		t.Errorf("Sgd: currentlr is smaller than after postOneIter: %v -> %v",
 			before, after)
 	}
 }

@@ -17,6 +17,8 @@ package word2vec
 import (
 	"github.com/ynqa/word-embedding/corpus"
 	"github.com/ynqa/word-embedding/corpus/node"
+
+	"github.com/pkg/errors"
 )
 
 // HierarchicalSoftmax is a piece of Word2Vec optimizer.
@@ -25,12 +27,11 @@ type HierarchicalSoftmax struct {
 	nodeMap  map[int]*node.Node
 	maxDepth int
 
-	vocabulary int
 	dimension  int
+	vocabulary int
 }
 
 // NewHierarchicalSoftmax creates *HierarchicalSoftmax.
-// The huffman tree is NOT built yet.
 func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	hs := new(HierarchicalSoftmax)
 	hs.SigmoidTable = newSigmoidTable()
@@ -38,42 +39,40 @@ func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
 	return hs
 }
 
-func (hs *HierarchicalSoftmax) initialize(c *corpus.Word2VecCorpus, dimension int) (err error) {
-	hs.vocabulary = c.Size()
+func (hs *HierarchicalSoftmax) initialize(cps *corpus.Word2vecCorpus, dimension int) error {
+	nodeMap, err := cps.HuffmanTree(dimension)
+	if err != nil {
+		return errors.Wrap(err, "Failed to initialize of *HierarchicalSoftmax")
+	}
+	hs.nodeMap = nodeMap
 	hs.dimension = dimension
-	hs.nodeMap, err = c.HuffmanTree(dimension)
-	return
+	hs.vocabulary = cps.Size()
+	return nil
 }
 
-func (hs *HierarchicalSoftmax) update(targetID int, contextVector, poolVector []float64, learningRate float64) {
-	path := hs.nodeMap[targetID].GetPath()
+func (hs *HierarchicalSoftmax) update(word int, lr float64, vector, poolVector []float64) {
+	path := hs.nodeMap[word].GetPath()
 	for p := 0; p < len(path)-1; p++ {
 		relayPoint := path[p]
-
 		childCode := path[p+1].Code
-
-		hs.gradUpd(childCode, learningRate, relayPoint.Vector, poolVector, contextVector)
-
+		hs.gradUpd(childCode, lr, relayPoint.Vector, vector, poolVector)
 		if hs.maxDepth > 0 && p >= hs.maxDepth {
 			break
 		}
 	}
 }
 
-func (hs *HierarchicalSoftmax) gradUpd(childCode int, lr float64, relayPointVec, poolVec, ctxVec []float64) {
+func (hs *HierarchicalSoftmax) gradUpd(childCode int, lr float64, relayPointVec, vector, poolVector []float64) {
 	var inner float64
-
 	for i := 0; i < hs.dimension; i++ {
-		inner += ctxVec[i] * relayPointVec[i]
+		inner += vector[i] * relayPointVec[i]
 	}
-
 	if inner <= -hs.maxExp || inner >= hs.maxExp {
 		return
 	}
 	g := (1.0 - float64(childCode) - hs.sigmoid(inner)) * lr
-
 	for i := 0; i < hs.dimension; i++ {
-		poolVec[i] += g * relayPointVec[i]
-		relayPointVec[i] += g * ctxVec[i]
+		poolVector[i] += g * relayPointVec[i]
+		relayPointVec[i] += g * vector[i]
 	}
 }
