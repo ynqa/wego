@@ -8,10 +8,10 @@ The implementation to calculate the cosine similarity between words.
 Estimate the distance between words
 
 Usage:
-  word-embedding distance [flags]
+  wego distance [flags]
 
 Examples:
-  word-embedding distance -i example/word_vectors.txt microsoft
+  wego distance -i example/word_vectors.txt microsoft
 
 Flags:
   -h, --help               help for distance
@@ -22,7 +22,7 @@ Flags:
 ## Example
 
 ```
-$ go run main.go distance -i example/word_vectors_sg.txt microsoft
+$ go run wego.go distance -i example/word_vectors_sg.txt microsoft
     RANK |   WORD    |  COSINE
   +------+-----------+----------+
        1 | computers | 0.995368

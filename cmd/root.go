@@ -20,15 +20,15 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/config"
+	"github.com/ynqa/wego/config"
 )
 
 // RootCmd is the root command for word embedding.
 var RootCmd = &cobra.Command{
-	Use:   "word-embedding",
+	Use:   "wego",
 	Short: "tools for embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Set sub-command from: distance|word2vec")
+		return errors.New("Set sub-command. One of distance|word2vec|glove")
 	},
 }
 

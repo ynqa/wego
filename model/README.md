@@ -18,7 +18,7 @@ Optimizer:
 Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
 Usage:
-  word-embedding word2vec [flags]
+  wego word2vec [flags]
 
 Flags:
       --batchSize int       interval word size to update learning rate (default 10000)
@@ -52,7 +52,7 @@ GloVe is weighted matrix factorization model for co-occurrence map between words
 GloVe: Global Vectors for Word Representation
 
 Usage:
-  word-embedding glove [flags]
+  wego glove [flags]
 
 Flags:
       --alpha float         exponent of weighting function (default 0.75)

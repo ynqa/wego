@@ -15,7 +15,7 @@
 package main
 
 import (
-	"github.com/ynqa/word-embedding/builder"
+	"github.com/ynqa/wego/builder"
 )
 
 func main() {

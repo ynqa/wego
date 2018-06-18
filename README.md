@@ -1,8 +1,8 @@
 # Word Embedding in Golang
 
-[![Build Status](https://travis-ci.org/ynqa/word-embedding.svg?branch=master)](https://travis-ci.org/ynqa/word-embedding)
-[![GoDoc](https://godoc.org/github.com/ynqa/word-embedding?status.svg)](https://godoc.org/github.com/ynqa/word-embedding)
-[![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/word-embedding)](https://goreportcard.com/report/github.com/ynqa/word-embedding)
+[![Build Status](https://travis-ci.org/ynqa/wego.svg?branch=master)](https://travis-ci.org/ynqa/wego)
+[![GoDoc](https://godoc.org/github.com/ynqa/wego?status.svg)](https://godoc.org/github.com/ynqa/wego)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/wego)](https://goreportcard.com/report/github.com/ynqa/wego)
 
 This is the implementation of word embedding (a.k.a word representation) models in Golang.
 
@@ -28,8 +28,8 @@ and more...
 ## Installation
 
 ```
-$ go get -u github.com/ynqa/word-embedding
-$ bin/word-embedding -h
+$ go get -u github.com/ynqa/wego
+$ bin/wego -h
 ```
 
 ## Usage
@@ -38,8 +38,8 @@ $ bin/word-embedding -h
 tools for embedding words into vector space
 
 Usage:
-  word-embedding [flags]
-  word-embedding [command]
+  wego [flags]
+  wego [command]
 
 Available Commands:
   distance    Estimate the distance between words
@@ -48,9 +48,9 @@ Available Commands:
   word2vec    Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
 Flags:
-  -h, --help   help for word-embedding
+  -h, --help   help for wego
 
-Use "word-embedding [command] --help" for more information about a command.
+Use "wego [command] --help" for more information about a command.
 ```
 
 For more information about each sub-command, see below:

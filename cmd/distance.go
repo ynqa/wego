@@ -21,8 +21,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/config"
-	"github.com/ynqa/word-embedding/distance"
+	"github.com/ynqa/wego/config"
+	"github.com/ynqa/wego/distance"
 )
 
 // DistanceCmd is the subcommand to estimate similarity.
@@ -30,7 +30,7 @@ var DistanceCmd = &cobra.Command{
 	Use:     "distance",
 	Short:   "Estimate the distance between words",
 	Long:    "Estimate the distance between words",
-	Example: "  word-embedding distance -i example/word_vectors.txt microsoft",
+	Example: "  wego distance -i example/word_vectors.txt microsoft",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		distanceBind(cmd)
 	},

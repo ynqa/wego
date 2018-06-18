@@ -15,7 +15,7 @@
 package word2vec
 
 import (
-	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/wego/model"
 )
 
 // Cbow behaviors as one of Word2vec solver.

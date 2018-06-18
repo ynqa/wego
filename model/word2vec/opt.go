@@ -15,7 +15,7 @@
 package word2vec
 
 import (
-	"github.com/ynqa/word-embedding/corpus"
+	"github.com/ynqa/wego/corpus"
 )
 
 // Optimizer is the interface to initialize after scanning corpus once, and update the word vector.

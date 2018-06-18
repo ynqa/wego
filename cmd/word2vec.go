@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/builder"
-	"github.com/ynqa/word-embedding/config"
-	"github.com/ynqa/word-embedding/validate"
+	"github.com/ynqa/wego/builder"
+	"github.com/ynqa/wego/config"
+	"github.com/ynqa/wego/validate"
 )
 
 // Word2vecCmd is the subcommand for Word2vec.

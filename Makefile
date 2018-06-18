@@ -8,6 +8,14 @@ build:
 clean:
 	rm -rf vendor/
 
+.PHONY: docker-build
+docker-build:
+	docker build -t wego:${TAG} .
+
+.PHONY: ensure
+ensure:
+	dep ensure -vendor-only
+
 .PHONY: fmt
 fmt:
 	go fmt `go list ./...`
@@ -19,7 +27,3 @@ lint:
 .PHONY: test
 test:
 	go test -cover -v `go list ./...`
-
-.PHONY: docker-build
-docker-build:
-	docker build -t word-embedding:${TAG} .

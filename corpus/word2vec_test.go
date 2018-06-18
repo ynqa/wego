@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ynqa/word-embedding/corpus/node"
+	"github.com/ynqa/wego/corpus/node"
 )
 
 func TestGetPath(t *testing.T) {

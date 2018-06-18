@@ -17,7 +17,7 @@ package main
 import (
 	"os"
 
-	"github.com/ynqa/word-embedding/cmd"
+	"github.com/ynqa/wego/cmd"
 )
 
 func main() {

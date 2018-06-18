@@ -19,7 +19,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ynqa/word-embedding/corpus/node"
+	"github.com/ynqa/wego/corpus/node"
 )
 
 // Word2vecCorpus stores corpus.

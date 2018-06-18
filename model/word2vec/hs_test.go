@@ -17,7 +17,7 @@ package word2vec
 import (
 	"testing"
 
-	"github.com/ynqa/word-embedding/corpus"
+	"github.com/ynqa/wego/corpus"
 )
 
 func TestNewHierarchicalSoftmax(t *testing.T) {

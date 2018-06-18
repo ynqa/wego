@@ -4,12 +4,12 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 ENV GOARCH=amd64
 
-WORKDIR /go/src/github.com/ynqa/word-embedding
+WORKDIR /go/src/github.com/ynqa/wego
 COPY . .
-RUN go build -o word-embedding .
+RUN go build -o wego .
 
 FROM busybox
-COPY --from=builder /go/src/github.com/ynqa/word-embedding/word-embedding /usr/local/bin/word-embedding
+COPY --from=builder /go/src/github.com/ynqa/wego/wego /usr/local/bin/wego
 
-ENTRYPOINT ["word-embedding"]
+ENTRYPOINT ["wego"]
 CMD ["help"]

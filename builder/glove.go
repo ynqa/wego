@@ -20,10 +20,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/word-embedding/config"
-	"github.com/ynqa/word-embedding/model"
-	"github.com/ynqa/word-embedding/model/glove"
-	"github.com/ynqa/word-embedding/validate"
+	"github.com/ynqa/wego/config"
+	"github.com/ynqa/wego/model"
+	"github.com/ynqa/wego/model/glove"
+	"github.com/ynqa/wego/validate"
 )
 
 // GloveBuilder manages the members to build Model interface.

@@ -20,7 +20,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/ynqa/word-embedding/corpus/co"
+	"github.com/ynqa/wego/corpus/co"
 )
 
 // GloveCorpus stores corpus and co-occurrences for words.

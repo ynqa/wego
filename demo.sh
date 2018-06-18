@@ -13,5 +13,5 @@ if [ ! -e text8 ]; then
 	rm text8.zip
 fi
 
-go run main.go word2vec --inputFile text8 --model skip-gram --optimizer ns --outputFile example/word_vectors_sg.txt -d 100 && \
+go run wego.go word2vec --inputFile text8 --model skip-gram --optimizer ns --outputFile example/word_vectors_sg.txt -d 100 && \
     echo "Save trained vectors to example/word_vectors_sg.txt"

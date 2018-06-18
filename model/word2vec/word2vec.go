@@ -29,8 +29,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/cheggaaa/pb.v1"
 
-	"github.com/ynqa/word-embedding/corpus"
-	"github.com/ynqa/word-embedding/model"
+	"github.com/ynqa/wego/corpus"
+	"github.com/ynqa/wego/model"
 )
 
 // Word2vec stores the configs for Word2vec models.
