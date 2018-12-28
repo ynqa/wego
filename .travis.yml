@@ -25,10 +25,10 @@ script:
   - make test
   - make lint
 
-after_script:
-  - goveralls -repotoken ${COVERALLS_TOKEN}
-  - if [ "$TRAVIS_BRANCH" == "master" ]; then
-      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-      docker build -t ynqa/wego:latest .
-      docker push ynqa/wego:latest
-    fi
+after_script: |
+  if [ "$TRAVIS_GO_VERSION" == "1.11.x" && "$TRAVIS_BRANCH" == "master" ]; then
+    goveralls -repotoken ${COVERALLS_TOKEN}
+    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    docker build -t ynqa/wego:latest .
+    docker push ynqa/wego:latest
+  fi
