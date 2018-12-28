@@ -1,5 +1,3 @@
-TAG = latest
-
 .PHONY: build
 build:
 	go build
@@ -7,10 +5,6 @@ build:
 .PHONY: clean
 clean:
 	rm -rf vendor/
-
-.PHONY: docker-build
-docker-build:
-	docker build -t wego:${TAG} .
 
 .PHONY: ensure
 ensure:

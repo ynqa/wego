@@ -1,7 +1,8 @@
 language: go
 
 go:
-  - 1.9
+  - "1.10"
+  - "1.11"
   - tip
 
 services:
@@ -14,7 +15,7 @@ addons:
 
 before_install:
   - go get github.com/golang/dep/...
-  - go get github.com/golang/lint/golint
+  - go get golang.org/x/lint/golint
   - go get github.com/mattn/goveralls
 
 install:
@@ -23,7 +24,11 @@ install:
 script:
   - make test
   - make lint
-  - make docker-build
 
 after_script:
   - goveralls -repotoken ${COVERALLS_TOKEN}
+  - if [ "$TRAVIS_BRANCH" == "master" ]; then
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      docker build -t ynqa/wego:latest .
+      docker push ynqa/wego:latest
+    fi
