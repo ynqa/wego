@@ -15,7 +15,7 @@ addons:
 
 before_install:
   - go get github.com/golang/dep/...
-  - go get github.com/golang/lint/golint
+  - go get golang.org/x/lint/golint
   - go get github.com/mattn/goveralls
 
 install:
