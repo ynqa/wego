@@ -23,16 +23,16 @@ Flags:
 
 ```
 $ go run wego.go search -i example/word_vectors_sg.txt microsoft
-    RANK |   WORD    |  COSINE
-  +------+-----------+----------+
-       1 | computers | 0.995368
-       2 | ibm       | 0.993774
-       3 | os        | 0.993721
-       4 | machines  | 0.993713
-       5 | operating | 0.993547
-       6 | wikipedia | 0.993026
-       7 | mpeg      | 0.992636
-       8 | apple     | 0.992628
-       9 | server    | 0.992574
-      10 | unix      | 0.992385
+  RANK |    WORD    | SIMILARITY
++------+------------+------------+
+     1 | apple      |   0.994008
+     2 | operating  |   0.992855
+     3 | versions   |   0.992800
+     4 | ibm        |   0.992232
+     5 | os         |   0.989174
+     6 | computers  |   0.988998
+     7 | machines   |   0.988804
+     8 | dvd        |   0.988732
+     9 | cd         |   0.988259
+    10 | compatible |   0.988200
 ```

@@ -20,22 +20,30 @@ import (
 	"testing"
 )
 
-var testVector = `apple 1 1 1 1 1
-	banana 1 1 1 1 1
-	chocolate 0 0 0 0 0
-	dragon -1 -1 -1 -1 -1`
-
 func TestSearch(t *testing.T) {
-	searcher := NewSearcher("apple", 3)
-
 	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
-	err := searcher.Search(f)
+	defer f.Close()
+	parser := NewParser(f)
 
+	searcher, err := NewSearcher(parser)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("Failed to create searcher: %s", err.Error())
 	}
 
-	if len(searcher.vectors) != 4 {
-		t.Errorf("Expected estimator.tensor len=4: %d", len(searcher.vectors))
+	neighbors, err := searcher.Search("banana", 20)
+	if err != nil {
+		t.Errorf("Failed to search with word=banana, rank=20: %s", err.Error())
+	}
+
+	if len(searcher.vectors) != testNumVector {
+		t.Errorf("Expected searcher.vectors len=%d, but got %d", testNumVector, len(searcher.vectors))
+	}
+
+	if len(neighbors) != 3 {
+		t.Errorf("Expected neighbors len=3, but got %d", len(neighbors))
+	}
+
+	if neighbors[0].word != "apple" {
+		t.Errorf("Expected the most near word is apple for banana, but got %s", neighbors[0].word)
 	}
 }

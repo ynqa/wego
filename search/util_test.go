@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2019 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,27 @@
 
 package search
 
-// Measure stores the word with cosine similarity value on the target.
-type Measure struct {
-	word       string
-	similarity float64
+import (
+	"testing"
+)
+
+var (
+	v1 = []float64{1, 1, 1, 1, 0, 0}
+	v2 = []float64{1, 1, 0, 0, 1, 1}
+)
+
+func TestNorm(t *testing.T) {
+	n1 := norm(v1)
+	if n1 != 2. {
+		t.Errorf("Expect norm of v1=%v is 2, but got %f", v1, n1)
+	}
 }
 
-// Measures is the list of Sim.
-type Measures []Measure
-
-func (m Measures) Len() int           { return len(m) }
-func (m Measures) Less(i, j int) bool { return m[i].similarity < m[j].similarity }
-func (m Measures) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+func TestCosine(t *testing.T) {
+	n1 := norm(v1)
+	n2 := norm(v2)
+	sim := cosine(v1, v2, n1, n2)
+	if sim != 0.5 {
+		t.Errorf("Expect sim(v1, v2)=0.5, but got %f", sim)
+	}
+}

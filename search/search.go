@@ -15,132 +15,54 @@
 package search
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"math"
-	"os"
 	"sort"
-	"strconv"
-	"strings"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 )
 
 // Searcher stores the elements for cosine similarity.
 type Searcher struct {
-	target  string
-	rank    int
 	vectors map[string][]float64
 }
 
 // NewSearcher creates *Searcher
-func NewSearcher(target string, rank int) *Searcher {
+func NewSearcher(parser *Parser) (*Searcher, error) {
+	vectors := make(map[string][]float64)
+	storeFunc := func(word string, vec []float64) {
+		vectors[word] = vec
+	}
+	if err := parser.ParseAll(storeFunc); err != nil {
+		return nil, errors.Wrap(err, "Failed to parse")
+	}
 	return &Searcher{
-		target:  target,
-		rank:    rank,
-		vectors: make(map[string][]float64),
-	}
+		vectors: vectors,
+	}, nil
 }
 
-// Search searches similar words for target word.
-func (s *Searcher) Search(f io.ReadCloser) error {
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.HasPrefix(line, " ") {
-			continue
-		}
-		word, vec, err := parse(line)
-		if err != nil {
-			return err
-		}
-
-		s.vectors[word] = vec
-	}
-
-	if err := scanner.Err(); err != nil && err != io.EOF {
-		return errors.New("Unable to complete scanning")
-	}
-
-	return nil
-}
-
-// Describe shows the similar words list for target word.
-func (s *Searcher) Describe() error {
-	// TODO: Save to the file also.
-	return s.stdout()
-}
-
-func (s *Searcher) stdout() error {
-	targetVec, ok := s.vectors[s.target]
+// Search searches similar words for query word and returns top-k nearest neighbors with similarity.
+func (s *Searcher) Search(query string, k int) (Neighbors, error) {
+	queryVec, ok := s.vectors[query]
 	if !ok {
-		return fmt.Errorf("%v is not found", s.target)
+		return nil, errors.Errorf("%s is not found in vector map", query)
 	}
-	targetNorm := norm(targetVec)
-	res := make(Measures, len(s.vectors))
+	queryNorm := norm(queryVec)
 
+	if k > len(s.vectors) {
+		k = len(s.vectors) - 1
+	}
+	neighbors := make(Neighbors, k)
 	for word, vec := range s.vectors {
-		if word == s.target {
+		if word == query {
 			continue
 		}
 		n := norm(vec)
-		res = append(res, Measure{
+		neighbors = append(neighbors, Neighbor{
 			word:       word,
-			similarity: cosine(targetVec, vec, targetNorm, n),
+			similarity: cosine(queryVec, vec, queryNorm, n),
 		})
 	}
 
-	sort.Sort(sort.Reverse(res))
+	sort.Sort(sort.Reverse(neighbors))
 
-	table := make([][]string, s.rank)
-	for r := 0; r < s.rank; r++ {
-		table[r] = []string{
-			fmt.Sprintf("%d", r+1),
-			res[r].word,
-			fmt.Sprintf("%f", res[r].similarity),
-		}
-	}
-
-	tw := tablewriter.NewWriter(os.Stdout)
-	tw.SetHeader([]string{"Rank", "Word", "Cosine"})
-	tw.SetBorder(false)
-	tw.AppendBulk(table)
-	tw.Render()
-	return nil
-}
-
-func parse(line string) (string, []float64, error) {
-	sep := strings.Fields(line)
-	word := sep[0]
-	elems := sep[1:]
-	vec := make([]float64, len(elems))
-	for k, elem := range elems {
-		val, err := strconv.ParseFloat(elem, 64)
-		if err != nil {
-			return "", nil, err
-		}
-		vec[k] = val
-	}
-	return word, vec, nil
-}
-
-func norm(vec []float64) float64 {
-	var n float64
-	for _, v := range vec {
-		n += math.Pow(v, 2)
-	}
-	return math.Sqrt(n)
-}
-
-func cosine(v1, v2 []float64, n1, n2 float64) float64 {
-	var dot float64
-	for i := range v1 {
-		dot += v1[i] * v2[i]
-	}
-	return dot / n1 / n2
+	return neighbors[:k], nil
 }

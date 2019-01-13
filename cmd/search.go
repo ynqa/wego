@@ -56,17 +56,22 @@ func searchBind(cmd *cobra.Command) {
 
 func executeSearch(target string) error {
 	inputFile := viper.GetString(config.InputFile.String())
-	rank := viper.GetInt(config.Rank.String())
-	searcher := search.NewSearcher(target, rank)
-
 	f, err := os.Open(inputFile)
 	if err != nil {
 		return err
 	}
 
-	if err := searcher.Search(f); err != nil {
+	parser := search.NewParser(f)
+	searcher, err := search.NewSearcher(parser)
+	if err != nil {
 		return err
 	}
 
-	return searcher.Describe()
+	k := viper.GetInt(config.Rank.String())
+	neighbors, err := searcher.Search(target, k)
+	if err != nil {
+		return err
+	}
+
+	return search.Describe(neighbors)
 }
