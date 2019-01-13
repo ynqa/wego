@@ -28,7 +28,7 @@ var RootCmd = &cobra.Command{
 	Use:   "wego",
 	Short: "tools for embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("Set sub-command. One of distance|word2vec|glove")
+		return errors.Errorf("Set sub-command. One of %s|%s|%s", Word2vecCmd.Name(), GloveCmd.Name(), SearchCmd.Name())
 	},
 }
 
@@ -76,6 +76,6 @@ func configBind(cmd *cobra.Command) {
 
 func init() {
 	RootCmd.AddCommand(Word2vecCmd)
-	RootCmd.AddCommand(DistanceCmd)
+	RootCmd.AddCommand(SearchCmd)
 	RootCmd.AddCommand(GloveCmd)
 }

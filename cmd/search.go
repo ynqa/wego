@@ -22,52 +22,51 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/wego/config"
-	"github.com/ynqa/wego/distance"
+	"github.com/ynqa/wego/search"
 )
 
-// DistanceCmd is the subcommand to estimate similarity.
-var DistanceCmd = &cobra.Command{
-	Use:     "distance",
-	Short:   "Estimate the distance between words",
-	Long:    "Estimate the distance between words",
-	Example: "  wego distance -i example/word_vectors.txt microsoft",
+// SearchCmd is the subcommand to estimate similarity.
+var SearchCmd = &cobra.Command{
+	Use:     "search",
+	Short:   "Search similar words",
+	Long:    "Search similar words",
+	Example: "  wego search -i example/word_vectors.txt microsoft",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		distanceBind(cmd)
+		searchBind(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 1 {
-			return executeDistance(args[0])
+			return executeSearch(args[0])
 		}
 		return errors.New("Input a single word")
 	},
 }
 
 func init() {
-	DistanceCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
+	SearchCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"input file path for trained word vector")
-	DistanceCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
+	SearchCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"how many the most similar words will be displayed")
 }
 
-func distanceBind(cmd *cobra.Command) {
+func searchBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Rank.String(), cmd.Flags().Lookup(config.Rank.String()))
 	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
 }
 
-func executeDistance(target string) error {
+func executeSearch(target string) error {
 	inputFile := viper.GetString(config.InputFile.String())
 	rank := viper.GetInt(config.Rank.String())
-
-	est := distance.NewEstimator(target, rank)
+	searcher := search.NewSearcher(target, rank)
 
 	f, err := os.Open(inputFile)
 	if err != nil {
 		return err
 	}
 
-	if err := est.Estimate(f); err != nil {
+	if err := searcher.Search(f); err != nil {
 		return err
 	}
 
-	return est.Describe()
+	return searcher.Describe()
 }

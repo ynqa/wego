@@ -314,7 +314,6 @@
     "github.com/spf13/pflag",
     "github.com/spf13/viper",
     "gopkg.in/cheggaaa/pb.v1",
-    "gorgonia.org/tensor",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

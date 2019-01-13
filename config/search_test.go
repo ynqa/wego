@@ -12,23 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package config
 
 import (
 	"testing"
-
-	"github.com/spf13/viper"
 )
 
-const distanceFlagSize = 2
+func TestInvalidSearchConfigString(t *testing.T) {
+	var Fake SearchConfig = 1024
 
-func TestSimilarityBind(t *testing.T) {
-	defer viper.Reset()
+	if Fake.String() != "unknown" {
+		t.Errorf("Fake should be not registered in SearchConfig: %v", Fake.String())
+	}
+}
 
-	distanceBind(DistanceCmd)
+func TestSearchConfigString(t *testing.T) {
+	testCases := []struct {
+		input    SearchConfig
+		expected string
+	}{
+		{
+			input:    Rank,
+			expected: "rank",
+		},
+	}
 
-	if len(viper.AllKeys()) != distanceFlagSize {
-		t.Errorf("Expected distanceBind maps %v keys: %v",
-			distanceFlagSize, viper.AllKeys())
+	for _, testCase := range testCases {
+		actual := testCase.input.String()
+		if actual != testCase.expected {
+			t.Errorf("SearchConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
+		}
 	}
 }

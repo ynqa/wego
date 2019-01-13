@@ -71,3 +71,10 @@ Flags:
   -w, --window int          context window size (default 5)
       --xmax int            specifying cutoff in weighting function (default 100)
 ```
+
+## References
+- Just see it for more deep comprehension:
+  - Improving Distributional Similarity
+with Lessons Learned from Word Embeddings [[pdf]](http://www.aclweb.org/anthology/Q15-1016)
+  - Don’t count, predict! A systematic comparison of
+context-counting vs. context-predicting semantic vectors [[pdf]](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.648.8023&rep=rep1&type=pdf)

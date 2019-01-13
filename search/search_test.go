@@ -12,35 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package search
 
 import (
+	"bytes"
+	"io/ioutil"
 	"testing"
 )
 
-func TestInvalidDistanceConfigString(t *testing.T) {
-	var Fake DistanceConfig = 1024
+var testVector = `apple 1 1 1 1 1
+	banana 1 1 1 1 1
+	chocolate 0 0 0 0 0
+	dragon -1 -1 -1 -1 -1`
 
-	if Fake.String() != "unknown" {
-		t.Errorf("Fake should be not registered in DistanceConfig: %v", Fake.String())
-	}
-}
+func TestSearch(t *testing.T) {
+	searcher := NewSearcher("apple", 3)
 
-func TestDistanceConfigString(t *testing.T) {
-	testCases := []struct {
-		input    DistanceConfig
-		expected string
-	}{
-		{
-			input:    Rank,
-			expected: "rank",
-		},
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
+	err := searcher.Search(f)
+
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
-	for _, testCase := range testCases {
-		actual := testCase.input.String()
-		if actual != testCase.expected {
-			t.Errorf("DistanceConfig: %v with String() should be %v, but get %v", testCase.input, testCase.expected, actual)
-		}
+	if len(searcher.dense) != 4 {
+		t.Errorf("Expected estimator.tensor len=4: %d", len(searcher.dense))
 	}
 }

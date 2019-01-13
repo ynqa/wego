@@ -42,9 +42,9 @@ Usage:
   wego [command]
 
 Available Commands:
-  distance    Estimate the distance between words
   glove       GloVe: Global Vectors for Word Representation
   help        Help about any command
+  search      Search similar words
   word2vec    Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
 Flags:
@@ -54,9 +54,8 @@ Use "wego [command] --help" for more information about a command.
 ```
 
 For more information about each sub-command, see below:
-- [distance](./distance/README.md)
+- [search](./search/README.md)
 - [word2vec](./model/README.md)
-  - In code-based, refer to the [example](./example/example.go).
 - [glove](./model/README.md)
 
 ## Demo
@@ -73,10 +72,3 @@ Output a file is subject to the following format:
 ```
 <word> <value1> <value2> ...
 ```
-
-## References
-- Just see it for more deep comprehension:
-  - Improving Distributional Similarity
-with Lessons Learned from Word Embeddings [[pdf]](http://www.aclweb.org/anthology/Q15-1016)
-  - Don’t count, predict! A systematic comparison of
-context-counting vs. context-predicting semantic vectors [[pdf]](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.648.8023&rep=rep1&type=pdf)

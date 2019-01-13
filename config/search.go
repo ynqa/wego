@@ -12,30 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package distance
+package config
 
-import (
-	"bytes"
-	"io/ioutil"
-	"testing"
+// SearchConfig is enum of the common config.
+type SearchConfig int
+
+// The list of SearchConfig.
+const (
+	Rank SearchConfig = iota
 )
 
-var testVector = `apple 1 1 1 1 1
-	banana 1 1 1 1 1
-	chocolate 0 0 0 0 0
-	dragon -1 -1 -1 -1 -1`
+// The defaults of SearchConfig.
+const (
+	DefaultRank int = 10
+)
 
-func TestEstimate(t *testing.T) {
-	estimator := NewEstimator("apple", 3)
-
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
-	err := estimator.Estimate(f)
-
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-
-	if len(estimator.dense) != 4 {
-		t.Errorf("Expected estimator.tensor len=4: %d", len(estimator.dense))
+func (d SearchConfig) String() string {
+	switch d {
+	case Rank:
+		return "rank"
+	default:
+		return "unknown"
 	}
 }

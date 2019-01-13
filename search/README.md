@@ -1,20 +1,20 @@
-# Distance
+# Search
 
-The implementation to calculate the cosine similarity between words.
+Similarity search between word vectors.
 
 ## Usage
 
 ```
-Estimate the distance between words
+Search similar words
 
 Usage:
-  wego distance [flags]
+  wego search [flags]
 
 Examples:
-  wego distance -i example/word_vectors.txt microsoft
+  wego search -i example/word_vectors.txt microsoft
 
 Flags:
-  -h, --help               help for distance
+  -h, --help               help for search
   -i, --inputFile string   input file path for trained word vector (default "example/input.txt")
   -r, --rank int           how many the most similar words will be displayed (default 10)
 ```
@@ -22,7 +22,7 @@ Flags:
 ## Example
 
 ```
-$ go run wego.go distance -i example/word_vectors_sg.txt microsoft
+$ go run wego.go search -i example/word_vectors_sg.txt microsoft
     RANK |   WORD    |  COSINE
   +------+-----------+----------+
        1 | computers | 0.995368

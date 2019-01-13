@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package distance
+package search
 
 import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -25,27 +26,26 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
-	"gorgonia.org/tensor"
 )
 
-// Estimator stores the elements for cosine similarity.
-type Estimator struct {
-	target string
-	rank   int
-	dense  map[string]*tensor.Dense
+// Searcher stores the elements for cosine similarity.
+type Searcher struct {
+	target  string
+	rank    int
+	vectors map[string][]float64
 }
 
-// NewEstimator creates *SimilarityEstimator
-func NewEstimator(target string, rank int) *Estimator {
-	return &Estimator{
-		target: target,
-		rank:   rank,
-		dense:  make(map[string]*tensor.Dense),
+// NewSearcher creates *Searcher
+func NewSearcher(target string, rank int) *Searcher {
+	return &Searcher{
+		target:  target,
+		rank:    rank,
+		vectors: make(map[string][]float64),
 	}
 }
 
-// Estimate estimates the similarity for target word.
-func (e *Estimator) Estimate(f io.ReadCloser) error {
+// Search searches similar words for target word.
+func (s *Searcher) Search(f io.ReadCloser) error {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
@@ -60,7 +60,7 @@ func (e *Estimator) Estimate(f io.ReadCloser) error {
 			return err
 		}
 
-		e.dense[word] = vec
+		s.vectors[word] = vec
 	}
 
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -71,51 +71,34 @@ func (e *Estimator) Estimate(f io.ReadCloser) error {
 }
 
 // Describe shows the similar words list for target word.
-func (e *Estimator) Describe() error {
+func (s *Searcher) Describe() error {
 	// TODO: Save to the file also.
-	return e.stdout()
+	return s.stdout()
 }
 
-func (e *Estimator) stdout() error {
-	tvec, ok := e.dense[e.target]
+func (s *Searcher) stdout() error {
+	targetVec, ok := s.vectors[s.target]
 	if !ok {
-		return fmt.Errorf("%v is not found", e.target)
+		return fmt.Errorf("%v is not found", s.target)
 	}
+	targetNorm := norm(targetVec)
+	res := make(Measures, len(s.vectors))
 
-	tvecNorm, err := norm(tvec)
-
-	if err != nil {
-		return err
-	}
-
-	res := make(Measures, len(e.dense))
-
-	for word, vec := range e.dense {
-		if word == e.target {
+	for word, vec := range s.vectors {
+		if word == s.target {
 			continue
 		}
-		vecNorm, err := norm(vec)
-
-		if err != nil {
-			return err
-		}
-
-		sim, err := cosine(tvec, vec, tvecNorm, vecNorm)
-
-		if err != nil {
-			return err
-		}
-
+		n := norm(vec)
 		res = append(res, Measure{
 			word:       word,
-			similarity: sim,
+			similarity: cosine(targetVec, vec, targetNorm, n),
 		})
 	}
 
 	sort.Sort(sort.Reverse(res))
 
-	table := make([][]string, e.rank)
-	for r := 0; r < e.rank; r++ {
+	table := make([][]string, s.rank)
+	for r := 0; r < s.rank; r++ {
 		table[r] = []string{
 			fmt.Sprintf("%d", r+1),
 			res[r].word,
@@ -131,40 +114,33 @@ func (e *Estimator) stdout() error {
 	return nil
 }
 
-func parse(line string) (string, *tensor.Dense, error) {
+func parse(line string) (string, []float64, error) {
 	sep := strings.Fields(line)
 	word := sep[0]
-	v := sep[1:]
-	vec := tensor.NewDense(tensor.Float64, tensor.Shape{len(v)})
-	dat := vec.Data().([]float64)
-	for k, elem := range v {
+	elems := sep[1:]
+	vec := make([]float64, len(elems))
+	for k, elem := range elems {
 		val, err := strconv.ParseFloat(elem, 64)
 		if err != nil {
 			return "", nil, err
 		}
-		dat[k] = val
+		vec[k] = val
 	}
 	return word, vec, nil
 }
 
-func norm(d *tensor.Dense) (float64, error) {
-	ifNorm, err := d.Norm(tensor.UnorderedNorm())
-
-	if err != nil {
-		return 0, errors.Wrap(err, "Norm failed")
+func norm(vec []float64) float64 {
+	var n float64
+	for _, v := range vec {
+		n += math.Pow(v, 2)
 	}
-
-	n := ifNorm.ScalarValue().(float64)
-	return n, nil
+	return math.Sqrt(n)
 }
 
-func cosine(d1, d2 *tensor.Dense, d1Norm, d2Norm float64) (float64, error) {
-	inner, err := tensor.Inner(d1, d2)
-
-	if err != nil {
-		return 0, errors.Wrap(err, "Inner failed")
+func cosine(v1, v2 []float64, n1, n2 float64) float64 {
+	var dot float64
+	for i := range v1 {
+		dot += v1[i] * v2[i]
 	}
-
-	cos := inner.(float64) / (d1Norm * d2Norm)
-	return cos, nil
+	return dot / n1 / n2
 }
