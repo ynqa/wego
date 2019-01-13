@@ -35,7 +35,7 @@ func TestSearch(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	if len(searcher.dense) != 4 {
-		t.Errorf("Expected estimator.tensor len=4: %d", len(searcher.dense))
+	if len(searcher.vectors) != 4 {
+		t.Errorf("Expected estimator.tensor len=4: %d", len(searcher.vectors))
 	}
 }
