@@ -15,6 +15,7 @@
 package search
 
 import (
+	"io"
 	"sort"
 
 	"github.com/pkg/errors"
@@ -22,39 +23,70 @@ import (
 
 // Searcher stores the elements for cosine similarity.
 type Searcher struct {
-	vectors map[string][]float64
+	Vectors   map[string][]float64
+	Dimension int
 }
 
 // NewSearcher creates *Searcher
-func NewSearcher(parser *Parser) (*Searcher, error) {
+func NewSearcher(f io.Reader) (*Searcher, error) {
 	vectors := make(map[string][]float64)
-	storeFunc := func(word string, vec []float64) {
+	var d int
+	storeFunc := func(word string, vec []float64, dim int) {
+		if d == 0 {
+			d = dim
+		} else if d != dim {
+			return
+		}
 		vectors[word] = vec
 	}
-	if err := parser.ParseAll(storeFunc); err != nil {
+	if err := ParseAll(f, storeFunc); err != nil {
 		return nil, errors.Wrap(err, "Failed to parse")
 	}
 	return &Searcher{
-		vectors: vectors,
+		Vectors:   vectors,
+		Dimension: d,
 	}, nil
 }
 
 // Search searches similar words for query word and returns top-k nearest neighbors with similarity.
-func (s *Searcher) Search(query string, k int) (Neighbors, error) {
-	queryVec, ok := s.vectors[query]
+func (s *Searcher) SearchWithQuery(query string, k int) (Neighbors, error) {
+	queryVec, ok := s.Vectors[query]
 	if !ok {
 		return nil, errors.Errorf("%s is not found in vector map", query)
 	}
 	queryNorm := norm(queryVec)
 
-	if k > len(s.vectors) {
-		k = len(s.vectors) - 1
+	if k > len(s.Vectors) {
+		k = len(s.Vectors) - 1
 	}
+
 	neighbors := make(Neighbors, k)
-	for word, vec := range s.vectors {
+	for word, vec := range s.Vectors {
 		if word == query {
 			continue
 		}
+		n := norm(vec)
+		neighbors = append(neighbors, Neighbor{
+			word:       word,
+			similarity: cosine(queryVec, vec, queryNorm, n),
+		})
+	}
+
+	sort.Sort(sort.Reverse(neighbors))
+
+	return neighbors[:k], nil
+
+}
+
+func (s *Searcher) Search(queryVec []float64, k int) (Neighbors, error) {
+	queryNorm := norm(queryVec)
+
+	if k > len(s.Vectors) {
+		k = len(s.Vectors)
+	}
+
+	neighbors := make(Neighbors, k)
+	for word, vec := range s.Vectors {
 		n := norm(vec)
 		neighbors = append(neighbors, Neighbor{
 			word:       word,

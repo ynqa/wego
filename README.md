@@ -44,6 +44,7 @@ Usage:
 Available Commands:
   glove       GloVe: Global Vectors for Word Representation
   help        Help about any command
+  repl        Search similar words with REPL mode
   search      Search similar words
   word2vec    Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
@@ -54,9 +55,10 @@ Use "wego [command] --help" for more information about a command.
 ```
 
 For more information about each sub-command, see below:
-- [search](./search/README.md)
 - [word2vec](./model/README.md)
 - [glove](./model/README.md)
+- [search](./search/README.md)
+- [repl](./repl/README.md)
 
 ## Demo
 

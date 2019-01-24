@@ -78,4 +78,5 @@ func init() {
 	RootCmd.AddCommand(Word2vecCmd)
 	RootCmd.AddCommand(SearchCmd)
 	RootCmd.AddCommand(GloveCmd)
+	RootCmd.AddCommand(ReplCmd)
 }

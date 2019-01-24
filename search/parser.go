@@ -23,50 +23,39 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Parser struct {
-	f io.ReadCloser
-}
+type StoreFunc func(string, []float64, int)
 
-func NewParser(f io.ReadCloser) *Parser {
-	return &Parser{
-		f: f,
-	}
-}
-
-type StoreFunc func(string, []float64)
-
-func (p *Parser) ParseAll(store StoreFunc) error {
-	defer p.f.Close()
-
-	s := bufio.NewScanner(p.f)
+func ParseAll(f io.Reader, store StoreFunc) error {
+	s := bufio.NewScanner(f)
 	for s.Scan() {
 		line := s.Text()
 		if strings.HasPrefix(line, " ") {
 			continue
 		}
-		word, vec, err := p.parse(line)
+		word, vec, dim, err := parse(line)
 		if err != nil {
 			return err
 		}
-		store(word, vec)
+		store(word, vec, dim)
 	}
 	if err := s.Err(); err != nil && err != io.EOF {
-		return errors.Wrapf(err, "Failed to scan %s", p.f)
+		return errors.Wrapf(err, "Failed to scan %v", f)
 	}
 	return nil
 }
 
-func (p *Parser) parse(line string) (string, []float64, error) {
+func parse(line string) (string, []float64, int, error) {
 	sep := strings.Fields(line)
 	word := sep[0]
 	elems := sep[1:]
-	vec := make([]float64, len(elems))
+	dim := len(elems)
+	vec := make([]float64, dim)
 	for k, elem := range elems {
 		val, err := strconv.ParseFloat(elem, 64)
 		if err != nil {
-			return "", nil, err
+			return "", nil, 0, err
 		}
 		vec[k] = val
 	}
-	return word, vec, nil
+	return word, vec, dim, nil
 }
