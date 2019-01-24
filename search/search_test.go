@@ -20,30 +20,56 @@ import (
 	"testing"
 )
 
-func TestSearch(t *testing.T) {
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
+func TestSearchWithQuery(t *testing.T) {
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
 	defer f.Close()
-	parser := NewParser(f)
 
-	searcher, err := NewSearcher(parser)
+	searcher, err := NewSearcher(f)
 	if err != nil {
 		t.Errorf("Failed to create searcher: %s", err.Error())
 	}
 
-	neighbors, err := searcher.Search("banana", 20)
+	neighbors, err := searcher.SearchWithQuery("banana", 20)
 	if err != nil {
 		t.Errorf("Failed to search with word=banana, rank=20: %s", err.Error())
 	}
 
-	if len(searcher.vectors) != testNumVector {
-		t.Errorf("Expected searcher.vectors len=%d, but got %d", testNumVector, len(searcher.vectors))
+	if len(searcher.Vectors) != testNumVector {
+		t.Errorf("Expected searcher.Vectors len=%d, but got %d", testNumVector, len(searcher.Vectors))
 	}
 
-	if len(neighbors) != 3 {
-		t.Errorf("Expected neighbors len=3, but got %d", len(neighbors))
+	if len(neighbors) != testNumVector-1 {
+		t.Errorf("Expected neighbors len=%d, but got %d", testNumVector-1, len(neighbors))
 	}
 
 	if neighbors[0].word != "apple" {
-		t.Errorf("Expected the most near word is apple for banana, but got %s", neighbors[0].word)
+		t.Errorf("Expected the most near word is `apple` for `banana`, but got neighbors=%v", neighbors)
+	}
+}
+
+func TestSearch(t *testing.T) {
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
+	defer f.Close()
+
+	searcher, err := NewSearcher(f)
+	if err != nil {
+		t.Errorf("Failed to create searcher: %s", err.Error())
+	}
+
+	neighbors, err := searcher.Search(dragonVector, 20)
+	if err != nil {
+		t.Errorf("Failed to search with vector=%v, rank=20: %s", dragonVector, err.Error())
+	}
+
+	if len(searcher.Vectors) != testNumVector {
+		t.Errorf("Expected searcher.Vectors len=%d, but got %d", testNumVector, len(searcher.Vectors))
+	}
+
+	if len(neighbors) != testNumVector {
+		t.Errorf("Expected neighbors len=%d, but got %d", testNumVector, len(neighbors))
+	}
+
+	if neighbors[0].word != "dragon" {
+		t.Errorf("Expected the most near word is vector=%v for `dragon`, but got neighbors=%v", dragonVector, neighbors)
 	}
 }

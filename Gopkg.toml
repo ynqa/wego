@@ -25,3 +25,7 @@
 [[constraint]]
   name = "gopkg.in/cheggaaa/pb.v1"
   version = "1.0.18"
+
+[[constraint]]
+  name = "github.com/peterh/liner"
+  version = "1.1.0"

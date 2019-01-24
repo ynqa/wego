@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2019 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,44 +17,41 @@ package cmd
 import (
 	"os"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/wego/config"
-	"github.com/ynqa/wego/search"
+	"github.com/ynqa/wego/repl"
 )
 
-// SearchCmd is the subcommand to estimate similarity.
-var SearchCmd = &cobra.Command{
-	Use:     "search",
-	Short:   "Search similar words",
-	Long:    "Search similar words",
-	Example: "  wego search -i example/word_vectors.txt microsoft",
+var ReplCmd = &cobra.Command{
+	Use:   "repl",
+	Short: "Search similar words with REPL mode",
+	Long:  "Search similar words with REPL mode",
+	Example: "  wego repl -i example/word_vectors.txt\n" +
+		"  >> apple + banana\n" +
+		"  ...",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		searchBind(cmd)
+		replBind(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 1 {
-			return executeSearch(args[0])
-		}
-		return errors.New("Input a single word")
+		return executeRepl()
 	},
 }
 
 func init() {
-	SearchCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
+	ReplCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
 		"input file path for trained word vector")
-	SearchCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
+	ReplCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"how many the most similar words will be displayed")
 }
 
-func searchBind(cmd *cobra.Command) {
-	viper.BindPFlag(config.Rank.String(), cmd.Flags().Lookup(config.Rank.String()))
+func replBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
+	viper.BindPFlag(config.Rank.String(), cmd.Flags().Lookup(config.Rank.String()))
 }
 
-func executeSearch(query string) error {
+func executeRepl() error {
 	inputFile := viper.GetString(config.InputFile.String())
 	f, err := os.Open(inputFile)
 	if err != nil {
@@ -62,16 +59,10 @@ func executeSearch(query string) error {
 	}
 	defer f.Close()
 
-	searcher, err := search.NewSearcher(f)
-	if err != nil {
-		return err
-	}
-
 	k := viper.GetInt(config.Rank.String())
-	neighbors, err := searcher.SearchWithQuery(query, k)
+	repl, err := repl.NewRepl(f, k)
 	if err != nil {
 		return err
 	}
-
-	return search.Describe(neighbors)
+	return repl.Run()
 }

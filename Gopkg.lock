@@ -127,6 +127,14 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:4aee2a94909f9d05d53281e22268c629f6eba9ddc179fdbcd6466de5a998e01e"
+  name = "github.com/peterh/liner"
+  packages = ["."]
+  pruneopts = ""
+  revision = "5a0dfa99e2aa1d433a9642e863da51402e609376"
+  version = "v1.1.0"
+
+[[projects]]
   digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -309,6 +317,7 @@
   input-imports = [
     "github.com/chewxy/lingo/corpus",
     "github.com/olekukonko/tablewriter",
+    "github.com/peterh/liner",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",

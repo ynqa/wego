@@ -22,21 +22,23 @@ import (
 
 const (
 	testNumVector = 4
-	testVector    = `apple 1 1 1 1 1
+	testVectorStr = `apple 1 1 1 1 1
 banana 1 1 1 1 1
 chocolate 0 0 0 0 0
 dragon -1 -1 -1 -1 -1`
 )
 
+var dragonVector = []float64{-1, -1, -1, -1, -1}
+
 func TestParseAll(t *testing.T) {
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
 	defer f.Close()
-	parser := NewParser(f)
+
 	vectors := make(map[string][]float64)
-	storeFunc := func(word string, vec []float64) {
+	storeFunc := func(word string, vec []float64, dim int) {
 		vectors[word] = vec
 	}
-	if err := parser.ParseAll(storeFunc); err != nil {
+	if err := ParseAll(f, storeFunc); err != nil {
 		t.Errorf("Failed to parse vector file: %s", err.Error())
 	}
 
@@ -46,10 +48,10 @@ func TestParseAll(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVector)))
+	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
 	defer f.Close()
-	parser := NewParser(f)
-	word, vec, err := parser.parse("apple 1 1 1 1 1")
+
+	word, vec, _, err := parse("apple 1 1 1 1 1")
 	if err != nil {
 		t.Errorf("Failed to parse a vector str: %s", err.Error())
 	}
