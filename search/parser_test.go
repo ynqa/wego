@@ -20,16 +20,6 @@ import (
 	"testing"
 )
 
-const (
-	testNumVector = 4
-	testVectorStr = `apple 1 1 1 1 1
-banana 1 1 1 1 1
-chocolate 0 0 0 0 0
-dragon -1 -1 -1 -1 -1`
-)
-
-var dragonVector = []float64{-1, -1, -1, -1, -1}
-
 func TestParseAll(t *testing.T) {
 	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
 	defer f.Close()
