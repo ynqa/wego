@@ -1,10 +1,10 @@
-# Word Embedding in Golang
+# Word Embedding in Go
 
 [![Build Status](https://travis-ci.org/ynqa/wego.svg?branch=master)](https://travis-ci.org/ynqa/wego)
 [![GoDoc](https://godoc.org/github.com/ynqa/wego?status.svg)](https://godoc.org/github.com/ynqa/wego)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/wego)](https://goreportcard.com/report/github.com/ynqa/wego)
 
-This is the implementation of word embedding (a.k.a word representation) models in Golang.
+This is the implementation of word embedding (a.k.a word representation) models in Go.
 
 ## Word Embedding
 
@@ -24,6 +24,10 @@ and their Compositionality [[pdf]](https://papers.nips.cc/paper/5021-distributed
   - GloVe: Global Vectors for Word Representation [[pdf]](http://nlp.stanford.edu/pubs/glove.pdf)
 
 and more...
+
+## Why Go?
+
+[Data Science in Go](https://speakerdeck.com/chewxy/data-science-in-go) @chewxy
 
 ## Installation
 
