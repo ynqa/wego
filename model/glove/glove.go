@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -30,7 +29,6 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 
 	"github.com/ynqa/wego/corpus"
-	"github.com/ynqa/wego/corpus/co"
 	"github.com/ynqa/wego/model"
 )
 
@@ -46,7 +44,7 @@ type Glove struct {
 	alpha float64
 
 	// word pair with co-occurrence.
-	pairs []pair
+	pairs []corpus.Pair
 
 	// words' vector.
 	vector []float64
@@ -61,7 +59,7 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 	xmax int, alpha float64) (*Glove, error) {
-	cps, err := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount, config.Window)
+	cps, err := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
 	}
@@ -80,7 +78,7 @@ func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 
 func (g *Glove) initialize() {
 	// Build pairs based on co-occurrence.
-	g.buildPairs()
+	g.pairs = g.GloveCorpus.Pairs(g.Window, g.xmax, g.alpha, g.Verbose)
 
 	// Initialize word vector.
 	vectorSize := g.GloveCorpus.Size() * (g.Config.Dimension + 1) * 2
@@ -93,56 +91,11 @@ func (g *Glove) initialize() {
 	g.solver.initialize(vectorSize)
 }
 
-type pair struct {
-	l1, l2         int
-	f, coefficient float64
-}
-
-func (g *Glove) buildPairs() {
-	coo := g.Cooccurrence()
-	pairSize := len(coo)
-	g.pairs = make([]pair, pairSize)
-	shuffle := rand.Perm(pairSize)
-
-	if g.Verbose {
-		fmt.Println("Build co-occurrence map from corpus:")
-		g.progress = pb.New(pairSize).SetWidth(80)
-		g.progress.Start()
-	}
-
-	i := 0
-	for p, f := range coo {
-		coefficient := 1.0
-		if f < float64(g.xmax) {
-			coefficient = math.Pow(f/float64(g.xmax), g.alpha)
-		}
-
-		ul1, ul2 := co.DecodeBigram(p)
-		g.pairs[shuffle[i]] = pair{
-			l1:          int(ul1),
-			l2:          int(ul2),
-			f:           math.Log(f),
-			coefficient: coefficient,
-		}
-		i++
-		if g.Verbose {
-			g.progress.Increment()
-		}
-	}
-	if g.Verbose {
-		g.progress.Finish()
-	}
-}
-
 // Train trains words' vector on corpus.
 func (g *Glove) Train() error {
 	pairSize := len(g.pairs)
 	if pairSize <= 0 {
 		return errors.Errorf("No pairs for training")
-	}
-	if g.Config.Verbose {
-		fmt.Printf("Size of Corpus: %v\n", g.GloveCorpus.Size())
-		fmt.Printf("Size of Pair: %v\n", len(g.pairs))
 	}
 
 	g.indexPerThread = model.IndexPerThread(g.Config.ThreadSize, pairSize)
@@ -152,7 +105,7 @@ func (g *Glove) Train() error {
 
 	for i := 1; i <= g.Iteration; i++ {
 		if g.Verbose {
-			fmt.Printf("%d-th:\n", i)
+			fmt.Printf("Train %d-th:\n", i)
 			g.progress = pb.New(pairSize).SetWidth(80)
 			g.progress.Start()
 		}
@@ -165,7 +118,7 @@ func (g *Glove) Train() error {
 		g.solver.postOneIter()
 
 		waitGroup.Wait()
-		if g.Verbose {
+		if g.Config.Verbose {
 			g.progress.Finish()
 		}
 	}
@@ -186,9 +139,9 @@ func (g *Glove) trainPerThread(beginIdx, endIdx int,
 			g.progress.Increment()
 		}
 		pair := g.pairs[i]
-		l1 := pair.l1 * (g.Config.Dimension + 1)
-		l2 := (pair.l2 + g.Corpus.Size()) * (g.Config.Dimension + 1)
-		g.solver.trainOne(l1, l2, pair.f, pair.coefficient, g.vector)
+		l1 := pair.L1 * (g.Config.Dimension + 1)
+		l2 := (pair.L2 + g.Corpus.Size()) * (g.Config.Dimension + 1)
+		g.solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
 	}
 }
 

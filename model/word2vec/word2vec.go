@@ -119,7 +119,7 @@ func (w *Word2vec) Train() error {
 
 	for i := 1; i <= w.Config.Iteration; i++ {
 		if w.Config.Verbose {
-			fmt.Printf("%d-th:\n", i)
+			fmt.Printf("Train %d-th:\n", i)
 			w.progress = pb.New(documentSize).SetWidth(80)
 			w.progress.Start()
 		}

@@ -46,18 +46,18 @@ function train() {
 }
 
 function search() {
-	echo "similarity search for skip-gram with ns"
+	echo "similarity search with skip-gram with ns"
 	./wego search -i example/word2vec_sg_ns.txt microsoft
-	echo "similarity search for skip-gram with hs"
+	echo "similarity search with skip-gram with hs"
 	./wego search -i example/word2vec_sg_hs.txt microsoft
-	echo "similarity search for cbow with ns"
+	echo "similarity search with cbow with ns"
 	./wego search -i example/word2vec_cbow_ns.txt microsoft
-	echo "similarity search for cbow with hs"
+	echo "similarity search with cbow with hs"
 	./wego search -i example/word2vec_cbow_hs.txt microsoft
 
-	echo "similarity search for glove with sgd"
+	echo "similarity search with glove with sgd"
 	./wego search -i example/glove_sgd.txt microsoft
-	echo "similarity search for glove with adagrad"
+	echo "similarity search with glove with adagrad"
 	./wego search -i example/glove_adagrad.txt microsoft
 }
 

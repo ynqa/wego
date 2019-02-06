@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2019 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,12 @@ import (
 )
 
 func main() {
-	b := builder.NewWord2vecBuilder()
+	b := builder.NewGloveBuilder()
 
 	b.InputFile("text8").
 		Dimension(10).
 		Window(5).
-		Model("cbow").
-		Optimizer("ns").
-		NegativeSampleSize(5).
+		Solver("sgd").
 		Verbose()
 
 	m, err := b.Build()
