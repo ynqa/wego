@@ -1,8 +1,6 @@
 # REPL
 
-REPL mode for similarity search
-
-![wego](https://user-images.githubusercontent.com/6745370/51677211-2e54e700-201c-11e9-8ce9-19d4b84ef071.gif)
+Similarity search between word vectors with REPL mode.
 
 ## Usage
 
