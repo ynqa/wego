@@ -25,7 +25,7 @@ const replFlagSize = 2
 func TestReplBind(t *testing.T) {
 	defer viper.Reset()
 
-	replBind(ReplCmd)
+	replBind(replCmd)
 
 	if len(viper.AllKeys()) != replFlagSize {
 		t.Errorf("Expected replBind maps %v keys: %v",

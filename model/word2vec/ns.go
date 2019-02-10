@@ -22,7 +22,7 @@ import (
 // NegativeSampling is a piece of Word2Vec optimizer.
 type NegativeSampling struct {
 	*SigmoidTable
-	contextVector []float64
+	ContextVector []float64
 	sampleSize    int
 
 	dimension  int
@@ -40,7 +40,7 @@ func NewNegativeSampling(sampleSize int) *NegativeSampling {
 func (ns *NegativeSampling) initialize(cps *corpus.Word2vecCorpus, dimension int) error {
 	ns.vocabulary = cps.Size()
 	ns.dimension = dimension
-	ns.contextVector = make([]float64, ns.vocabulary*ns.dimension)
+	ns.ContextVector = make([]float64, ns.vocabulary*ns.dimension)
 	return nil
 }
 
@@ -51,11 +51,11 @@ func (ns *NegativeSampling) update(word int, lr float64, vector, poolVector []fl
 	for n := -1; n < ns.sampleSize; n++ {
 		if n == -1 {
 			label = 1
-			sampleVector = ns.contextVector[word*ns.dimension : word*ns.dimension+ns.dimension]
+			sampleVector = ns.ContextVector[word*ns.dimension : word*ns.dimension+ns.dimension]
 		} else {
 			label = 0
 			sample = model.NextRandom(ns.vocabulary)
-			sampleVector = ns.contextVector[sample*ns.dimension : sample*ns.dimension+ns.dimension]
+			sampleVector = ns.ContextVector[sample*ns.dimension : sample*ns.dimension+ns.dimension]
 			if word == sample {
 				continue
 			}
@@ -68,7 +68,7 @@ func (ns *NegativeSampling) update(word int, lr float64, vector, poolVector []fl
 			index = sample
 		}
 		for i := 0; i < ns.dimension; i++ {
-			ns.contextVector[index*ns.dimension+i] = sampleVector[i]
+			ns.ContextVector[index*ns.dimension+i] = sampleVector[i]
 		}
 	}
 }

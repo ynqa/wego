@@ -25,8 +25,7 @@ import (
 	"github.com/ynqa/wego/search"
 )
 
-// SearchCmd is the subcommand to estimate similarity.
-var SearchCmd = &cobra.Command{
+var searchCmd = &cobra.Command{
 	Use:     "search",
 	Short:   "Search similar words",
 	Long:    "Search similar words",
@@ -43,9 +42,9 @@ var SearchCmd = &cobra.Command{
 }
 
 func init() {
-	SearchCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
+	searchCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
 		"input file path for trained word vector")
-	SearchCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
+	searchCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"how many the most similar words will be displayed")
 }
 

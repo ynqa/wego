@@ -71,3 +71,34 @@ Flags:
   -w, --window int          context window size (default 5)
       --xmax int            specifying cutoff in weighting function (default 100)
 ```
+
+## Lexvec
+
+### Usage
+
+```
+Lexvec: Matrix Factorization using Window Sampling and Negative Sampling for Improved Word Representations
+
+Usage:
+  wego lexvec [flags]
+
+Flags:
+      --batchSize int       interval word size to update learning rate (default 10000)
+  -d, --dimension int       dimension of word vector (default 10)
+  -h, --help                help for lexvec
+      --initlr float        initial learning rate (default 0.025)
+  -i, --inputFile string    input file path for corpus (default "example/input.txt")
+      --iter int            number of iteration (default 15)
+      --lower               whether the words on corpus convert to lowercase or not
+      --min-count int       lower limit to filter rare words (default 5)
+  -o, --outputFile string   output file path to save word vectors (default "example/word_vectors.txt")
+      --prof                profiling mode to check the performances
+      --rel string          relation type for counting co-occurrence. One of ppmi|pmi|co|logco (default "ppmi")
+      --sample int          negative sample size(for negative sampling only) (default 5)
+      --save-vec string     save vector type. One of: normal|add (default "normal")
+      --smooth float        smoothing value (default 0.75)
+      --theta float         lower limit of learning rate (lr >= initlr * theta) (default 0.0001)
+      --thread int          number of goroutine (default 12)
+      --verbose             verbose mode
+  -w, --window int          context window size (default 5)
+```

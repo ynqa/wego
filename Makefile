@@ -2,9 +2,16 @@
 build:
 	go build
 
-.PHONY: clean
-clean:
+.PHONY: clean-vendor
+clean-vendor:
 	rm -rf vendor/
+
+.PHONY: clean-example
+clean-example:
+	rm -rf example/*.txt
+
+.PHONY: clean
+clean: clean-example clean-vendor
 
 .PHONY: ensure
 ensure:

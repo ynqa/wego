@@ -16,6 +16,7 @@ package main
 
 import (
 	"github.com/ynqa/wego/builder"
+	"github.com/ynqa/wego/model/glove"
 )
 
 func main() {
@@ -24,7 +25,7 @@ func main() {
 	b.InputFile("text8").
 		Dimension(10).
 		Window(5).
-		Solver("sgd").
+		Solver(glove.SGD).
 		Verbose()
 
 	m, err := b.Build()

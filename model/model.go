@@ -20,3 +20,24 @@ type Model interface {
 	Train() error
 	Save(outputFile string) error
 }
+
+// SaveVectorType is a list of types to save model.
+type SaveVectorType int
+
+const (
+	// NORMAL saves word vectors only.
+	NORMAL SaveVectorType = iota
+	// ADD add word to context vectors, and save them.
+	ADD
+)
+
+func (t SaveVectorType) String() string {
+	switch t {
+	case NORMAL:
+		return "normal"
+	case ADD:
+		return "add"
+	default:
+		return "unknown"
+	}
+}

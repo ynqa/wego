@@ -32,17 +32,18 @@ type GloveBuilder struct {
 	inputFile string
 
 	// common configs.
-	dimension  int
-	iteration  int
-	minCount   int
-	threadSize int
-	window     int
-	initlr     float64
-	toLower    bool
-	verbose    bool
+	dimension      int
+	iteration      int
+	minCount       int
+	threadSize     int
+	window         int
+	initlr         float64
+	toLower        bool
+	verbose        bool
+	saveVectorType model.SaveVectorType
 
 	// glove configs.
-	solver string
+	solver glove.SolverType
 	xmax   int
 	alpha  float64
 }
@@ -52,14 +53,15 @@ func NewGloveBuilder() *GloveBuilder {
 	return &GloveBuilder{
 		inputFile: config.DefaultInputFile,
 
-		dimension:  config.DefaultDimension,
-		iteration:  config.DefaultIteration,
-		minCount:   config.DefaultMinCount,
-		threadSize: config.DefaultThreadSize,
-		window:     config.DefaultWindow,
-		initlr:     config.DefaultInitlr,
-		toLower:    config.DefaultToLower,
-		verbose:    config.DefaultVerbose,
+		dimension:      config.DefaultDimension,
+		iteration:      config.DefaultIteration,
+		minCount:       config.DefaultMinCount,
+		threadSize:     config.DefaultThreadSize,
+		window:         config.DefaultWindow,
+		initlr:         config.DefaultInitlr,
+		toLower:        config.DefaultToLower,
+		verbose:        config.DefaultVerbose,
+		saveVectorType: config.DefaultSaveVectorType,
 
 		solver: config.DefaultSolver,
 		xmax:   config.DefaultXmax,
@@ -68,23 +70,45 @@ func NewGloveBuilder() *GloveBuilder {
 }
 
 // NewGloveBuilderFromViper creates *GloveBuilder from viper.
-func NewGloveBuilderFromViper() *GloveBuilder {
+func NewGloveBuilderFromViper() (*GloveBuilder, error) {
+	var saveVectorType model.SaveVectorType
+	saveVectorTypeStr := viper.GetString(config.SaveVectorType.String())
+	switch saveVectorTypeStr {
+	case model.NORMAL.String():
+		saveVectorType = model.NORMAL
+	case model.ADD.String():
+		saveVectorType = model.ADD
+	default:
+		return nil, errors.Errorf("Invalid save vector type=%s", saveVectorTypeStr)
+	}
+
+	var solver glove.SolverType
+	solverTypeStr := viper.GetString(config.Solver.String())
+	switch solverTypeStr {
+	case glove.SGD.String():
+		solver = glove.SGD
+	case glove.ADAGRAD.String():
+		solver = glove.ADAGRAD
+	default:
+		return nil, errors.Errorf("Invalid solver type=%s", solverTypeStr)
+	}
 	return &GloveBuilder{
 		inputFile: viper.GetString(config.InputFile.String()),
 
-		dimension:  viper.GetInt(config.Dimension.String()),
-		iteration:  viper.GetInt(config.Iteration.String()),
-		minCount:   viper.GetInt(config.MinCount.String()),
-		threadSize: viper.GetInt(config.ThreadSize.String()),
-		window:     viper.GetInt(config.Window.String()),
-		initlr:     viper.GetFloat64(config.Initlr.String()),
-		toLower:    viper.GetBool(config.ToLower.String()),
-		verbose:    viper.GetBool(config.Verbose.String()),
+		dimension:      viper.GetInt(config.Dimension.String()),
+		iteration:      viper.GetInt(config.Iteration.String()),
+		minCount:       viper.GetInt(config.MinCount.String()),
+		threadSize:     viper.GetInt(config.ThreadSize.String()),
+		window:         viper.GetInt(config.Window.String()),
+		initlr:         viper.GetFloat64(config.Initlr.String()),
+		toLower:        viper.GetBool(config.ToLower.String()),
+		verbose:        viper.GetBool(config.Verbose.String()),
+		saveVectorType: saveVectorType,
 
-		solver: viper.GetString(config.Solver.String()),
+		solver: solver,
 		xmax:   viper.GetInt(config.Xmax.String()),
 		alpha:  viper.GetFloat64(config.Alpha.String()),
-	}
+	}, nil
 }
 
 // InputFile sets input file string.
@@ -141,9 +165,14 @@ func (gb *GloveBuilder) Verbose() *GloveBuilder {
 	return gb
 }
 
+func (gb *GloveBuilder) SaveVectorType(typ model.SaveVectorType) *GloveBuilder {
+	gb.saveVectorType = typ
+	return gb
+}
+
 // Solver sets solver.
-func (gb *GloveBuilder) Solver(solver string) *GloveBuilder {
-	gb.solver = solver
+func (gb *GloveBuilder) Solver(typ glove.SolverType) *GloveBuilder {
+	gb.solver = typ
 	return gb
 }
 
@@ -171,13 +200,13 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 	}
 
 	cnf := model.NewConfig(gb.dimension, gb.iteration, gb.minCount, gb.threadSize, gb.window,
-		gb.initlr, gb.toLower, gb.verbose)
+		gb.initlr, gb.toLower, gb.verbose, gb.saveVectorType)
 
 	var solver glove.Solver
 	switch gb.solver {
-	case "sgd":
+	case glove.SGD:
 		solver = glove.NewSgd(gb.dimension, gb.initlr)
-	case "adagrad":
+	case glove.ADAGRAD:
 		solver = glove.NewAdaGrad(gb.dimension, gb.initlr)
 	default:
 		return nil, errors.Errorf("Invalid solver: %s not in sgd|adagrad", gb.solver)

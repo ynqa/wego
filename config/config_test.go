@@ -19,7 +19,7 @@ import (
 )
 
 func TestInvalidConfigString(t *testing.T) {
-	var Fake Config = 1024
+	var Fake Config = Config(1024)
 
 	if Fake.String() != "unknown" {
 		t.Errorf("Fake should be not registered in Config: %v", Fake.String())
@@ -74,6 +74,62 @@ func TestConfigString(t *testing.T) {
 		{
 			input:    Verbose,
 			expected: "verbose",
+		},
+		{
+			input:    SaveVectorType,
+			expected: "save-vec",
+		},
+		// Word2ec
+		{
+			input:    Model,
+			expected: "model",
+		},
+		{
+			input:    Optimizer,
+			expected: "optimizer",
+		},
+		{
+			input:    BatchSize,
+			expected: "batchSize",
+		},
+		{
+			input:    MaxDepth,
+			expected: "maxDepth",
+		},
+		{
+			input:    NegativeSampleSize,
+			expected: "sample",
+		},
+		{
+			input:    SubsampleThreshold,
+			expected: "threshold",
+		},
+		{
+			input:    Theta,
+			expected: "theta",
+		},
+		// GloVe
+		{
+			input:    Solver,
+			expected: "solver",
+		},
+		{
+			input:    Xmax,
+			expected: "xmax",
+		},
+		{
+			input:    Alpha,
+			expected: "alpha",
+		},
+		// Lexvec
+		{
+			input:    RelationType,
+			expected: "rel",
+		},
+		// Search
+		{
+			input:    Rank,
+			expected: "rank",
 		},
 	}
 

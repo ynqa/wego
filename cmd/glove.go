@@ -27,13 +27,12 @@ import (
 	"github.com/ynqa/wego/validate"
 )
 
-// GloveCmd is the subcommand for Glove.
-var GloveCmd = &cobra.Command{
+var gloveCmd = &cobra.Command{
 	Use:   "glove",
 	Short: "GloVe: Global Vectors for Word Representation",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		configBind(cmd)
-		gloveBind(cmd)
+		bindConfig(cmd)
+		bindGlove(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if viper.GetBool(config.Prof.String()) {
@@ -44,34 +43,35 @@ var GloveCmd = &cobra.Command{
 			pprof.StartCPUProfile(f)
 			defer pprof.StopCPUProfile()
 		}
-
-		return executeGlove()
+		return runGlove()
 	},
 }
 
 func init() {
-	GloveCmd.Flags().AddFlagSet(ConfigFlagSet())
-	GloveCmd.Flags().String(config.Solver.String(), config.DefaultSolver,
+	gloveCmd.Flags().AddFlagSet(configFlagSet())
+	gloveCmd.Flags().String(config.Solver.String(), config.DefaultSolver.String(),
 		"solver for GloVe objective. One of: sgd|adagrad")
-	GloveCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
+	gloveCmd.Flags().Int(config.Xmax.String(), config.DefaultXmax,
 		"specifying cutoff in weighting function")
-	GloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
+	gloveCmd.Flags().Float64(config.Alpha.String(), config.DefaultAlpha,
 		"exponent of weighting function")
 }
 
-func gloveBind(cmd *cobra.Command) {
+func bindGlove(cmd *cobra.Command) {
 	viper.BindPFlag(config.Solver.String(), cmd.Flags().Lookup(config.Solver.String()))
 	viper.BindPFlag(config.Xmax.String(), cmd.Flags().Lookup(config.Xmax.String()))
 	viper.BindPFlag(config.Alpha.String(), cmd.Flags().Lookup(config.Alpha.String()))
 }
 
-func executeGlove() error {
+func runGlove() error {
 	outputFile := viper.GetString(config.OutputFile.String())
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
-
-	glove := builder.NewGloveBuilderFromViper()
+	glove, err := builder.NewGloveBuilderFromViper()
+	if err != nil {
+		return err
+	}
 	mod, err := glove.Build()
 	if err != nil {
 		return err

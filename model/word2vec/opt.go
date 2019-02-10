@@ -23,3 +23,21 @@ type Optimizer interface {
 	initialize(cps *corpus.Word2vecCorpus, dimension int) error
 	update(word int, lr float64, vector, poolVector []float64)
 }
+
+type OptimizerType int
+
+const (
+	NEGATIVE_SAMPLING OptimizerType = iota
+	HIERARCHICAL_SOFTMAX
+)
+
+func (t OptimizerType) String() string {
+	switch t {
+	case NEGATIVE_SAMPLING:
+		return "ns"
+	case HIERARCHICAL_SOFTMAX:
+		return "hs"
+	default:
+		return "unknown"
+	}
+}

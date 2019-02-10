@@ -32,18 +32,19 @@ type Word2vecBuilder struct {
 	inputFile string
 
 	// common configs.
-	dimension  int
-	iteration  int
-	minCount   int
-	threadSize int
-	window     int
-	initlr     float64
-	toLower    bool
-	verbose    bool
+	dimension      int
+	iteration      int
+	minCount       int
+	threadSize     int
+	window         int
+	initlr         float64
+	toLower        bool
+	verbose        bool
+	saveVectorType model.SaveVectorType
 
 	// word2vec configs.
-	model              string
-	optimizer          string
+	model              word2vec.ModelType
+	optimizer          word2vec.OptimizerType
 	batchSize          int
 	maxDepth           int
 	negativeSampleSize int
@@ -56,14 +57,15 @@ func NewWord2vecBuilder() *Word2vecBuilder {
 	return &Word2vecBuilder{
 		inputFile: config.DefaultInputFile,
 
-		dimension:  config.DefaultDimension,
-		iteration:  config.DefaultIteration,
-		minCount:   config.DefaultMinCount,
-		threadSize: config.DefaultThreadSize,
-		window:     config.DefaultWindow,
-		initlr:     config.DefaultInitlr,
-		toLower:    config.DefaultToLower,
-		verbose:    config.DefaultVerbose,
+		dimension:      config.DefaultDimension,
+		iteration:      config.DefaultIteration,
+		minCount:       config.DefaultMinCount,
+		threadSize:     config.DefaultThreadSize,
+		window:         config.DefaultWindow,
+		initlr:         config.DefaultInitlr,
+		toLower:        config.DefaultToLower,
+		verbose:        config.DefaultVerbose,
+		saveVectorType: config.DefaultSaveVectorType,
 
 		model:              config.DefaultModel,
 		optimizer:          config.DefaultOptimizer,
@@ -76,27 +78,61 @@ func NewWord2vecBuilder() *Word2vecBuilder {
 }
 
 // NewWord2vecBuilderFromViper creates *Word2vecBuilder from viper.
-func NewWord2vecBuilderFromViper() *Word2vecBuilder {
+func NewWord2vecBuilderFromViper() (*Word2vecBuilder, error) {
+	var saveVectorType model.SaveVectorType
+	saveVectorTypeStr := viper.GetString(config.SaveVectorType.String())
+	switch saveVectorTypeStr {
+	case model.NORMAL.String():
+		saveVectorType = model.NORMAL
+	case model.ADD.String():
+		saveVectorType = model.ADD
+	default:
+		return nil, errors.Errorf("Invalid save vector type=%s", saveVectorTypeStr)
+	}
+
+	var model word2vec.ModelType
+	modelTypeStr := viper.GetString(config.Model.String())
+	switch modelTypeStr {
+	case word2vec.CBOW.String():
+		model = word2vec.CBOW
+	case word2vec.SKIP_GRAM.String():
+		model = word2vec.SKIP_GRAM
+	default:
+		return nil, errors.Errorf("Invalid model type=%s", modelTypeStr)
+	}
+
+	var optimizer word2vec.OptimizerType
+	optimizerTypeStr := viper.GetString(config.Optimizer.String())
+	switch optimizerTypeStr {
+	case word2vec.NEGATIVE_SAMPLING.String():
+		optimizer = word2vec.NEGATIVE_SAMPLING
+	case word2vec.HIERARCHICAL_SOFTMAX.String():
+		optimizer = word2vec.HIERARCHICAL_SOFTMAX
+	default:
+		return nil, errors.Errorf("Invalid optimizer type=%s", optimizerTypeStr)
+	}
+
 	return &Word2vecBuilder{
 		inputFile: viper.GetString(config.InputFile.String()),
 
-		dimension:  viper.GetInt(config.Dimension.String()),
-		iteration:  viper.GetInt(config.Iteration.String()),
-		minCount:   viper.GetInt(config.MinCount.String()),
-		threadSize: viper.GetInt(config.ThreadSize.String()),
-		window:     viper.GetInt(config.Window.String()),
-		initlr:     viper.GetFloat64(config.Initlr.String()),
-		toLower:    viper.GetBool(config.ToLower.String()),
-		verbose:    viper.GetBool(config.Verbose.String()),
+		dimension:      viper.GetInt(config.Dimension.String()),
+		iteration:      viper.GetInt(config.Iteration.String()),
+		minCount:       viper.GetInt(config.MinCount.String()),
+		threadSize:     viper.GetInt(config.ThreadSize.String()),
+		window:         viper.GetInt(config.Window.String()),
+		initlr:         viper.GetFloat64(config.Initlr.String()),
+		toLower:        viper.GetBool(config.ToLower.String()),
+		verbose:        viper.GetBool(config.Verbose.String()),
+		saveVectorType: saveVectorType,
 
-		model:              viper.GetString(config.Model.String()),
-		optimizer:          viper.GetString(config.Optimizer.String()),
+		model:              model,
+		optimizer:          optimizer,
 		batchSize:          viper.GetInt(config.BatchSize.String()),
 		maxDepth:           viper.GetInt(config.MaxDepth.String()),
 		negativeSampleSize: viper.GetInt(config.NegativeSampleSize.String()),
 		subsampleThreshold: viper.GetFloat64(config.SubsampleThreshold.String()),
 		theta:              viper.GetFloat64(config.Theta.String()),
-	}
+	}, nil
 }
 
 // InputFile sets input file string.
@@ -153,15 +189,20 @@ func (wb *Word2vecBuilder) Verbose() *Word2vecBuilder {
 	return wb
 }
 
+func (wb *Word2vecBuilder) SaveVectorType(typ model.SaveVectorType) *Word2vecBuilder {
+	wb.saveVectorType = typ
+	return wb
+}
+
 // Model sets model of Word2vec. One of: cbow|skip-gram
-func (wb *Word2vecBuilder) Model(model string) *Word2vecBuilder {
-	wb.model = model
+func (wb *Word2vecBuilder) Model(typ word2vec.ModelType) *Word2vecBuilder {
+	wb.model = typ
 	return wb
 }
 
 // Optimizer sets optimizer of Word2vec. One of: hs|ns
-func (wb *Word2vecBuilder) Optimizer(optimizer string) *Word2vecBuilder {
-	wb.optimizer = optimizer
+func (wb *Word2vecBuilder) Optimizer(typ word2vec.OptimizerType) *Word2vecBuilder {
+	wb.optimizer = typ
 	return wb
 }
 
@@ -207,13 +248,13 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 	}
 
 	cnf := model.NewConfig(wb.dimension, wb.iteration, wb.minCount, wb.threadSize, wb.window,
-		wb.initlr, wb.toLower, wb.verbose)
+		wb.initlr, wb.toLower, wb.verbose, wb.saveVectorType)
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {
-	case "hs":
+	case word2vec.HIERARCHICAL_SOFTMAX:
 		opt = word2vec.NewHierarchicalSoftmax(wb.maxDepth)
-	case "ns":
+	case word2vec.NEGATIVE_SAMPLING:
 		opt = word2vec.NewNegativeSampling(wb.negativeSampleSize)
 	default:
 		return nil, errors.Errorf("Invalid optimizer: %s not in hs|ns", wb.optimizer)
@@ -221,12 +262,16 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 
 	var mod word2vec.Model
 	switch wb.model {
-	case "cbow":
+	case word2vec.CBOW:
 		mod = word2vec.NewCbow(wb.dimension, wb.window, wb.threadSize)
-	case "skip-gram":
+	case word2vec.SKIP_GRAM:
 		mod = word2vec.NewSkipGram(wb.dimension, wb.window, wb.threadSize)
 	default:
 		return nil, errors.Errorf("Invalid model: %s not in cbow|skip-gram", wb.model)
+	}
+
+	if wb.optimizer == word2vec.HIERARCHICAL_SOFTMAX && wb.saveVectorType == model.ADD {
+		return nil, errors.Errorf("Invalid pair of optimizer=%s and save vector type=%s", wb.optimizer, wb.saveVectorType)
 	}
 
 	return word2vec.NewWord2vec(input, cnf, mod, opt,

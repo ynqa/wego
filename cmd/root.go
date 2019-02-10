@@ -28,12 +28,12 @@ var RootCmd = &cobra.Command{
 	Use:   "wego",
 	Short: "tools for embedding words into vector space",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.Errorf("Set sub-command. One of %s|%s|%s", Word2vecCmd.Name(), GloveCmd.Name(), SearchCmd.Name())
+		return errors.Errorf("Set sub-command. One of %s|%s|%s|%s|%s",
+			word2vecCmd.Name(), gloveCmd.Name(), lexvecCmd.Name(), searchCmd.Name(), replCmd.Name())
 	},
 }
 
-// ConfigFlagSet creates the common config flags.
-func ConfigFlagSet() *pflag.FlagSet {
+func configFlagSet() *pflag.FlagSet {
 	fs := pflag.NewFlagSet(RootCmd.Name(), pflag.ExitOnError)
 	fs.StringP(config.InputFile.String(), "i", config.DefaultInputFile,
 		"input file path for corpus")
@@ -57,10 +57,12 @@ func ConfigFlagSet() *pflag.FlagSet {
 		"whether the words on corpus convert to lowercase or not")
 	fs.Bool(config.Verbose.String(), config.DefaultVerbose,
 		"verbose mode")
+	fs.String(config.SaveVectorType.String(), config.DefaultSaveVectorType.String(),
+		"save vector type. One of: normal|add")
 	return fs
 }
 
-func configBind(cmd *cobra.Command) {
+func bindConfig(cmd *cobra.Command) {
 	viper.BindPFlag(config.InputFile.String(), cmd.Flags().Lookup(config.InputFile.String()))
 	viper.BindPFlag(config.OutputFile.String(), cmd.Flags().Lookup(config.OutputFile.String()))
 	viper.BindPFlag(config.Dimension.String(), cmd.Flags().Lookup(config.Dimension.String()))
@@ -72,11 +74,13 @@ func configBind(cmd *cobra.Command) {
 	viper.BindPFlag(config.Prof.String(), cmd.Flags().Lookup(config.Prof.String()))
 	viper.BindPFlag(config.ToLower.String(), cmd.Flags().Lookup(config.ToLower.String()))
 	viper.BindPFlag(config.Verbose.String(), cmd.Flags().Lookup(config.Verbose.String()))
+	viper.BindPFlag(config.SaveVectorType.String(), cmd.Flags().Lookup(config.SaveVectorType.String()))
 }
 
 func init() {
-	RootCmd.AddCommand(Word2vecCmd)
-	RootCmd.AddCommand(SearchCmd)
-	RootCmd.AddCommand(GloveCmd)
-	RootCmd.AddCommand(ReplCmd)
+	RootCmd.AddCommand(word2vecCmd)
+	RootCmd.AddCommand(gloveCmd)
+	RootCmd.AddCommand(lexvecCmd)
+	RootCmd.AddCommand(searchCmd)
+	RootCmd.AddCommand(replCmd)
 }

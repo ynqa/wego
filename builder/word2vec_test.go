@@ -15,6 +15,7 @@
 package builder
 
 import (
+	"github.com/ynqa/wego/model/word2vec"
 	"testing"
 )
 
@@ -118,7 +119,7 @@ func TestWord2vecVerbose(t *testing.T) {
 func TestWord2vecModel(t *testing.T) {
 	b := &Word2vecBuilder{}
 
-	expectedModel := "skip-gram"
+	expectedModel := word2vec.CBOW
 	b.Model(expectedModel)
 
 	if b.model != expectedModel {
@@ -129,7 +130,7 @@ func TestWord2vecModel(t *testing.T) {
 func TestWord2vecOptimizer(t *testing.T) {
 	b := &Word2vecBuilder{}
 
-	expectedOptimizer := "ns"
+	expectedOptimizer := word2vec.NEGATIVE_SAMPLING
 	b.Optimizer(expectedOptimizer)
 
 	if b.optimizer != expectedOptimizer {
@@ -195,7 +196,7 @@ func TestWord2vecTheta(t *testing.T) {
 func TestWord2vecInvalidModelBuild(t *testing.T) {
 	b := &Word2vecBuilder{}
 
-	b.Model("fake_model")
+	b.Model(word2vec.ModelType(10))
 
 	if _, err := b.Build(); err == nil {
 		t.Errorf("Expected to fail building with invalid model except for skip-gram|cbow: %v", b.model)
@@ -205,7 +206,7 @@ func TestWord2vecInvalidModelBuild(t *testing.T) {
 func TestWord2vecInvalidOptimizerBuild(t *testing.T) {
 	b := &Word2vecBuilder{}
 
-	b.Optimizer("fake_optimizer")
+	b.Optimizer(word2vec.OptimizerType(10))
 
 	if _, err := b.Build(); err == nil {
 		t.Errorf("Expected to fail building with invalid optimizer except for ns|hs: %v", b.optimizer)

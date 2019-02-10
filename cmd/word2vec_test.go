@@ -25,7 +25,7 @@ const word2vecFlagSize = 7
 func TestWord2vecBind(t *testing.T) {
 	defer viper.Reset()
 
-	word2vecBind(Word2vecCmd)
+	bindWord2vec(word2vecCmd)
 
 	if len(viper.AllKeys()) != word2vecFlagSize {
 		t.Errorf("Expected word2vecBind maps %v keys: %v",
@@ -38,10 +38,10 @@ func TestWord2vecCmdPreRun(t *testing.T) {
 	defer viper.Reset()
 
 	var empty []string
-	Word2vecCmd.PreRun(Word2vecCmd, empty)
+	word2vecCmd.PreRun(word2vecCmd, empty)
 
 	if len(viper.AllKeys()) != word2vecFlagSize+configFlagSize {
-		t.Errorf("Expected PreRun of Word2vecCmd maps %v keys: %v",
+		t.Errorf("Expected PreRun of word2vecCmd maps %v keys: %v",
 			word2vecFlagSize+configFlagSize, viper.AllKeys())
 	}
 }

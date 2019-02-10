@@ -35,7 +35,7 @@ import (
 // Glove stores the configs for Glove models.
 type Glove struct {
 	*model.Config
-	*corpus.GloveCorpus
+	*corpus.CountModelCorpus
 
 	solver Solver
 
@@ -43,7 +43,7 @@ type Glove struct {
 	xmax  int
 	alpha float64
 
-	// word pair with co-occurrence.
+	// word pairs.
 	pairs []corpus.Pair
 
 	// words' vector.
@@ -59,29 +59,34 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 	xmax int, alpha float64) (*Glove, error) {
-	cps, err := corpus.NewGloveCorpus(f, config.ToLower, config.MinCount)
+	cps, err := corpus.NewCountModelCorpus(f, config.ToLower, config.MinCount)
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
 	}
 	glove := &Glove{
-		Config:      config,
-		GloveCorpus: cps,
+		Config:           config,
+		CountModelCorpus: cps,
 
 		solver: solver,
 
 		xmax:  xmax,
 		alpha: alpha,
 	}
-	glove.initialize()
+	if err := glove.initialize(); err != nil {
+		return nil, errors.Wrap(err, "Unable to generate *Glove")
+	}
 	return glove, nil
 }
 
-func (g *Glove) initialize() {
+func (g *Glove) initialize() (err error) {
 	// Build pairs based on co-occurrence.
-	g.pairs = g.GloveCorpus.Pairs(g.Window, g.xmax, g.alpha, g.Verbose)
+	g.pairs, err = g.CountModelCorpus.PairsIntoGlove(g.Window, g.xmax, g.alpha, g.Verbose)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to initialize for GloVe")
+	}
 
 	// Initialize word vector.
-	vectorSize := g.GloveCorpus.Size() * (g.Config.Dimension + 1) * 2
+	vectorSize := g.CountModelCorpus.Size() * (g.Config.Dimension + 1) * 2
 	g.vector = make([]float64, vectorSize)
 	for i := 0; i < vectorSize; i++ {
 		g.vector[i] = rand.Float64() / float64(g.Config.Dimension)
@@ -89,6 +94,7 @@ func (g *Glove) initialize() {
 
 	// Initialize solver.
 	g.solver.initialize(vectorSize)
+	return nil
 }
 
 // Train trains words' vector on corpus.
@@ -140,7 +146,7 @@ func (g *Glove) trainPerThread(beginIdx, endIdx int,
 		}
 		pair := g.pairs[i]
 		l1 := pair.L1 * (g.Config.Dimension + 1)
-		l2 := (pair.L2 + g.Corpus.Size()) * (g.Config.Dimension + 1)
+		l2 := (pair.L2 + g.CountModelCorpus.Size()) * (g.Config.Dimension + 1)
 		g.solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
 	}
 }
@@ -170,16 +176,37 @@ func (g *Glove) Save(outputPath string) error {
 		file.Close()
 	}()
 
+	wordSize := g.CountModelCorpus.Size()
+	if g.Config.Verbose {
+		fmt.Println("Save:")
+		g.progress = pb.New(wordSize).SetWidth(80)
+		defer g.progress.Finish()
+		g.progress.Start()
+	}
+
 	var buf bytes.Buffer
-	for i := 0; i < g.GloveCorpus.Size(); i++ {
-		word, _ := g.GloveCorpus.Word(i)
+	for i := 0; i < wordSize; i++ {
+		word, _ := g.CountModelCorpus.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
 		for j := 0; j < g.Config.Dimension; j++ {
-			l1 := i * (g.Config.Dimension + 1)
-			l2 := (i + g.GloveCorpus.Size()) * (g.Config.Dimension + 1)
-			fmt.Fprintf(&buf, "%v ", g.vector[l1+j]+g.vector[l2+j])
+			l1 := i*(g.Config.Dimension+1) + j
+			var v float64
+			switch g.SaveVectorType {
+			case model.NORMAL:
+				v = g.vector[l1]
+			case model.ADD:
+				l2 := (i+wordSize)*(g.Config.Dimension+1) + j
+				v = g.vector[l1] + g.vector[l2]
+			default:
+				return errors.Errorf("Invalid save vector type=%s", g.SaveVectorType)
+			}
+
+			fmt.Fprintf(&buf, "%v ", v)
 		}
 		fmt.Fprintln(&buf)
+		if g.Config.Verbose {
+			g.progress.Increment()
+		}
 	}
 	w.WriteString(fmt.Sprintf("%v", buf.String()))
 	return nil

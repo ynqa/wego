@@ -21,10 +21,10 @@ import (
 	"github.com/spf13/viper"
 )
 
-const configFlagSize = 11
+const configFlagSize = 12
 
 func TestConfigFlagSet(t *testing.T) {
-	fs := ConfigFlagSet()
+	fs := configFlagSet()
 
 	if !fs.HasAvailableFlags() {
 		t.Error("Expected that ConfigFlagSet() retruns *pflag.FlagSet without empty")
@@ -35,8 +35,8 @@ func TestConfigBind(t *testing.T) {
 	defer viper.Reset()
 
 	config := &cobra.Command{}
-	config.Flags().AddFlagSet(ConfigFlagSet())
-	configBind(config)
+	config.Flags().AddFlagSet(configFlagSet())
+	bindConfig(config)
 
 	if len(viper.AllKeys()) != configFlagSize {
 		t.Errorf("Expected configBind maps %v keys: %v",
