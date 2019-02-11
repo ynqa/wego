@@ -34,9 +34,11 @@ func TestInitialize(t *testing.T) {
 	ns := NewNegativeSampling(sampleSize)
 
 	dimension := 10
-	ns.initialize(corpus.TestWord2vecCorpus, dimension)
+	c := corpus.NewWord2vecCorpus()
+	c.Parse(corpus.FakeSeeker, true, 0)
+	ns.initialize(c, dimension)
 
-	expectedVectorSize := corpus.TestWord2vecCorpus.Size() * dimension
+	expectedVectorSize := c.Size() * dimension
 	if len(ns.ContextVector) != expectedVectorSize {
 		t.Errorf("NegativeSampling: Init returns negativeTensor with length=%v: %v",
 			expectedVectorSize, len(ns.ContextVector))

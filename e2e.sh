@@ -24,6 +24,10 @@ function build() {
 	make build
 }
 
+function clean_examples() {
+	make clean-example
+}
+
 function get_corpus() {
 	if [ ! -e text8 ]; then
 		echo "Download text8 corpus"
@@ -99,6 +103,7 @@ for OPT in "$@"; do
 		exit 1
 		;;
 	'-a' | '--all')
+		clean_examples
 		build
 		get_corpus
 		train_word2vec
@@ -109,24 +114,28 @@ for OPT in "$@"; do
 		search_lexvec
 		;;
 	'--all-word2vec')
+		clean_examples
 		build
 		get_corpus
 		train_word2vec
 		search_word2vec
 		;;
 	'--all-glove')
+		clean_examples
 		build
 		get_corpus
 		train_glove
 		search_glove
 		;;
 	'--all-lexvec')
+		clean_examples
 		build
 		get_corpus
 		train_lexvec
 		search_lexvec
 		;;
 	'-t' | '--train')
+		clean_examples
 		build
 		get_corpus
 		train_word2vec
@@ -134,16 +143,19 @@ for OPT in "$@"; do
 		train_lexvec
 		;;
 	'--train-word2vec')
+		clean_examples
 		build
 		get_corpus
 		train_word2vec
 		;;
 	'--train-glove')
+		clean_examples
 		build
 		get_corpus
 		train_glove
 		;;
 	'--train-lexvec')
+		clean_examples
 		build
 		get_corpus
 		train_lexvec

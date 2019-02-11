@@ -42,7 +42,7 @@ func (c *core) Document() []int {
 	return c.document
 }
 
-func (c *core) parse(f io.ReadCloser, toLower bool, minCount int) error {
+func (c *core) Parse(f io.ReadCloser, toLower bool, minCount int) error {
 	fullDoc := make([]int, 0)
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)

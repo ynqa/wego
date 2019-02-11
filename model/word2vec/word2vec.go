@@ -65,13 +65,13 @@ type Word2vec struct {
 // NewWord2vec creates *Word2Vec.
 func NewWord2vec(f io.ReadCloser, config *model.Config, mod Model, opt Optimizer,
 	batchSize int, subsampleThreshold, theta float64) (*Word2vec, error) {
-	cps, err := corpus.NewWord2vecCorpus(f, config.ToLower, config.MinCount)
-	if err != nil {
+	c := corpus.NewWord2vecCorpus()
+	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Word2vec")
 	}
 	word2vec := &Word2vec{
 		Config:         config,
-		Word2vecCorpus: cps,
+		Word2vecCorpus: c,
 
 		mod: mod,
 		opt: opt,

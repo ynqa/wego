@@ -15,8 +15,9 @@
 package builder
 
 import (
-	"github.com/ynqa/wego/model/glove"
 	"testing"
+
+	"github.com/ynqa/wego/model/glove"
 )
 
 func TestGloveInputFile(t *testing.T) {

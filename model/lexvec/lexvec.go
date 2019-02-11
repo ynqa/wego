@@ -69,8 +69,8 @@ type Lexvec struct {
 // NewLexvec create *Lexvec.
 func NewLexvec(f io.ReadCloser, config *model.Config, batchSize, negativeSampleSize int,
 	subSampleThreshold, theta, smooth float64, relationType corpus.RelationType) (*Lexvec, error) {
-	c, err := corpus.NewCountModelCorpus(f, config.ToLower, config.MinCount)
-	if err != nil {
+	c := corpus.NewCountModelCorpus()
+	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Lexvec")
 	}
 	lexvec := &Lexvec{

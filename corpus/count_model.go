@@ -16,7 +16,6 @@ package corpus
 
 import (
 	"fmt"
-	"io"
 	"math"
 	"math/rand"
 
@@ -122,14 +121,10 @@ func countValue(typ CountType, left, right int) (float64, error) {
 }
 
 // NewCountModelCorpus creates *CountModelCorpus.
-func NewCountModelCorpus(f io.ReadCloser, toLower bool, minCount int) (*CountModelCorpus, error) {
-	c := &CountModelCorpus{
+func NewCountModelCorpus() *CountModelCorpus {
+	return &CountModelCorpus{
 		core: newCore(),
 	}
-	if err := c.parse(f, toLower, minCount); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate *CountModelCorpus")
-	}
-	return c, nil
 }
 
 func (c *CountModelCorpus) cooccurrence(window int, typ CountType, verbose bool) (PairMap, error) {

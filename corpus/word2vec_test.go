@@ -23,8 +23,9 @@ import (
 )
 
 func TestGetPath(t *testing.T) {
-	cps := TestWord2vecCorpus
-	huffmanTree, err := cps.HuffmanTree(5)
+	c := NewWord2vecCorpus()
+	c.Parse(FakeSeeker, true, 0)
+	huffmanTree, err := c.HuffmanTree(5)
 
 	if err != nil {
 		t.Errorf(err.Error())
@@ -44,7 +45,7 @@ func TestGetPath(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		wordID, _ := cps.Id(testCase.word)
+		wordID, _ := c.Id(testCase.word)
 		actual := codes(huffmanTree[wordID].GetPath())
 		if actual != testCase.expected {
 			t.Errorf("Expected codes: %v, but got %v in %v",

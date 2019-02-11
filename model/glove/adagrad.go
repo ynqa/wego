@@ -67,5 +67,3 @@ func (a *AdaGrad) trainOne(l1, l2 int, f, coefficient float64, vector []float64)
 	a.gradsq[l2+a.dimension] += fdiff
 	return cost
 }
-
-func (a *AdaGrad) postOneIter() {}

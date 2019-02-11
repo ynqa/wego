@@ -59,13 +59,13 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 	xmax int, alpha float64) (*Glove, error) {
-	cps, err := corpus.NewCountModelCorpus(f, config.ToLower, config.MinCount)
-	if err != nil {
+	c := corpus.NewCountModelCorpus()
+	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
 	}
 	glove := &Glove{
 		Config:           config,
-		CountModelCorpus: cps,
+		CountModelCorpus: c,
 
 		solver: solver,
 
@@ -93,7 +93,10 @@ func (g *Glove) initialize() (err error) {
 	}
 
 	// Initialize solver.
-	g.solver.initialize(vectorSize)
+	switch solver := g.solver.(type) {
+	case *AdaGrad:
+		solver.initialize(vectorSize)
+	}
 	return nil
 }
 
@@ -121,7 +124,11 @@ func (g *Glove) Train() error {
 			go g.trainPerThread(g.indexPerThread[j], g.indexPerThread[j+1],
 				semaphore, waitGroup)
 		}
-		g.solver.postOneIter()
+
+		switch solver := g.solver.(type) {
+		case *Sgd:
+			solver.postOneIter()
+		}
 
 		waitGroup.Wait()
 		if g.Config.Verbose {
