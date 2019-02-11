@@ -149,7 +149,6 @@ func (c *CountModelCorpus) cooccurrence(window int, typ CountType, verbose bool)
 				return nil, errors.Wrap(err, "Failed to count co-occurrence between words")
 			}
 			cooccurrence[co.EncodeBigram(uint64(c.document[i]), uint64(c.document[j]))] += f
-			cooccurrence[co.EncodeBigram(uint64(c.document[j]), uint64(c.document[i]))] += f
 		}
 		if verbose {
 			progress.Increment()
@@ -158,7 +157,7 @@ func (c *CountModelCorpus) cooccurrence(window int, typ CountType, verbose bool)
 	return cooccurrence, nil
 }
 
-func (c *CountModelCorpus) PairsIntoLexvec(window int, relationType RelationType, smooth float64, verbose bool) (map[uint64]float64, error) {
+func (c *CountModelCorpus) PairsIntoLexvec(window int, relationType RelationType, smooth float64, verbose bool) (PairMap, error) {
 	cooccurrence, err := c.cooccurrence(window, INCREMENT, verbose)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create Pairs for Lexvec")

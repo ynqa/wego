@@ -155,6 +155,9 @@ func (g *Glove) trainPerThread(beginIdx, endIdx int,
 		l1 := pair.L1 * (g.Config.Dimension + 1)
 		l2 := (pair.L2 + g.CountModelCorpus.Size()) * (g.Config.Dimension + 1)
 		g.solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
+		ll1 := (pair.L1 + g.CountModelCorpus.Size()) * (g.Config.Dimension + 1)
+		ll2 := pair.L2 * (g.Config.Dimension + 1)
+		g.solver.trainOne(ll1, ll2, pair.F, pair.Coefficient, g.vector)
 	}
 }
 

@@ -19,6 +19,14 @@ package co
 
 // EncodeBigram creates id between two words.
 func EncodeBigram(l1, l2 uint64) uint64 {
+	if l1 < l2 {
+		return encode(l1, l2)
+	} else {
+		return encode(l2, l1)
+	}
+}
+
+func encode(l1, l2 uint64) uint64 {
 	return l1 | (l2 << 32)
 }
 
