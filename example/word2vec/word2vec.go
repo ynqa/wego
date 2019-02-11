@@ -16,6 +16,7 @@ package main
 
 import (
 	"github.com/ynqa/wego/builder"
+	"github.com/ynqa/wego/model/word2vec"
 )
 
 func main() {
@@ -24,8 +25,8 @@ func main() {
 	b.InputFile("text8").
 		Dimension(10).
 		Window(5).
-		Model("cbow").
-		Optimizer("ns").
+		Model(word2vec.CBOW).
+		Optimizer(word2vec.NEGATIVE_SAMPLING).
 		NegativeSampleSize(5).
 		Verbose()
 

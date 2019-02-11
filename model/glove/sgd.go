@@ -30,8 +30,6 @@ func NewSgd(dimension int, initlr float64) *Sgd {
 	}
 }
 
-func (s *Sgd) initialize(vectorSize int) {}
-
 func (s *Sgd) trainOne(l1, l2 int, f, coefficient float64, vector []float64) float64 {
 	var diff, cost float64
 	for i := 0; i < s.dimension; i++ {

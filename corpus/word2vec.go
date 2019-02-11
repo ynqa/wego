@@ -15,10 +15,6 @@
 package corpus
 
 import (
-	"io"
-
-	"github.com/pkg/errors"
-
 	"github.com/ynqa/wego/corpus/node"
 )
 
@@ -28,14 +24,10 @@ type Word2vecCorpus struct {
 }
 
 // NewWord2vecCorpus creates *Word2vecCorpus.
-func NewWord2vecCorpus(f io.ReadCloser, toLower bool, minCount int) (*Word2vecCorpus, error) {
-	word2vecCorpus := &Word2vecCorpus{
+func NewWord2vecCorpus() *Word2vecCorpus {
+	return &Word2vecCorpus{
 		core: newCore(),
 	}
-	if err := word2vecCorpus.parse(f, toLower, minCount); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate Word2vecCorpus")
-	}
-	return word2vecCorpus, nil
 }
 
 // HuffmanTree builds word nodes map.

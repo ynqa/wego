@@ -16,28 +16,30 @@ package model
 
 // Config stores the configs for each model.
 type Config struct {
-	Dimension  int
-	Iteration  int
-	MinCount   int
-	ThreadSize int
-	Window     int
-	Initlr     float64
-	ToLower    bool
-	Verbose    bool
+	Dimension      int
+	Iteration      int
+	MinCount       int
+	ThreadSize     int
+	Window         int
+	Initlr         float64
+	ToLower        bool
+	Verbose        bool
+	SaveVectorType SaveVectorType
 }
 
 // NewConfig creates *Config
 func NewConfig(dimension, iteration, minCount, threadSize, window int,
-	initlr float64, toLower, verbose bool) *Config {
+	initlr float64, toLower, verbose bool, saveVectorType SaveVectorType) *Config {
 
 	return &Config{
-		Dimension:  dimension,
-		Iteration:  iteration,
-		MinCount:   minCount,
-		ThreadSize: threadSize,
-		Window:     window,
-		Initlr:     initlr,
-		ToLower:    toLower,
-		Verbose:    verbose,
+		Dimension:      dimension,
+		Iteration:      iteration,
+		MinCount:       minCount,
+		ThreadSize:     threadSize,
+		Window:         window,
+		Initlr:         initlr,
+		ToLower:        toLower,
+		Verbose:        verbose,
+		SaveVectorType: saveVectorType,
 	}
 }

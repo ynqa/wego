@@ -24,7 +24,7 @@ func TestNewNegativeSampling(t *testing.T) {
 	sampleSize := 10
 	ns := NewNegativeSampling(sampleSize)
 
-	if ns.contextVector != nil {
+	if ns.ContextVector != nil {
 		t.Error("NegativeSampling: Initializing without building negative vactors")
 	}
 }
@@ -34,11 +34,13 @@ func TestInitialize(t *testing.T) {
 	ns := NewNegativeSampling(sampleSize)
 
 	dimension := 10
-	ns.initialize(corpus.TestWord2vecCorpus, dimension)
+	c := corpus.NewWord2vecCorpus()
+	c.Parse(corpus.FakeSeeker, true, 0)
+	ns.initialize(c, dimension)
 
-	expectedVectorSize := corpus.TestWord2vecCorpus.Size() * dimension
-	if len(ns.contextVector) != expectedVectorSize {
+	expectedVectorSize := c.Size() * dimension
+	if len(ns.ContextVector) != expectedVectorSize {
 		t.Errorf("NegativeSampling: Init returns negativeTensor with length=%v: %v",
-			expectedVectorSize, len(ns.contextVector))
+			expectedVectorSize, len(ns.ContextVector))
 	}
 }

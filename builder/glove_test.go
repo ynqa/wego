@@ -16,6 +16,8 @@ package builder
 
 import (
 	"testing"
+
+	"github.com/ynqa/wego/model/glove"
 )
 
 func TestGloveInputFile(t *testing.T) {
@@ -118,7 +120,7 @@ func TestGloveVerbose(t *testing.T) {
 func TestGloveSolver(t *testing.T) {
 	b := &GloveBuilder{}
 
-	expectedSolver := "adagrad"
+	expectedSolver := glove.ADAGRAD
 	b.Solver(expectedSolver)
 
 	if b.solver != expectedSolver {
@@ -151,7 +153,7 @@ func TestGloveAlpha(t *testing.T) {
 func TestGloveInvalidSolverBuild(t *testing.T) {
 	b := &GloveBuilder{}
 
-	b.Solver("fake_solver")
+	b.Solver(glove.SolverType(10))
 
 	if _, err := b.Build(); err == nil {
 		t.Errorf("Expected to fail building with invalid solver except for sgd|adagrad: %v", b.solver)

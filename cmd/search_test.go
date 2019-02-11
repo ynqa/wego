@@ -25,7 +25,7 @@ const searchFlagSize = 2
 func TestSearchBind(t *testing.T) {
 	defer viper.Reset()
 
-	searchBind(SearchCmd)
+	searchBind(searchCmd)
 
 	if len(viper.AllKeys()) != searchFlagSize {
 		t.Errorf("Expected searchBind maps %v keys: %v",

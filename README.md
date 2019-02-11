@@ -20,6 +20,8 @@ Wego provides CLI that includes not only training model for embedding but also s
 
 🎃 GloVe: Global Vectors for Word Representation [[pdf]](http://nlp.stanford.edu/pubs/glove.pdf)
 
+🎃 LexVec: Matrix Factorization using Window Sampling and Negative Sampling for Improved Word Representations [[pdf]](http://anthology.aclweb.org/P16-2068)
+
 ## Why Go?
 
 [Data Science in Go](https://speakerdeck.com/chewxy/data-science-in-go) @chewxy
@@ -42,8 +44,6 @@ $ sh demo.sh
 ## Usage
 
 ```
-tools for embedding words into vector space
-
 Usage:
   wego [flags]
   wego [command]
@@ -51,18 +51,17 @@ Usage:
 Available Commands:
   glove       GloVe: Global Vectors for Word Representation
   help        Help about any command
+  lexvec      Lexvec: Matrix Factorization using Window Sampling and Negative Sampling for Improved Word Representations
   repl        Search similar words with REPL mode
   search      Search similar words
   word2vec    Word2Vec: Continuous Bag-of-Words and Skip-gram model
 
 Flags:
   -h, --help   help for wego
-
-Use "wego [command] --help" for more information about a command.
 ```
 
 For more information about each sub-command, see below:
-[word2vec](./model/README.md), [glove](./model/README.md), [search](./search/README.md), [repl](./repl/README.md)
+[word2vec](./model/README.md#Word2Vec), [glove](./model/README.md#GloVe), [lexvec](./model/README.md#Lexvec), [search](./search/README.md), [repl](./repl/README.md)
 
 ## File I/O
 
@@ -85,6 +84,7 @@ package main
 
 import (
 	"github.com/ynqa/wego/builder"
+	"github.com/ynqa/wego/model/word2vec"
 )
 
 func main() {
@@ -93,8 +93,8 @@ func main() {
 	b.InputFile("text8").
 		Dimension(10).
 		Window(5).
-		Model("cbow").
-		Optimizer("ns").
+		Model(word2vec.CBOW).
+		Optimizer(word2vec.NEGATIVE_SAMPLING).
 		NegativeSampleSize(5).
 		Verbose()
 

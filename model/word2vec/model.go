@@ -18,3 +18,21 @@ package word2vec
 type Model interface {
 	trainOne(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer)
 }
+
+type ModelType int
+
+const (
+	CBOW ModelType = iota
+	SKIP_GRAM
+)
+
+func (t ModelType) String() string {
+	switch t {
+	case CBOW:
+		return "cbow"
+	case SKIP_GRAM:
+		return "skip-gram"
+	default:
+		return "unknown"
+	}
+}

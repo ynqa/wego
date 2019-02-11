@@ -16,6 +16,11 @@ package config
 
 import (
 	"runtime"
+
+	"github.com/ynqa/wego/corpus"
+	"github.com/ynqa/wego/model"
+	"github.com/ynqa/wego/model/glove"
+	"github.com/ynqa/wego/model/word2vec"
 )
 
 // Config is enum of the common config.
@@ -34,24 +39,58 @@ const (
 	Prof
 	ToLower
 	Verbose
+	SaveVectorType
+	// Word2Vec
+	Model
+	Optimizer
+	BatchSize
+	MaxDepth
+	NegativeSampleSize
+	SubsampleThreshold
+	Theta
+	// GloVe
+	Solver
+	Xmax
+	Alpha
+	// Lexvec
+	RelationType
+	Smooth
+	// Search
+	Rank
 )
 
 // The defaults of Config.
-const (
-	DefaultInputFile  string  = "example/input.txt"
-	DefaultOutputFile string  = "example/word_vectors.txt"
-	DefaultDimension  int     = 10
-	DefaultIteration  int     = 15
-	DefaultMinCount   int     = 5
-	DefaultWindow     int     = 5
-	DefaultInitlr     float64 = 0.025
-	DefaultProf       bool    = false
-	DefaultToLower    bool    = false
-	DefaultVerbose    bool    = false
+var (
+	DefaultInputFile      string               = "example/input.txt"
+	DefaultOutputFile     string               = "example/word_vectors.txt"
+	DefaultDimension      int                  = 10
+	DefaultIteration      int                  = 15
+	DefaultMinCount       int                  = 5
+	DefaultWindow         int                  = 5
+	DefaultInitlr         float64              = 0.025
+	DefaultProf           bool                 = false
+	DefaultToLower        bool                 = false
+	DefaultVerbose        bool                 = false
+	DefaultThreadSize                          = runtime.NumCPU()
+	DefaultSaveVectorType model.SaveVectorType = model.NORMAL
+	// Word2Vec
+	DefaultModel              word2vec.ModelType     = word2vec.CBOW
+	DefaultOptimizer          word2vec.OptimizerType = word2vec.NEGATIVE_SAMPLING
+	DefaultBatchSize          int                    = 10000
+	DefaultMaxDepth           int                    = 0
+	DefaultNegativeSampleSize int                    = 5
+	DefaultSubsampleThreshold float64                = 1.0e-3
+	DefaultTheta              float64                = 1.0e-4
+	// GloVe
+	DefaultSolver glove.SolverType = glove.SGD
+	DefaultXmax   int              = 100
+	DefaultAlpha  float64          = 0.75
+	// Lexvex
+	DefaultRelationType corpus.RelationType = corpus.PPMI
+	DefaultSmooth       float64             = 0.75
+	// Search
+	DefaultRank int = 10
 )
-
-// DefaultThreadSize is number of CPU.
-var DefaultThreadSize = runtime.NumCPU()
 
 func (c Config) String() string {
 	switch c {
@@ -77,6 +116,38 @@ func (c Config) String() string {
 		return "lower"
 	case Verbose:
 		return "verbose"
+	case SaveVectorType:
+		return "save-vec"
+	// Word2Vec
+	case Model:
+		return "model"
+	case Optimizer:
+		return "optimizer"
+	case BatchSize:
+		return "batchSize"
+	case MaxDepth:
+		return "maxDepth"
+	case NegativeSampleSize:
+		return "sample"
+	case SubsampleThreshold:
+		return "threshold"
+	case Theta:
+		return "theta"
+	// GloVe
+	case Solver:
+		return "solver"
+	case Xmax:
+		return "xmax"
+	case Alpha:
+		return "alpha"
+	// Lexvec
+	case RelationType:
+		return "rel"
+	case Smooth:
+		return "smooth"
+	// Search
+	case Rank:
+		return "rank"
 	default:
 		return "unknown"
 	}

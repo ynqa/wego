@@ -65,13 +65,13 @@ type Word2vec struct {
 // NewWord2vec creates *Word2Vec.
 func NewWord2vec(f io.ReadCloser, config *model.Config, mod Model, opt Optimizer,
 	batchSize int, subsampleThreshold, theta float64) (*Word2vec, error) {
-	cps, err := corpus.NewWord2vecCorpus(f, config.ToLower, config.MinCount)
-	if err != nil {
+	c := corpus.NewWord2vecCorpus()
+	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Word2vec")
 	}
 	word2vec := &Word2vec{
 		Config:         config,
-		Word2vecCorpus: cps,
+		Word2vecCorpus: c,
 
 		mod: mod,
 		opt: opt,
@@ -142,7 +142,7 @@ func (w *Word2vec) Train() error {
 }
 
 func (w *Word2vec) trainPerThread(document []int,
-	trainOne func(wordIDs []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer),
+	trainOne func(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer),
 	semaphore chan struct{}, waitGroup *sync.WaitGroup) {
 
 	defer func() {
@@ -203,17 +203,42 @@ func (w *Word2vec) Save(outputPath string) error {
 		file.Close()
 	}()
 
+	wordSize := w.Size()
+	if w.Config.Verbose {
+		fmt.Println("Save:")
+		w.progress = pb.New(wordSize).SetWidth(80)
+		defer w.progress.Finish()
+		w.progress.Start()
+	}
+
+	var contextVector []float64
+	switch opt := w.opt.(type) {
+	case *NegativeSampling:
+		contextVector = opt.ContextVector
+	}
+
 	var buf bytes.Buffer
-	for i := 0; i < w.Size(); i++ {
+	for i := 0; i < wordSize; i++ {
 		word, _ := w.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
 		for j := 0; j < w.Config.Dimension; j++ {
-			fmt.Fprintf(&buf, "%f ", w.vector[i*w.Config.Dimension+j])
+			var v float64
+			l := i*w.Config.Dimension + j
+			switch {
+			case w.SaveVectorType == model.ADD && len(contextVector) != 0:
+				v = w.vector[l] + contextVector[l]
+			case w.SaveVectorType == model.NORMAL:
+				v = w.vector[l]
+			default:
+				return errors.Errorf("Invalid case to save vector type=%s", w.SaveVectorType)
+			}
+			fmt.Fprintf(&buf, "%f ", v)
 		}
 		fmt.Fprintln(&buf)
+		if w.Config.Verbose {
+			w.progress.Increment()
+		}
 	}
-
 	wr.WriteString(fmt.Sprintf("%v", buf.String()))
-
 	return nil
 }

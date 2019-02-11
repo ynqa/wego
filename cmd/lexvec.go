@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2019 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,12 +27,12 @@ import (
 	"github.com/ynqa/wego/validate"
 )
 
-var word2vecCmd = &cobra.Command{
-	Use:   "word2vec",
-	Short: "Word2Vec: Continuous Bag-of-Words and Skip-gram model",
+var lexvecCmd = &cobra.Command{
+	Use:   "lexvec",
+	Short: "Lexvec: Matrix Factorization using Window Sampling and Negative Sampling for Improved Word Representations",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		bindConfig(cmd)
-		bindWord2vec(cmd)
+		bindLexvec(cmd)
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if viper.GetBool(config.Prof.String()) {
@@ -43,49 +43,42 @@ var word2vecCmd = &cobra.Command{
 			pprof.StartCPUProfile(f)
 			defer pprof.StopCPUProfile()
 		}
-
-		return runWord2vec()
+		return runLexvec()
 	},
 }
 
 func init() {
-	word2vecCmd.Flags().AddFlagSet(configFlagSet())
-	word2vecCmd.Flags().String(config.Model.String(), config.DefaultModel.String(),
-		"which model does it use? one of: cbow|skip-gram")
-	word2vecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer.String(),
-		"which optimizer does it use? one of: hs|ns")
-	word2vecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
+	lexvecCmd.Flags().AddFlagSet(configFlagSet())
+	lexvecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
 		"interval word size to update learning rate")
-	word2vecCmd.Flags().Int(config.MaxDepth.String(), config.DefaultMaxDepth,
-		"times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
-	word2vecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
+	lexvecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
 		"negative sample size(for negative sampling only)")
-	word2vecCmd.Flags().Float64(config.SubsampleThreshold.String(), config.DefaultSubsampleThreshold,
-		"threshold for subsampling")
-	word2vecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
+	lexvecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
 		"lower limit of learning rate (lr >= initlr * theta)")
+	lexvecCmd.Flags().Float64(config.Smooth.String(), config.DefaultSmooth,
+		"smoothing value")
+	lexvecCmd.Flags().String(config.RelationType.String(), config.DefaultRelationType.String(),
+		"relation type for counting co-occurrence. One of ppmi|pmi|co|logco")
 }
 
-func bindWord2vec(cmd *cobra.Command) {
-	viper.BindPFlag(config.Model.String(), cmd.Flags().Lookup(config.Model.String()))
-	viper.BindPFlag(config.Optimizer.String(), cmd.Flags().Lookup(config.Optimizer.String()))
+func bindLexvec(cmd *cobra.Command) {
 	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
-	viper.BindPFlag(config.MaxDepth.String(), cmd.Flags().Lookup(config.MaxDepth.String()))
 	viper.BindPFlag(config.NegativeSampleSize.String(), cmd.Flags().Lookup(config.NegativeSampleSize.String()))
-	viper.BindPFlag(config.SubsampleThreshold.String(), cmd.Flags().Lookup(config.SubsampleThreshold.String()))
 	viper.BindPFlag(config.Theta.String(), cmd.Flags().Lookup(config.Theta.String()))
+	viper.BindPFlag(config.Smooth.String(), cmd.Flags().Lookup(config.Smooth.String()))
+	viper.BindPFlag(config.RelationType.String(), cmd.Flags().Lookup(config.RelationType.String()))
 }
 
-func runWord2vec() error {
+func runLexvec() error {
 	outputFile := viper.GetString(config.OutputFile.String())
 	if validate.FileExists(outputFile) {
 		return errors.Errorf("%s is already existed", outputFile)
 	}
-	w2v, err := builder.NewWord2vecBuilderFromViper()
+	lexvec, err := builder.NewLexvecBuilderFromViper()
 	if err != nil {
 		return err
 	}
-	mod, err := w2v.Build()
+	mod, err := lexvec.Build()
 	if err != nil {
 		return err
 	}

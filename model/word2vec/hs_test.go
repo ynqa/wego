@@ -34,9 +34,11 @@ func TestHSInit(t *testing.T) {
 	hs := NewHierarchicalSoftmax(maxDepth)
 
 	dimension := 10
-	hs.initialize(corpus.TestWord2vecCorpus, dimension)
+	c := corpus.NewWord2vecCorpus()
+	c.Parse(corpus.FakeSeeker, true, 0)
+	hs.initialize(c, dimension)
 
-	expectedNodeMapSize := corpus.TestWord2vecCorpus.Size()
+	expectedNodeMapSize := c.Size()
 	if len(hs.nodeMap) != expectedNodeMapSize {
 		t.Errorf("HierarchicalSoftmax: Init returns nodeMap with length=%v: %v",
 			expectedNodeMapSize, len(hs.nodeMap))

@@ -24,7 +24,7 @@ import (
 	"github.com/ynqa/wego/repl"
 )
 
-var ReplCmd = &cobra.Command{
+var replCmd = &cobra.Command{
 	Use:   "repl",
 	Short: "Search similar words with REPL mode",
 	Long:  "Search similar words with REPL mode",
@@ -40,9 +40,9 @@ var ReplCmd = &cobra.Command{
 }
 
 func init() {
-	ReplCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
+	replCmd.Flags().StringP(config.InputFile.String(), "i", config.DefaultOutputFile,
 		"input file path for trained word vector")
-	ReplCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
+	replCmd.Flags().IntP(config.Rank.String(), "r", config.DefaultRank,
 		"how many the most similar words will be displayed")
 }
 

@@ -16,7 +16,23 @@ package glove
 
 // Solver is the interface for training with GloVe.
 type Solver interface {
-	initialize(vectorSize int)
 	trainOne(l1, l2 int, f, coefficient float64, vector []float64) (cost float64)
-	postOneIter()
+}
+
+type SolverType int
+
+const (
+	SGD SolverType = iota
+	ADAGRAD
+)
+
+func (t SolverType) String() string {
+	switch t {
+	case SGD:
+		return "sgd"
+	case ADAGRAD:
+		return "adagrad"
+	default:
+		return "unknown"
+	}
 }

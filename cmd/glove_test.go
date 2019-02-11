@@ -25,7 +25,7 @@ const gloveFlagSize = 3
 func TestGloveBind(t *testing.T) {
 	defer viper.Reset()
 
-	gloveBind(GloveCmd)
+	bindGlove(gloveCmd)
 
 	if len(viper.AllKeys()) != gloveFlagSize {
 		t.Errorf("Expected gloveBind maps %v keys: %v",
@@ -37,10 +37,10 @@ func TestGloveCmdPreRun(t *testing.T) {
 	defer viper.Reset()
 
 	var empty []string
-	GloveCmd.PreRun(GloveCmd, empty)
+	gloveCmd.PreRun(gloveCmd, empty)
 
 	if len(viper.AllKeys()) != gloveFlagSize+configFlagSize {
-		t.Errorf("Expected PreRun of GloveCmd maps %v keys: %v",
+		t.Errorf("Expected PreRun of gloveCmd maps %v keys: %v",
 			gloveFlagSize+configFlagSize, viper.AllKeys())
 	}
 }

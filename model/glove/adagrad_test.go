@@ -57,7 +57,6 @@ func TestAdaGradCallBack(t *testing.T) {
 	solver := NewAdaGrad(dimension, initlr)
 
 	before := solver.initlr
-	solver.postOneIter()
 	after := solver.initlr
 
 	if before != after {
