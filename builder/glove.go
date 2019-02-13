@@ -199,8 +199,17 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 		return nil, err
 	}
 
-	cnf := model.NewConfig(gb.dimension, gb.iteration, gb.minCount, gb.threadSize, gb.window,
-		gb.initlr, gb.toLower, gb.verbose, gb.saveVectorType)
+	o := &model.Option{
+		Dimension:      gb.dimension,
+		Iteration:      gb.iteration,
+		MinCount:       gb.minCount,
+		ThreadSize:     gb.threadSize,
+		Window:         gb.window,
+		Initlr:         gb.initlr,
+		ToLower:        gb.toLower,
+		Verbose:        gb.verbose,
+		SaveVectorType: gb.saveVectorType,
+	}
 
 	var solver glove.Solver
 	switch gb.solver {
@@ -212,5 +221,11 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Invalid solver: %s not in sgd|adagrad", gb.solver)
 	}
 
-	return glove.NewGlove(input, cnf, solver, gb.xmax, gb.alpha)
+	g := &glove.GloveOption{
+		Solver: solver,
+		Xmax:   gb.xmax,
+		Alpha:  gb.alpha,
+	}
+
+	return glove.NewGlove(input, o, g)
 }

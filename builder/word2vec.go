@@ -242,13 +242,26 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Not such a file %s", wb.inputFile)
 	}
 
+	if wb.optimizer == word2vec.HIERARCHICAL_SOFTMAX && wb.saveVectorType == model.ADD {
+		return nil, errors.Errorf("Invalid pair of optimizer=%s and save vector type=%s", wb.optimizer, wb.saveVectorType)
+	}
+
 	input, err := os.Open(wb.inputFile)
 	if err != nil {
 		return nil, err
 	}
 
-	cnf := model.NewConfig(wb.dimension, wb.iteration, wb.minCount, wb.threadSize, wb.window,
-		wb.initlr, wb.toLower, wb.verbose, wb.saveVectorType)
+	o := &model.Option{
+		Dimension:      wb.dimension,
+		Iteration:      wb.iteration,
+		MinCount:       wb.minCount,
+		ThreadSize:     wb.threadSize,
+		Window:         wb.window,
+		Initlr:         wb.initlr,
+		ToLower:        wb.toLower,
+		Verbose:        wb.verbose,
+		SaveVectorType: wb.saveVectorType,
+	}
 
 	var opt word2vec.Optimizer
 	switch wb.optimizer {
@@ -270,10 +283,13 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 		return nil, errors.Errorf("Invalid model: %s not in cbow|skip-gram", wb.model)
 	}
 
-	if wb.optimizer == word2vec.HIERARCHICAL_SOFTMAX && wb.saveVectorType == model.ADD {
-		return nil, errors.Errorf("Invalid pair of optimizer=%s and save vector type=%s", wb.optimizer, wb.saveVectorType)
+	w := &word2vec.Word2vecOption{
+		Mod:                mod,
+		Opt:                opt,
+		BatchSize:          wb.batchSize,
+		SubsampleThreshold: wb.subsampleThreshold,
+		Theta:              wb.theta,
 	}
 
-	return word2vec.NewWord2vec(input, cnf, mod, opt,
-		wb.batchSize, wb.subsampleThreshold, wb.theta)
+	return word2vec.NewWord2vec(input, o, w)
 }

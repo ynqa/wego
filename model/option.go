@@ -14,8 +14,8 @@
 
 package model
 
-// Config stores the configs for each model.
-type Config struct {
+// Option stores common options for each model.
+type Option struct {
 	Dimension      int
 	Iteration      int
 	MinCount       int
@@ -25,21 +25,4 @@ type Config struct {
 	ToLower        bool
 	Verbose        bool
 	SaveVectorType SaveVectorType
-}
-
-// NewConfig creates *Config
-func NewConfig(dimension, iteration, minCount, threadSize, window int,
-	initlr float64, toLower, verbose bool, saveVectorType SaveVectorType) *Config {
-
-	return &Config{
-		Dimension:      dimension,
-		Iteration:      iteration,
-		MinCount:       minCount,
-		ThreadSize:     threadSize,
-		Window:         window,
-		Initlr:         initlr,
-		ToLower:        toLower,
-		Verbose:        verbose,
-		SaveVectorType: saveVectorType,
-	}
 }

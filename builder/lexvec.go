@@ -226,9 +226,26 @@ func (lb *LexvecBuilder) Build() (model.Model, error) {
 		return nil, err
 	}
 
-	cnf := model.NewConfig(lb.dimension, lb.iteration, lb.minCount, lb.threadSize, lb.window,
-		lb.initlr, lb.toLower, lb.verbose, lb.saveVectorType)
+	o := &model.Option{
+		Dimension:      lb.dimension,
+		Iteration:      lb.iteration,
+		MinCount:       lb.minCount,
+		ThreadSize:     lb.threadSize,
+		Window:         lb.window,
+		Initlr:         lb.initlr,
+		ToLower:        lb.toLower,
+		Verbose:        lb.verbose,
+		SaveVectorType: lb.saveVectorType,
+	}
 
-	return lexvec.NewLexvec(input, cnf, lb.batchSize, lb.negativeSampleSize,
-		lb.subsampleThreshold, lb.theta, lb.smooth, lb.relationType)
+	l := &lexvec.LexvecOption{
+		BatchSize:          lb.batchSize,
+		NegativeSampleSize: lb.negativeSampleSize,
+		SubSampleThreshold: lb.subsampleThreshold,
+		Theta:              lb.theta,
+		Smooth:             lb.smooth,
+		RelationType:       lb.relationType,
+	}
+
+	return lexvec.NewLexvec(input, o, l)
 }

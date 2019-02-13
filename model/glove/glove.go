@@ -32,16 +32,17 @@ import (
 	"github.com/ynqa/wego/model"
 )
 
+type GloveOption struct {
+	Solver Solver
+	Xmax   int
+	Alpha  float64
+}
+
 // Glove stores the configs for Glove models.
 type Glove struct {
-	*model.Config
+	*model.Option
+	*GloveOption
 	*corpus.CountModelCorpus
-
-	solver Solver
-
-	// given parameters.
-	xmax  int
-	alpha float64
 
 	// word pairs.
 	pairs []corpus.Pair
@@ -57,20 +58,15 @@ type Glove struct {
 }
 
 // NewGlove creates *Glove.
-func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
-	xmax int, alpha float64) (*Glove, error) {
+func NewGlove(f io.ReadCloser, option *model.Option, gloveOption *GloveOption) (*Glove, error) {
 	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
 	}
 	glove := &Glove{
-		Config:           config,
+		Option:           option,
+		GloveOption:      gloveOption,
 		CountModelCorpus: c,
-
-		solver: solver,
-
-		xmax:  xmax,
-		alpha: alpha,
 	}
 	if err := glove.initialize(); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
@@ -80,20 +76,20 @@ func NewGlove(f io.ReadCloser, config *model.Config, solver Solver,
 
 func (g *Glove) initialize() (err error) {
 	// Build pairs based on co-occurrence.
-	g.pairs, err = g.CountModelCorpus.PairsIntoGlove(g.Window, g.xmax, g.alpha, g.Verbose)
+	g.pairs, err = g.CountModelCorpus.PairsIntoGlove(g.Window, g.Xmax, g.Alpha, g.Verbose)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to initialize for GloVe")
 	}
 
 	// Initialize word vector.
-	vectorSize := g.CountModelCorpus.Size() * (g.Config.Dimension + 1) * 2
+	vectorSize := g.CountModelCorpus.Size() * (g.Dimension + 1) * 2
 	g.vector = make([]float64, vectorSize)
 	for i := 0; i < vectorSize; i++ {
-		g.vector[i] = rand.Float64() / float64(g.Config.Dimension)
+		g.vector[i] = rand.Float64() / float64(g.Dimension)
 	}
 
 	// Initialize solver.
-	switch solver := g.solver.(type) {
+	switch solver := g.Solver.(type) {
 	case *AdaGrad:
 		solver.initialize(vectorSize)
 	}
@@ -107,9 +103,9 @@ func (g *Glove) Train() error {
 		return errors.Errorf("No pairs for training")
 	}
 
-	g.indexPerThread = model.IndexPerThread(g.Config.ThreadSize, pairSize)
+	g.indexPerThread = model.IndexPerThread(g.ThreadSize, pairSize)
 
-	semaphore := make(chan struct{}, g.Config.ThreadSize)
+	semaphore := make(chan struct{}, g.ThreadSize)
 	waitGroup := &sync.WaitGroup{}
 
 	for i := 1; i <= g.Iteration; i++ {
@@ -119,19 +115,19 @@ func (g *Glove) Train() error {
 			g.progress.Start()
 		}
 
-		for j := 0; j < g.Config.ThreadSize; j++ {
+		for j := 0; j < g.ThreadSize; j++ {
 			waitGroup.Add(1)
 			go g.trainPerThread(g.indexPerThread[j], g.indexPerThread[j+1],
 				semaphore, waitGroup)
 		}
 
-		switch solver := g.solver.(type) {
+		switch solver := g.Solver.(type) {
 		case *Sgd:
 			solver.postOneIter()
 		}
 
 		waitGroup.Wait()
-		if g.Config.Verbose {
+		if g.Verbose {
 			g.progress.Finish()
 		}
 	}
@@ -148,16 +144,16 @@ func (g *Glove) trainPerThread(beginIdx, endIdx int,
 
 	semaphore <- struct{}{}
 	for i := beginIdx; i < endIdx; i++ {
-		if g.Config.Verbose {
+		if g.Verbose {
 			g.progress.Increment()
 		}
 		pair := g.pairs[i]
-		l1 := pair.L1 * (g.Config.Dimension + 1)
-		l2 := (pair.L2 + g.CountModelCorpus.Size()) * (g.Config.Dimension + 1)
-		g.solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
-		ll1 := (pair.L1 + g.CountModelCorpus.Size()) * (g.Config.Dimension + 1)
-		ll2 := pair.L2 * (g.Config.Dimension + 1)
-		g.solver.trainOne(ll1, ll2, pair.F, pair.Coefficient, g.vector)
+		l1 := pair.L1 * (g.Dimension + 1)
+		l2 := (pair.L2 + g.CountModelCorpus.Size()) * (g.Dimension + 1)
+		g.Solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
+		ll1 := (pair.L1 + g.CountModelCorpus.Size()) * (g.Dimension + 1)
+		ll2 := pair.L2 * (g.Dimension + 1)
+		g.Solver.trainOne(ll1, ll2, pair.F, pair.Coefficient, g.vector)
 	}
 }
 
@@ -187,7 +183,7 @@ func (g *Glove) Save(outputPath string) error {
 	}()
 
 	wordSize := g.CountModelCorpus.Size()
-	if g.Config.Verbose {
+	if g.Verbose {
 		fmt.Println("Save:")
 		g.progress = pb.New(wordSize).SetWidth(80)
 		defer g.progress.Finish()
@@ -198,14 +194,14 @@ func (g *Glove) Save(outputPath string) error {
 	for i := 0; i < wordSize; i++ {
 		word, _ := g.CountModelCorpus.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < g.Config.Dimension; j++ {
-			l1 := i*(g.Config.Dimension+1) + j
+		for j := 0; j < g.Dimension; j++ {
+			l1 := i*(g.Dimension+1) + j
 			var v float64
 			switch g.SaveVectorType {
 			case model.NORMAL:
 				v = g.vector[l1]
 			case model.ADD:
-				l2 := (i+wordSize)*(g.Config.Dimension+1) + j
+				l2 := (i+wordSize)*(g.Dimension+1) + j
 				v = g.vector[l1] + g.vector[l2]
 			default:
 				return errors.Errorf("Invalid save vector type=%s", g.SaveVectorType)
@@ -214,7 +210,7 @@ func (g *Glove) Save(outputPath string) error {
 			fmt.Fprintf(&buf, "%v ", v)
 		}
 		fmt.Fprintln(&buf)
-		if g.Config.Verbose {
+		if g.Verbose {
 			g.progress.Increment()
 		}
 	}

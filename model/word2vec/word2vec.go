@@ -33,19 +33,21 @@ import (
 	"github.com/ynqa/wego/model"
 )
 
+type Word2vecOption struct {
+	Mod                Model
+	Opt                Optimizer
+	BatchSize          int
+	SubsampleThreshold float64
+	Theta              float64
+}
+
 // Word2vec stores the configs for Word2vec models.
 type Word2vec struct {
-	*model.Config
+	*model.Option
+	*Word2vecOption
 	*corpus.Word2vecCorpus
 
-	mod Model
-	opt Optimizer
-
-	// given parameters.
-	batchSize          int
-	subsampleThreshold float64
-	subSamples         []float64
-	theta              float64
+	subSamples []float64
 
 	// words' vector.
 	vector []float64
@@ -63,24 +65,17 @@ type Word2vec struct {
 }
 
 // NewWord2vec creates *Word2Vec.
-func NewWord2vec(f io.ReadCloser, config *model.Config, mod Model, opt Optimizer,
-	batchSize int, subsampleThreshold, theta float64) (*Word2vec, error) {
+func NewWord2vec(f io.ReadCloser, option *model.Option, word2vecOption *Word2vecOption) (*Word2vec, error) {
 	c := corpus.NewWord2vecCorpus()
-	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Word2vec")
 	}
 	word2vec := &Word2vec{
-		Config:         config,
+		Option:         option,
+		Word2vecOption: word2vecOption,
 		Word2vecCorpus: c,
 
-		mod: mod,
-		opt: opt,
-
-		subsampleThreshold: subsampleThreshold,
-		batchSize:          batchSize,
-		theta:              theta,
-
-		currentlr: config.Initlr,
+		currentlr: option.Initlr,
 		trained:   make(chan struct{}),
 	}
 	word2vec.initialize()
@@ -92,19 +87,19 @@ func (w *Word2vec) initialize() {
 	w.subSamples = make([]float64, w.Word2vecCorpus.Size())
 	for i := 0; i < w.Word2vecCorpus.Size(); i++ {
 		z := float64(w.Word2vecCorpus.IDFreq(i)) / float64(w.Word2vecCorpus.TotalFreq())
-		w.subSamples[i] = (math.Sqrt(z/w.subsampleThreshold) + 1.0) *
-			w.subsampleThreshold / z
+		w.subSamples[i] = (math.Sqrt(z/w.SubsampleThreshold) + 1.0) *
+			w.SubsampleThreshold / z
 	}
 
 	// Initialize word vector.
-	vectorSize := w.Word2vecCorpus.Size() * w.Config.Dimension
+	vectorSize := w.Word2vecCorpus.Size() * w.Dimension
 	w.vector = make([]float64, vectorSize)
 	for i := 0; i < vectorSize; i++ {
-		w.vector[i] = (rand.Float64() - 0.5) / float64(w.Config.Dimension)
+		w.vector[i] = (rand.Float64() - 0.5) / float64(w.Dimension)
 	}
 
 	// Initialize optimizer.
-	w.opt.initialize(w.Word2vecCorpus, w.Config.Dimension)
+	w.Opt.initialize(w.Word2vecCorpus, w.Dimension)
 }
 
 // Train trains words' vector on corpus.
@@ -115,26 +110,26 @@ func (w *Word2vec) Train() error {
 		return errors.New("No words for training")
 	}
 
-	w.indexPerThread = model.IndexPerThread(w.Config.ThreadSize, documentSize)
+	w.indexPerThread = model.IndexPerThread(w.ThreadSize, documentSize)
 
-	for i := 1; i <= w.Config.Iteration; i++ {
-		if w.Config.Verbose {
+	for i := 1; i <= w.Iteration; i++ {
+		if w.Verbose {
 			fmt.Printf("Train %d-th:\n", i)
 			w.progress = pb.New(documentSize).SetWidth(80)
 			w.progress.Start()
 		}
 		go w.observeLearningRate()
 
-		semaphore := make(chan struct{}, w.Config.ThreadSize)
+		semaphore := make(chan struct{}, w.ThreadSize)
 		waitGroup := &sync.WaitGroup{}
 
-		for j := 0; j < w.Config.ThreadSize; j++ {
+		for j := 0; j < w.ThreadSize; j++ {
 			waitGroup.Add(1)
-			go w.trainPerThread(document[w.indexPerThread[j]:w.indexPerThread[j+1]], w.mod.trainOne,
+			go w.trainPerThread(document[w.indexPerThread[j]:w.indexPerThread[j+1]], w.Mod.trainOne,
 				semaphore, waitGroup)
 		}
 		waitGroup.Wait()
-		if w.Config.Verbose {
+		if w.Verbose {
 			w.progress.Finish()
 		}
 	}
@@ -152,7 +147,7 @@ func (w *Word2vec) trainPerThread(document []int,
 
 	semaphore <- struct{}{}
 	for idx, wordID := range document {
-		if w.Config.Verbose {
+		if w.Verbose {
 			w.progress.Increment()
 		}
 
@@ -161,7 +156,7 @@ func (w *Word2vec) trainPerThread(document []int,
 		if p < bernoulliTrial {
 			continue
 		}
-		trainOne(document, idx, w.vector, w.currentlr, w.opt)
+		trainOne(document, idx, w.vector, w.currentlr, w.Opt)
 		w.trained <- struct{}{}
 	}
 }
@@ -169,10 +164,10 @@ func (w *Word2vec) trainPerThread(document []int,
 func (w *Word2vec) observeLearningRate() {
 	for range w.trained {
 		w.trainedWordCount++
-		if w.trainedWordCount%w.batchSize == 0 {
-			w.currentlr = w.Config.Initlr * (1.0 - float64(w.trainedWordCount)/float64(w.TotalFreq()))
-			if w.currentlr < w.Config.Initlr*w.theta {
-				w.currentlr = w.Config.Initlr * w.theta
+		if w.trainedWordCount%w.BatchSize == 0 {
+			w.currentlr = w.Initlr * (1.0 - float64(w.trainedWordCount)/float64(w.TotalFreq()))
+			if w.currentlr < w.Initlr*w.Theta {
+				w.currentlr = w.Initlr * w.Theta
 			}
 		}
 	}
@@ -204,7 +199,7 @@ func (w *Word2vec) Save(outputPath string) error {
 	}()
 
 	wordSize := w.Size()
-	if w.Config.Verbose {
+	if w.Verbose {
 		fmt.Println("Save:")
 		w.progress = pb.New(wordSize).SetWidth(80)
 		defer w.progress.Finish()
@@ -212,7 +207,7 @@ func (w *Word2vec) Save(outputPath string) error {
 	}
 
 	var contextVector []float64
-	switch opt := w.opt.(type) {
+	switch opt := w.Opt.(type) {
 	case *NegativeSampling:
 		contextVector = opt.ContextVector
 	}
@@ -221,9 +216,9 @@ func (w *Word2vec) Save(outputPath string) error {
 	for i := 0; i < wordSize; i++ {
 		word, _ := w.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < w.Config.Dimension; j++ {
+		for j := 0; j < w.Dimension; j++ {
 			var v float64
-			l := i*w.Config.Dimension + j
+			l := i*w.Dimension + j
 			switch {
 			case w.SaveVectorType == model.ADD && len(contextVector) != 0:
 				v = w.vector[l] + contextVector[l]
@@ -235,7 +230,7 @@ func (w *Word2vec) Save(outputPath string) error {
 			fmt.Fprintf(&buf, "%f ", v)
 		}
 		fmt.Fprintln(&buf)
-		if w.Config.Verbose {
+		if w.Verbose {
 			w.progress.Increment()
 		}
 	}

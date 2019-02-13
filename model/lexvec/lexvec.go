@@ -34,19 +34,22 @@ import (
 	"github.com/ynqa/wego/model"
 )
 
+type LexvecOption struct {
+	BatchSize          int
+	NegativeSampleSize int
+	SubSampleThreshold float64
+	Theta              float64
+	Smooth             float64
+	RelationType       corpus.RelationType
+}
+
 // Lexvec stores the configs for Lexvec models.
 type Lexvec struct {
-	*model.Config
+	*model.Option
+	*LexvecOption
 	*corpus.CountModelCorpus
 
-	// hyper parameters.
-	batchSize          int
-	negativeSampleSize int
-	subSampleThreshold float64
-	subSamples         []float64
-	theta              float64
-	smooth             float64
-	relationType       corpus.RelationType
+	subSamples []float64
 
 	// word pairs.
 	pairs corpus.PairMap
@@ -67,24 +70,17 @@ type Lexvec struct {
 }
 
 // NewLexvec create *Lexvec.
-func NewLexvec(f io.ReadCloser, config *model.Config, batchSize, negativeSampleSize int,
-	subSampleThreshold, theta, smooth float64, relationType corpus.RelationType) (*Lexvec, error) {
+func NewLexvec(f io.ReadCloser, option *model.Option, lexvecOption *LexvecOption) (*Lexvec, error) {
 	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, config.ToLower, config.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Lexvec")
 	}
 	lexvec := &Lexvec{
-		Config:           config,
+		Option:           option,
+		LexvecOption:     lexvecOption,
 		CountModelCorpus: c,
 
-		batchSize:          batchSize,
-		subSampleThreshold: subSampleThreshold,
-		theta:              theta,
-		relationType:       relationType,
-		negativeSampleSize: negativeSampleSize,
-		smooth:             smooth,
-
-		currentlr: config.Initlr,
+		currentlr: option.Initlr,
 		trained:   make(chan struct{}),
 	}
 	lexvec.initialize()
@@ -93,12 +89,12 @@ func NewLexvec(f io.ReadCloser, config *model.Config, batchSize, negativeSampleS
 
 func (l *Lexvec) initialize() (err error) {
 	// Build pairs based on co-occurrence.
-	l.pairs, err = l.CountModelCorpus.PairsIntoLexvec(l.Window, l.relationType, l.smooth, l.Verbose)
+	l.pairs, err = l.CountModelCorpus.PairsIntoLexvec(l.Window, l.RelationType, l.Smooth, l.Verbose)
 
 	// Store subsample before training.
 	l.subSamples = make([]float64, l.Corpus.Size())
 	for i := 0; i < l.Corpus.Size(); i++ {
-		z := 1. - math.Sqrt(l.subSampleThreshold/float64(l.IDFreq(i)))
+		z := 1. - math.Sqrt(l.SubSampleThreshold/float64(l.IDFreq(i)))
 		if z < 0 {
 			z = 0
 		}
@@ -106,10 +102,10 @@ func (l *Lexvec) initialize() (err error) {
 	}
 
 	// Initialize word vector.
-	vectorSize := l.Corpus.Size() * l.Config.Dimension * 2
+	vectorSize := l.Corpus.Size() * l.Dimension * 2
 	l.vector = make([]float64, vectorSize)
 	for i := 0; i < vectorSize; i++ {
-		l.vector[i] = (rand.Float64() - 0.5) / float64(l.Config.Dimension)
+		l.vector[i] = (rand.Float64() - 0.5) / float64(l.Dimension)
 	}
 	return nil
 }
@@ -122,26 +118,26 @@ func (l *Lexvec) Train() error {
 		return errors.New("No words for training")
 	}
 
-	l.indexPerThread = model.IndexPerThread(l.Config.ThreadSize, documentSize)
+	l.indexPerThread = model.IndexPerThread(l.ThreadSize, documentSize)
 
-	for i := 1; i <= l.Config.Iteration; i++ {
-		if l.Config.Verbose {
+	for i := 1; i <= l.Iteration; i++ {
+		if l.Verbose {
 			fmt.Printf("Train %d-th:\n", i)
 			l.progress = pb.New(documentSize).SetWidth(80)
 			l.progress.Start()
 		}
 		go l.observeLearningRate(i)
 
-		semaphore := make(chan struct{}, l.Config.ThreadSize)
+		semaphore := make(chan struct{}, l.ThreadSize)
 		waitGroup := &sync.WaitGroup{}
 
-		for j := 0; j < l.Config.ThreadSize; j++ {
+		for j := 0; j < l.ThreadSize; j++ {
 			waitGroup.Add(1)
 			go l.trainPerThread(document[l.indexPerThread[j]:l.indexPerThread[j+1]], semaphore, waitGroup)
 		}
 
 		waitGroup.Wait()
-		if l.Config.Verbose {
+		if l.Verbose {
 			l.progress.Finish()
 		}
 	}
@@ -155,7 +151,7 @@ func (l *Lexvec) trainPerThread(document []int, semaphore chan struct{}, waitGro
 	}()
 
 	for idx, wordID := range document {
-		if l.Config.Verbose {
+		if l.Verbose {
 			l.progress.Increment()
 		}
 
@@ -185,7 +181,7 @@ func (l *Lexvec) scan(document []int, wordIndex int, wordVector []float64, lr fl
 		l2 := context * l.Dimension
 		encoded := co.EncodeBigram(uint64(word), uint64(context))
 		l.trainOne(l1, l2, l.pairs[encoded])
-		for n := 0; n < l.negativeSampleSize; n++ {
+		for n := 0; n < l.NegativeSampleSize; n++ {
 			sample := model.NextRandom(l.CountModelCorpus.Size())
 			encoded := co.EncodeBigram(uint64(word), uint64(sample))
 			l2 := (sample + l.CountModelCorpus.Size()) * l.Dimension
@@ -211,12 +207,12 @@ func (l *Lexvec) trainOne(l1, l2 int, f float64) {
 func (l *Lexvec) observeLearningRate(iteration int) {
 	for range l.trained {
 		l.trainedWordCount++
-		if l.trainedWordCount%l.batchSize == 0 {
-			l.currentlr = l.Config.Initlr *
+		if l.trainedWordCount%l.BatchSize == 0 {
+			l.currentlr = l.Initlr *
 				(1. - float64(l.trainedWordCount)/
 					(float64(l.Corpus.TotalFreq())-float64(iteration)))
-			if l.currentlr < l.Config.Initlr*l.theta {
-				l.currentlr = l.Config.Initlr * l.theta
+			if l.currentlr < l.Initlr*l.Theta {
+				l.currentlr = l.Initlr * l.Theta
 			}
 		}
 	}
@@ -247,7 +243,7 @@ func (l *Lexvec) Save(outputPath string) error {
 	}()
 
 	wordSize := l.CountModelCorpus.Size()
-	if l.Config.Verbose {
+	if l.Verbose {
 		fmt.Println("Save:")
 		l.progress = pb.New(wordSize).SetWidth(80)
 		defer l.progress.Finish()
@@ -258,14 +254,14 @@ func (l *Lexvec) Save(outputPath string) error {
 	for i := 0; i < wordSize; i++ {
 		word, _ := l.CountModelCorpus.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < l.Config.Dimension; j++ {
-			l1 := i*l.Config.Dimension + j
+		for j := 0; j < l.Dimension; j++ {
+			l1 := i*l.Dimension + j
 			var v float64
 			switch l.SaveVectorType {
 			case model.NORMAL:
 				v = l.vector[l1]
 			case model.ADD:
-				l2 := (i+wordSize)*l.Config.Dimension + j
+				l2 := (i+wordSize)*l.Dimension + j
 				v = l.vector[l1] + l.vector[l2]
 			default:
 				return errors.Errorf("Invalid save vector type=%s", l.SaveVectorType)
@@ -273,7 +269,7 @@ func (l *Lexvec) Save(outputPath string) error {
 			fmt.Fprintf(&buf, "%v ", v)
 		}
 		fmt.Fprintln(&buf)
-		if l.Config.Verbose {
+		if l.Verbose {
 			l.progress.Increment()
 		}
 	}
