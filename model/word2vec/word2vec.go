@@ -64,24 +64,17 @@ type Word2vec struct {
 }
 
 // NewWord2vec creates *Word2Vec.
-func NewWord2vec(f io.ReadCloser, option *model.Option, word2vecOption *Word2vecOption) (*Word2vec, error) {
-	c := corpus.NewWord2vecCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate *Word2vec")
-	}
-	word2vec := &Word2vec{
+func NewWord2vec(option *model.Option, word2vecOption *Word2vecOption) *Word2vec {
+	return &Word2vec{
 		Option:         option,
 		Word2vecOption: word2vecOption,
-		Word2vecCorpus: c,
 
 		currentlr: option.Initlr,
 		trained:   make(chan struct{}),
 	}
-	word2vec.initialize()
-	return word2vec, nil
 }
 
-func (w *Word2vec) initialize() {
+func (w *Word2vec) initialize() error {
 	// Store subsumple before training.
 	w.subSamples = make([]float64, w.Word2vecCorpus.Size())
 	for i := 0; i < w.Word2vecCorpus.Size(); i++ {
@@ -98,12 +91,24 @@ func (w *Word2vec) initialize() {
 	}
 
 	// Initialize optimizer.
-	w.Opt.initialize(w.Word2vecCorpus, w.Dimension)
+	return w.Opt.initialize(w.Word2vecCorpus, w.Dimension)
 }
 
 // Train trains words' vector on corpus.
-func (w *Word2vec) Train() error {
-	document := w.Word2vecCorpus.Document
+func (w *Word2vec) Train(f io.Reader) error {
+	c := corpus.NewWord2vecCorpus()
+	if err := c.Parse(f, w.ToLower, w.MinCount, w.BatchSize, w.Verbose); err != nil {
+		return errors.Wrap(err, "Failed to parse corpus")
+	}
+	w.Word2vecCorpus = c
+	if err := w.initialize(); err != nil {
+		return errors.Wrap(err, "Failed to initialize")
+	}
+	return w.train()
+}
+
+func (w *Word2vec) train() error {
+	document := w.Document
 	documentSize := len(document)
 	if documentSize <= 0 {
 		return errors.New("No words for training")

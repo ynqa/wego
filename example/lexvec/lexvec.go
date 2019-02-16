@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2019 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,35 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package main
 
 import (
-	"io"
+	"os"
+
+	"github.com/ynqa/wego/builder"
+	"github.com/ynqa/wego/corpus"
 )
 
-// Model is the interface that has Train, Save.
-type Model interface {
-	Train(f io.Reader) error
-	Save(outputFile string) error
-}
+func main() {
+	b := builder.NewLexvecBuilder()
 
-// SaveVectorType is a list of types to save model.
-type SaveVectorType int
+	b.Dimension(10).
+		Window(5).
+		RelationType(corpus.PPMI).
+		NegativeSampleSize(5).
+		Verbose()
 
-const (
-	// NORMAL saves word vectors only.
-	NORMAL SaveVectorType = iota
-	// ADD add word to context vectors, and save them.
-	ADD
-)
-
-func (t SaveVectorType) String() string {
-	switch t {
-	case NORMAL:
-		return "normal"
-	case ADD:
-		return "add"
-	default:
-		return "unknown"
+	m, err := b.Build()
+	if err != nil {
+		// Failed to build word2vec.
 	}
+
+	input, _ := os.Open("text8")
+
+	// Start to Train.
+	if err = m.Train(input); err != nil {
+		// Failed to train by word2vec.
+	}
+
+	// Save word vectors to a text file.
+	m.Save("example.txt")
 }

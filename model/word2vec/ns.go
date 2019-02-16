@@ -31,10 +31,10 @@ type NegativeSampling struct {
 
 // NewNegativeSampling creates *NegativeSampling.
 func NewNegativeSampling(sampleSize int) *NegativeSampling {
-	ns := new(NegativeSampling)
-	ns.SigmoidTable = newSigmoidTable()
-	ns.sampleSize = sampleSize
-	return ns
+	return &NegativeSampling{
+		SigmoidTable: newSigmoidTable(),
+		sampleSize:   sampleSize,
+	}
 }
 
 func (ns *NegativeSampling) initialize(cps *corpus.Word2vecCorpus, dimension int) error {

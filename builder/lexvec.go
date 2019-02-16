@@ -15,8 +15,6 @@
 package builder
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
@@ -24,14 +22,10 @@ import (
 	"github.com/ynqa/wego/corpus"
 	"github.com/ynqa/wego/model"
 	"github.com/ynqa/wego/model/lexvec"
-	"github.com/ynqa/wego/validate"
 )
 
 // LexvecBuilder manages the members to build Model interface.
 type LexvecBuilder struct {
-	// input file path.
-	inputFile string
-
 	// common configs.
 	dimension      int
 	iteration      int
@@ -55,8 +49,6 @@ type LexvecBuilder struct {
 // NewLexvecBuilder creates *LexvecBuilder.
 func NewLexvecBuilder() *LexvecBuilder {
 	return &LexvecBuilder{
-		inputFile: config.DefaultInputFile,
-
 		dimension:      config.DefaultDimension,
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
@@ -103,8 +95,6 @@ func NewLexvecBuilderFromViper() (*LexvecBuilder, error) {
 	}
 
 	return &LexvecBuilder{
-		inputFile: viper.GetString(config.InputFile.String()),
-
 		dimension:      viper.GetInt(config.Dimension.String()),
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
@@ -121,12 +111,6 @@ func NewLexvecBuilderFromViper() (*LexvecBuilder, error) {
 		smooth:             viper.GetFloat64(config.Smooth.String()),
 		relationType:       relationType,
 	}, nil
-}
-
-// InputFile sets input file string.
-func (lb *LexvecBuilder) InputFile(inputFile string) *LexvecBuilder {
-	lb.inputFile = inputFile
-	return lb
 }
 
 // Dimension sets dimension of word vector.
@@ -217,15 +201,6 @@ func (lb *LexvecBuilder) RelationType(typ corpus.RelationType) *LexvecBuilder {
 
 // Build creates Lexvec model.
 func (lb *LexvecBuilder) Build() (model.Model, error) {
-	if !validate.FileExists(lb.inputFile) {
-		return nil, errors.Errorf("Not such a file %s", lb.inputFile)
-	}
-
-	input, err := os.Open(lb.inputFile)
-	if err != nil {
-		return nil, err
-	}
-
 	o := &model.Option{
 		Dimension:      lb.dimension,
 		Iteration:      lb.iteration,
@@ -247,5 +222,5 @@ func (lb *LexvecBuilder) Build() (model.Model, error) {
 		RelationType:       lb.relationType,
 	}
 
-	return lexvec.NewLexvec(input, o, l)
+	return lexvec.NewLexvec(o, l), nil
 }

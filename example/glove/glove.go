@@ -15,6 +15,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/ynqa/wego/builder"
 	"github.com/ynqa/wego/model/glove"
 )
@@ -22,8 +24,7 @@ import (
 func main() {
 	b := builder.NewGloveBuilder()
 
-	b.InputFile("text8").
-		Dimension(10).
+	b.Dimension(10).
 		Window(5).
 		Solver(glove.SGD).
 		Verbose()
@@ -33,8 +34,10 @@ func main() {
 		// Failed to build word2vec.
 	}
 
+	input, _ := os.Open("text8")
+
 	// Start to Train.
-	if err = m.Train(); err != nil {
+	if err = m.Train(input); err != nil {
 		// Failed to train by word2vec.
 	}
 

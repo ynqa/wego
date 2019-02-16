@@ -40,7 +40,7 @@ func newCore() *core {
 	}
 }
 
-func (c *core) Parse(f io.ReadCloser, toLower bool, minCount int, batchSize int, verbose bool) error {
+func (c *core) Parse(f io.Reader, toLower bool, minCount int, batchSize int, verbose bool) error {
 	fullDoc := make([]int, 0)
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)

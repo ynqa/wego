@@ -69,21 +69,14 @@ type Lexvec struct {
 }
 
 // NewLexvec create *Lexvec.
-func NewLexvec(f io.ReadCloser, option *model.Option, lexvecOption *LexvecOption) (*Lexvec, error) {
-	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate *Lexvec")
-	}
-	lexvec := &Lexvec{
-		Option:           option,
-		LexvecOption:     lexvecOption,
-		CountModelCorpus: c,
+func NewLexvec(option *model.Option, lexvecOption *LexvecOption) *Lexvec {
+	return &Lexvec{
+		Option:       option,
+		LexvecOption: lexvecOption,
 
 		currentlr: option.Initlr,
 		trained:   make(chan struct{}),
 	}
-	lexvec.initialize()
-	return lexvec, nil
 }
 
 func (l *Lexvec) initialize() (err error) {
@@ -110,7 +103,19 @@ func (l *Lexvec) initialize() (err error) {
 }
 
 // Train trains words' vector on corpus.
-func (l *Lexvec) Train() error {
+func (l *Lexvec) Train(f io.Reader) error {
+	c := corpus.NewCountModelCorpus()
+	if err := c.Parse(f, l.ToLower, l.MinCount, l.BatchSize, l.Verbose); err != nil {
+		return errors.Wrap(err, "Failed to parse corpus")
+	}
+	l.CountModelCorpus = c
+	if err := l.initialize(); err != nil {
+		return errors.Wrap(err, "Failed to initialize")
+	}
+	return l.train()
+}
+
+func (l *Lexvec) train() error {
 	document := l.Document
 	documentSize := len(document)
 	if documentSize <= 0 {

@@ -86,7 +86,15 @@ func runWord2vec() error {
 	if err != nil {
 		return err
 	}
-	if err := mod.Train(); err != nil {
+	inputFile := viper.GetString(config.InputFile.String())
+	if !validate.FileExists(inputFile) {
+		return errors.Errorf("Not such a file %s", inputFile)
+	}
+	input, err := os.Open(inputFile)
+	if err != nil {
+		return err
+	}
+	if err := mod.Train(input); err != nil {
 		return err
 	}
 	return mod.Save(outputFile)
