@@ -16,53 +16,67 @@ package corpus
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
 	"github.com/chewxy/lingo/corpus"
 	"github.com/pkg/errors"
+
+	"github.com/ynqa/wego/timer"
 )
 
 type core struct {
 	*corpus.Corpus
 	// TODO: more efficient data structure, such as radix tree (trie).
-	document []int
+	Document []int
 }
 
 func newCore() *core {
 	c, _ := corpus.Construct()
 	return &core{
 		Corpus:   c,
-		document: make([]int, 0),
+		Document: make([]int, 0),
 	}
 }
 
-// Document returns list of word id.
-func (c *core) Document() []int {
-	return c.document
-}
-
-func (c *core) Parse(f io.ReadCloser, toLower bool, minCount int) error {
+func (c *core) Parse(f io.ReadCloser, toLower bool, minCount int, batchSize int, verbose bool) error {
 	fullDoc := make([]int, 0)
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanWords)
+
+	var t *timer.Timer
+	if verbose {
+		t = timer.NewTimer()
+	}
+	var i int
 	for scanner.Scan() {
 		word := scanner.Text()
 		if toLower {
 			word = strings.ToLower(word)
 		}
-		// TODO: delete words less than minCount.
+		// TODO: delete words less than minCount in Corpus.
 		c.Add(word)
 		wordID, _ := c.Id(word)
 		fullDoc = append(fullDoc, wordID)
+		if verbose && i%batchSize == 0 {
+			fmt.Printf("Read %d words %v\r", i, t.AllElapsed())
+		}
+		i++
 	}
 	if err := scanner.Err(); err != nil && err != io.EOF {
 		return errors.Wrap(err, "Unable to complete scanning")
 	}
+	if verbose {
+		fmt.Printf("Read %d words %v\r\n", i, t.AllElapsed())
+	}
 	for _, d := range fullDoc {
 		if c.IDFreq(d) > minCount {
-			c.document = append(c.document, d)
+			c.Document = append(c.Document, d)
 		}
+	}
+	if verbose {
+		fmt.Printf("Filter words less than minCount=%d > documentSize=%d\n", minCount, len(c.Document))
 	}
 	return nil
 }

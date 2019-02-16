@@ -35,7 +35,6 @@ import (
 )
 
 type LexvecOption struct {
-	BatchSize          int
 	NegativeSampleSize int
 	SubSampleThreshold float64
 	Theta              float64
@@ -72,7 +71,7 @@ type Lexvec struct {
 // NewLexvec create *Lexvec.
 func NewLexvec(f io.ReadCloser, option *model.Option, lexvecOption *LexvecOption) (*Lexvec, error) {
 	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Lexvec")
 	}
 	lexvec := &Lexvec{
@@ -112,7 +111,7 @@ func (l *Lexvec) initialize() (err error) {
 
 // Train trains words' vector on corpus.
 func (l *Lexvec) Train() error {
-	document := l.Document()
+	document := l.Document
 	documentSize := len(document)
 	if documentSize <= 0 {
 		return errors.New("No words for training")
@@ -150,6 +149,7 @@ func (l *Lexvec) trainPerThread(document []int, semaphore chan struct{}, waitGro
 		<-semaphore
 	}()
 
+	semaphore <- struct{}{}
 	for idx, wordID := range document {
 		if l.Verbose {
 			l.progress.Increment()

@@ -37,6 +37,7 @@ type LexvecBuilder struct {
 	iteration      int
 	minCount       int
 	threadSize     int
+	batchSize      int
 	window         int
 	initlr         float64
 	toLower        bool
@@ -44,7 +45,6 @@ type LexvecBuilder struct {
 	saveVectorType model.SaveVectorType
 
 	// lexvec configs.
-	batchSize          int
 	negativeSampleSize int
 	subsampleThreshold float64
 	theta              float64
@@ -61,13 +61,13 @@ func NewLexvecBuilder() *LexvecBuilder {
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
 		threadSize:     config.DefaultThreadSize,
+		batchSize:      config.DefaultBatchSize,
 		window:         config.DefaultWindow,
 		initlr:         config.DefaultInitlr,
 		toLower:        config.DefaultToLower,
 		verbose:        config.DefaultVerbose,
 		saveVectorType: config.DefaultSaveVectorType,
 
-		batchSize:          config.DefaultBatchSize,
 		negativeSampleSize: config.DefaultNegativeSampleSize,
 		subsampleThreshold: config.DefaultSubsampleThreshold,
 		theta:              config.DefaultTheta,
@@ -109,13 +109,13 @@ func NewLexvecBuilderFromViper() (*LexvecBuilder, error) {
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
 		threadSize:     viper.GetInt(config.ThreadSize.String()),
+		batchSize:      viper.GetInt(config.BatchSize.String()),
 		window:         viper.GetInt(config.Window.String()),
 		initlr:         viper.GetFloat64(config.Initlr.String()),
 		toLower:        viper.GetBool(config.ToLower.String()),
 		verbose:        viper.GetBool(config.Verbose.String()),
 		saveVectorType: saveVectorType,
 
-		batchSize:          viper.GetInt(config.BatchSize.String()),
 		subsampleThreshold: viper.GetFloat64(config.SubsampleThreshold.String()),
 		negativeSampleSize: viper.GetInt(config.NegativeSampleSize.String()),
 		smooth:             viper.GetFloat64(config.Smooth.String()),
@@ -153,6 +153,12 @@ func (lb *LexvecBuilder) ThreadSize(threadSize int) *LexvecBuilder {
 	return lb
 }
 
+// BatchSize sets batch size to preprocess/train.
+func (lb *LexvecBuilder) BatchSize(batchSize int) *LexvecBuilder {
+	lb.batchSize = batchSize
+	return lb
+}
+
 // Window sets context window size.
 func (lb *LexvecBuilder) Window(window int) *LexvecBuilder {
 	lb.window = window
@@ -179,12 +185,6 @@ func (lb *LexvecBuilder) Verbose() *LexvecBuilder {
 
 func (lb *LexvecBuilder) SaveVectorType(typ model.SaveVectorType) *LexvecBuilder {
 	lb.saveVectorType = typ
-	return lb
-}
-
-// BatchSize sets batch size to update learning rate.
-func (lb *LexvecBuilder) BatchSize(batchSize int) *LexvecBuilder {
-	lb.batchSize = batchSize
 	return lb
 }
 
@@ -231,6 +231,7 @@ func (lb *LexvecBuilder) Build() (model.Model, error) {
 		Iteration:      lb.iteration,
 		MinCount:       lb.minCount,
 		ThreadSize:     lb.threadSize,
+		BatchSize:      lb.batchSize,
 		Window:         lb.window,
 		Initlr:         lb.initlr,
 		ToLower:        lb.toLower,
@@ -239,7 +240,6 @@ func (lb *LexvecBuilder) Build() (model.Model, error) {
 	}
 
 	l := &lexvec.LexvecOption{
-		BatchSize:          lb.batchSize,
 		NegativeSampleSize: lb.negativeSampleSize,
 		SubSampleThreshold: lb.subsampleThreshold,
 		Theta:              lb.theta,

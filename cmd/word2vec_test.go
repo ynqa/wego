@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const word2vecFlagSize = 7
+const word2vecFlagSize = 6
 
 func TestWord2vecBind(t *testing.T) {
 	defer viper.Reset()

@@ -60,7 +60,7 @@ type Glove struct {
 // NewGlove creates *Glove.
 func NewGlove(f io.ReadCloser, option *model.Option, gloveOption *GloveOption) (*Glove, error) {
 	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Glove")
 	}
 	glove := &Glove{

@@ -35,7 +35,7 @@ func TestHSInit(t *testing.T) {
 
 	dimension := 10
 	c := corpus.NewWord2vecCorpus()
-	c.Parse(corpus.FakeSeeker, true, 0)
+	c.Parse(corpus.FakeSeeker, true, 0, 0, false)
 	hs.initialize(c, dimension)
 
 	expectedNodeMapSize := c.Size()

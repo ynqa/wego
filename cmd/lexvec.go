@@ -49,20 +49,17 @@ var lexvecCmd = &cobra.Command{
 
 func init() {
 	lexvecCmd.Flags().AddFlagSet(configFlagSet())
-	lexvecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
-		"interval word size to update learning rate")
 	lexvecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
 		"negative sample size(for negative sampling only)")
 	lexvecCmd.Flags().Float64(config.Theta.String(), config.DefaultTheta,
 		"lower limit of learning rate (lr >= initlr * theta)")
 	lexvecCmd.Flags().Float64(config.Smooth.String(), config.DefaultSmooth,
-		"smoothing value")
+		"smoothing value for co-occurence value")
 	lexvecCmd.Flags().String(config.RelationType.String(), config.DefaultRelationType.String(),
 		"relation type for counting co-occurrence. One of ppmi|pmi|co|logco")
 }
 
 func bindLexvec(cmd *cobra.Command) {
-	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 	viper.BindPFlag(config.NegativeSampleSize.String(), cmd.Flags().Lookup(config.NegativeSampleSize.String()))
 	viper.BindPFlag(config.Theta.String(), cmd.Flags().Lookup(config.Theta.String()))
 	viper.BindPFlag(config.Smooth.String(), cmd.Flags().Lookup(config.Smooth.String()))

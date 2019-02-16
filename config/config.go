@@ -34,6 +34,7 @@ const (
 	Iteration
 	MinCount
 	ThreadSize
+	BatchSize
 	Window
 	Initlr
 	Prof
@@ -43,7 +44,6 @@ const (
 	// Word2Vec
 	Model
 	Optimizer
-	BatchSize
 	MaxDepth
 	NegativeSampleSize
 	SubsampleThreshold
@@ -66,17 +66,17 @@ var (
 	DefaultDimension      int                  = 10
 	DefaultIteration      int                  = 15
 	DefaultMinCount       int                  = 5
+	DefaultThreadSize     int                  = runtime.NumCPU()
+	DefaultBatchSize      int                  = 10000
 	DefaultWindow         int                  = 5
 	DefaultInitlr         float64              = 0.025
 	DefaultProf           bool                 = false
 	DefaultToLower        bool                 = false
 	DefaultVerbose        bool                 = false
-	DefaultThreadSize                          = runtime.NumCPU()
 	DefaultSaveVectorType model.SaveVectorType = model.NORMAL
 	// Word2Vec
 	DefaultModel              word2vec.ModelType     = word2vec.CBOW
 	DefaultOptimizer          word2vec.OptimizerType = word2vec.NEGATIVE_SAMPLING
-	DefaultBatchSize          int                    = 10000
 	DefaultMaxDepth           int                    = 0
 	DefaultNegativeSampleSize int                    = 5
 	DefaultSubsampleThreshold float64                = 1.0e-3
@@ -106,6 +106,8 @@ func (c Config) String() string {
 		return "min-count"
 	case ThreadSize:
 		return "thread"
+	case BatchSize:
+		return "batchSize"
 	case Window:
 		return "window"
 	case Initlr:
@@ -123,8 +125,6 @@ func (c Config) String() string {
 		return "model"
 	case Optimizer:
 		return "optimizer"
-	case BatchSize:
-		return "batchSize"
 	case MaxDepth:
 		return "maxDepth"
 	case NegativeSampleSize:

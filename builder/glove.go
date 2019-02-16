@@ -36,6 +36,7 @@ type GloveBuilder struct {
 	iteration      int
 	minCount       int
 	threadSize     int
+	batchSize      int
 	window         int
 	initlr         float64
 	toLower        bool
@@ -57,6 +58,7 @@ func NewGloveBuilder() *GloveBuilder {
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
 		threadSize:     config.DefaultThreadSize,
+		batchSize:      config.DefaultBatchSize,
 		window:         config.DefaultWindow,
 		initlr:         config.DefaultInitlr,
 		toLower:        config.DefaultToLower,
@@ -99,6 +101,7 @@ func NewGloveBuilderFromViper() (*GloveBuilder, error) {
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
 		threadSize:     viper.GetInt(config.ThreadSize.String()),
+		batchSize:      viper.GetInt(config.BatchSize.String()),
 		window:         viper.GetInt(config.Window.String()),
 		initlr:         viper.GetFloat64(config.Initlr.String()),
 		toLower:        viper.GetBool(config.ToLower.String()),
@@ -138,6 +141,12 @@ func (gb *GloveBuilder) MinCount(minCount int) *GloveBuilder {
 // ThreadSize sets number of goroutine.
 func (gb *GloveBuilder) ThreadSize(threadSize int) *GloveBuilder {
 	gb.threadSize = threadSize
+	return gb
+}
+
+// BatchSize sets batch size to to preprocess/train.
+func (gb *GloveBuilder) BatchSize(batchSize int) *GloveBuilder {
+	gb.batchSize = batchSize
 	return gb
 }
 
@@ -204,6 +213,7 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 		Iteration:      gb.iteration,
 		MinCount:       gb.minCount,
 		ThreadSize:     gb.threadSize,
+		BatchSize:      gb.batchSize,
 		Window:         gb.window,
 		Initlr:         gb.initlr,
 		ToLower:        gb.toLower,

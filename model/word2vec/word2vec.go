@@ -36,7 +36,6 @@ import (
 type Word2vecOption struct {
 	Mod                Model
 	Opt                Optimizer
-	BatchSize          int
 	SubsampleThreshold float64
 	Theta              float64
 }
@@ -67,7 +66,7 @@ type Word2vec struct {
 // NewWord2vec creates *Word2Vec.
 func NewWord2vec(f io.ReadCloser, option *model.Option, word2vecOption *Word2vecOption) (*Word2vec, error) {
 	c := corpus.NewWord2vecCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount); err != nil {
+	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
 		return nil, errors.Wrap(err, "Unable to generate *Word2vec")
 	}
 	word2vec := &Word2vec{
@@ -104,7 +103,7 @@ func (w *Word2vec) initialize() {
 
 // Train trains words' vector on corpus.
 func (w *Word2vec) Train() error {
-	document := w.Word2vecCorpus.Document()
+	document := w.Word2vecCorpus.Document
 	documentSize := len(document)
 	if documentSize <= 0 {
 		return errors.New("No words for training")

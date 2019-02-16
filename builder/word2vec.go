@@ -36,6 +36,7 @@ type Word2vecBuilder struct {
 	iteration      int
 	minCount       int
 	threadSize     int
+	batchSize      int
 	window         int
 	initlr         float64
 	toLower        bool
@@ -45,7 +46,6 @@ type Word2vecBuilder struct {
 	// word2vec configs.
 	model              word2vec.ModelType
 	optimizer          word2vec.OptimizerType
-	batchSize          int
 	maxDepth           int
 	negativeSampleSize int
 	subsampleThreshold float64
@@ -61,6 +61,7 @@ func NewWord2vecBuilder() *Word2vecBuilder {
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
 		threadSize:     config.DefaultThreadSize,
+		batchSize:      config.DefaultBatchSize,
 		window:         config.DefaultWindow,
 		initlr:         config.DefaultInitlr,
 		toLower:        config.DefaultToLower,
@@ -69,7 +70,6 @@ func NewWord2vecBuilder() *Word2vecBuilder {
 
 		model:              config.DefaultModel,
 		optimizer:          config.DefaultOptimizer,
-		batchSize:          config.DefaultBatchSize,
 		maxDepth:           config.DefaultMaxDepth,
 		negativeSampleSize: config.DefaultNegativeSampleSize,
 		subsampleThreshold: config.DefaultSubsampleThreshold,
@@ -119,6 +119,7 @@ func NewWord2vecBuilderFromViper() (*Word2vecBuilder, error) {
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
 		threadSize:     viper.GetInt(config.ThreadSize.String()),
+		batchSize:      viper.GetInt(config.BatchSize.String()),
 		window:         viper.GetInt(config.Window.String()),
 		initlr:         viper.GetFloat64(config.Initlr.String()),
 		toLower:        viper.GetBool(config.ToLower.String()),
@@ -127,7 +128,6 @@ func NewWord2vecBuilderFromViper() (*Word2vecBuilder, error) {
 
 		model:              model,
 		optimizer:          optimizer,
-		batchSize:          viper.GetInt(config.BatchSize.String()),
 		maxDepth:           viper.GetInt(config.MaxDepth.String()),
 		negativeSampleSize: viper.GetInt(config.NegativeSampleSize.String()),
 		subsampleThreshold: viper.GetFloat64(config.SubsampleThreshold.String()),
@@ -162,6 +162,12 @@ func (wb *Word2vecBuilder) MinCount(minCount int) *Word2vecBuilder {
 // ThreadSize sets number of goroutine.
 func (wb *Word2vecBuilder) ThreadSize(threadSize int) *Word2vecBuilder {
 	wb.threadSize = threadSize
+	return wb
+}
+
+// BatchSize sets batch size to to preprocess/train.
+func (wb *Word2vecBuilder) BatchSize(batchSize int) *Word2vecBuilder {
+	wb.batchSize = batchSize
 	return wb
 }
 
@@ -203,12 +209,6 @@ func (wb *Word2vecBuilder) Model(typ word2vec.ModelType) *Word2vecBuilder {
 // Optimizer sets optimizer of Word2vec. One of: hs|ns
 func (wb *Word2vecBuilder) Optimizer(typ word2vec.OptimizerType) *Word2vecBuilder {
 	wb.optimizer = typ
-	return wb
-}
-
-// BatchSize sets batch size to update learning rate.
-func (wb *Word2vecBuilder) BatchSize(batchSize int) *Word2vecBuilder {
-	wb.batchSize = batchSize
 	return wb
 }
 
@@ -256,6 +256,7 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 		Iteration:      wb.iteration,
 		MinCount:       wb.minCount,
 		ThreadSize:     wb.threadSize,
+		BatchSize:      wb.batchSize,
 		Window:         wb.window,
 		Initlr:         wb.initlr,
 		ToLower:        wb.toLower,
@@ -286,7 +287,6 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 	w := &word2vec.Word2vecOption{
 		Mod:                mod,
 		Opt:                opt,
-		BatchSize:          wb.batchSize,
 		SubsampleThreshold: wb.subsampleThreshold,
 		Theta:              wb.theta,
 	}

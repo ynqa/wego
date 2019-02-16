@@ -20,6 +20,7 @@ type Option struct {
 	Iteration      int
 	MinCount       int
 	ThreadSize     int
+	BatchSize      int
 	Window         int
 	Initlr         float64
 	ToLower        bool

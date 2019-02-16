@@ -47,6 +47,8 @@ func configFlagSet() *pflag.FlagSet {
 		"lower limit to filter rare words")
 	fs.Int(config.ThreadSize.String(), config.DefaultThreadSize,
 		"number of goroutine")
+	fs.Int(config.BatchSize.String(), config.DefaultBatchSize,
+		"interval word size to preprocess/train")
 	fs.IntP(config.Window.String(), "w", config.DefaultWindow,
 		"context window size")
 	fs.Float64(config.Initlr.String(), config.DefaultInitlr,
@@ -69,6 +71,7 @@ func bindConfig(cmd *cobra.Command) {
 	viper.BindPFlag(config.Iteration.String(), cmd.Flags().Lookup(config.Iteration.String()))
 	viper.BindPFlag(config.MinCount.String(), cmd.Flags().Lookup(config.MinCount.String()))
 	viper.BindPFlag(config.ThreadSize.String(), cmd.Flags().Lookup(config.ThreadSize.String()))
+	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 	viper.BindPFlag(config.Window.String(), cmd.Flags().Lookup(config.Window.String()))
 	viper.BindPFlag(config.Initlr.String(), cmd.Flags().Lookup(config.Initlr.String()))
 	viper.BindPFlag(config.Prof.String(), cmd.Flags().Lookup(config.Prof.String()))

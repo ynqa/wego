@@ -24,7 +24,7 @@ import (
 
 func TestGetPath(t *testing.T) {
 	c := NewWord2vecCorpus()
-	c.Parse(FakeSeeker, true, 0)
+	c.Parse(FakeSeeker, true, 0, 0, false)
 	huffmanTree, err := c.HuffmanTree(5)
 
 	if err != nil {

@@ -54,8 +54,6 @@ func init() {
 		"which model does it use? one of: cbow|skip-gram")
 	word2vecCmd.Flags().String(config.Optimizer.String(), config.DefaultOptimizer.String(),
 		"which optimizer does it use? one of: hs|ns")
-	word2vecCmd.Flags().Int(config.BatchSize.String(), config.DefaultBatchSize,
-		"interval word size to update learning rate")
 	word2vecCmd.Flags().Int(config.MaxDepth.String(), config.DefaultMaxDepth,
 		"times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
 	word2vecCmd.Flags().Int(config.NegativeSampleSize.String(), config.DefaultNegativeSampleSize,
@@ -69,7 +67,6 @@ func init() {
 func bindWord2vec(cmd *cobra.Command) {
 	viper.BindPFlag(config.Model.String(), cmd.Flags().Lookup(config.Model.String()))
 	viper.BindPFlag(config.Optimizer.String(), cmd.Flags().Lookup(config.Optimizer.String()))
-	viper.BindPFlag(config.BatchSize.String(), cmd.Flags().Lookup(config.BatchSize.String()))
 	viper.BindPFlag(config.MaxDepth.String(), cmd.Flags().Lookup(config.MaxDepth.String()))
 	viper.BindPFlag(config.NegativeSampleSize.String(), cmd.Flags().Lookup(config.NegativeSampleSize.String()))
 	viper.BindPFlag(config.SubsampleThreshold.String(), cmd.Flags().Lookup(config.SubsampleThreshold.String()))

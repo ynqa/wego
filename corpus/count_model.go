@@ -128,7 +128,7 @@ func NewCountModelCorpus() *CountModelCorpus {
 }
 
 func (c *CountModelCorpus) cooccurrence(window int, typ CountType, verbose bool) (PairMap, error) {
-	documentSize := len(c.document)
+	documentSize := len(c.Document)
 
 	var progress *pb.ProgressBar
 	if verbose {
@@ -148,7 +148,7 @@ func (c *CountModelCorpus) cooccurrence(window int, typ CountType, verbose bool)
 			if err != nil {
 				return nil, errors.Wrap(err, "Failed to count co-occurrence between words")
 			}
-			cooccurrence[co.EncodeBigram(uint64(c.document[i]), uint64(c.document[j]))] += f
+			cooccurrence[co.EncodeBigram(uint64(c.Document[i]), uint64(c.Document[j]))] += f
 		}
 		if verbose {
 			progress.Increment()
