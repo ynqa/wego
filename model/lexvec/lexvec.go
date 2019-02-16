@@ -29,8 +29,8 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/cheggaaa/pb.v1"
 
+	"github.com/ynqa/wego/co"
 	"github.com/ynqa/wego/corpus"
-	"github.com/ynqa/wego/corpus/co"
 	"github.com/ynqa/wego/model"
 )
 

@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/cheggaaa/pb.v1"
 
-	"github.com/ynqa/wego/corpus/co"
+	"github.com/ynqa/wego/co"
 )
 
 // CountModelCorpus stores corpus and co-occurrence values between words.

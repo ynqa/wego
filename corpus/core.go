@@ -51,6 +51,7 @@ func (c *core) Parse(f io.ReadCloser, toLower bool, minCount int) error {
 		if toLower {
 			word = strings.ToLower(word)
 		}
+		// TODO: delete words less than minCount.
 		c.Add(word)
 		wordID, _ := c.Id(word)
 		fullDoc = append(fullDoc, wordID)

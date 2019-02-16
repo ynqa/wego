@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/ynqa/wego/corpus/node"
+	"github.com/ynqa/wego/node"
 )
 
 func TestGetPath(t *testing.T) {
