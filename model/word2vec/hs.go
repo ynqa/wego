@@ -33,10 +33,10 @@ type HierarchicalSoftmax struct {
 
 // NewHierarchicalSoftmax creates *HierarchicalSoftmax.
 func NewHierarchicalSoftmax(maxDepth int) *HierarchicalSoftmax {
-	hs := new(HierarchicalSoftmax)
-	hs.SigmoidTable = newSigmoidTable()
-	hs.maxDepth = maxDepth
-	return hs
+	return &HierarchicalSoftmax{
+		SigmoidTable: newSigmoidTable(),
+		maxDepth:     maxDepth,
+	}
 }
 
 func (hs *HierarchicalSoftmax) initialize(cps *corpus.Word2vecCorpus, dimension int) error {

@@ -58,20 +58,11 @@ type Glove struct {
 }
 
 // NewGlove creates *Glove.
-func NewGlove(f io.ReadCloser, option *model.Option, gloveOption *GloveOption) (*Glove, error) {
-	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, option.ToLower, option.MinCount, option.BatchSize, option.Verbose); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate *Glove")
+func NewGlove(option *model.Option, gloveOption *GloveOption) *Glove {
+	return &Glove{
+		Option:      option,
+		GloveOption: gloveOption,
 	}
-	glove := &Glove{
-		Option:           option,
-		GloveOption:      gloveOption,
-		CountModelCorpus: c,
-	}
-	if err := glove.initialize(); err != nil {
-		return nil, errors.Wrap(err, "Unable to generate *Glove")
-	}
-	return glove, nil
 }
 
 func (g *Glove) initialize() (err error) {
@@ -97,7 +88,19 @@ func (g *Glove) initialize() (err error) {
 }
 
 // Train trains words' vector on corpus.
-func (g *Glove) Train() error {
+func (g *Glove) Train(f io.Reader) error {
+	c := corpus.NewCountModelCorpus()
+	if err := c.Parse(f, g.ToLower, g.MinCount, g.BatchSize, g.Verbose); err != nil {
+		return errors.Wrap(err, "Unable to generate *Glove")
+	}
+	g.CountModelCorpus = c
+	if err := g.initialize(); err != nil {
+		return errors.Wrap(err, "Failed to initialize")
+	}
+	return g.train()
+}
+
+func (g *Glove) train() error {
 	pairSize := len(g.pairs)
 	if pairSize <= 0 {
 		return errors.Errorf("No pairs for training")

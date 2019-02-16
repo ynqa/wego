@@ -15,22 +15,16 @@
 package builder
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/wego/config"
 	"github.com/ynqa/wego/model"
 	"github.com/ynqa/wego/model/word2vec"
-	"github.com/ynqa/wego/validate"
 )
 
 // Word2vecBuilder manages the members to build Model interface.
 type Word2vecBuilder struct {
-	// input file path.
-	inputFile string
-
 	// common configs.
 	dimension      int
 	iteration      int
@@ -55,8 +49,6 @@ type Word2vecBuilder struct {
 // NewWord2vecBuilder creates *Word2vecBuilder.
 func NewWord2vecBuilder() *Word2vecBuilder {
 	return &Word2vecBuilder{
-		inputFile: config.DefaultInputFile,
-
 		dimension:      config.DefaultDimension,
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
@@ -113,8 +105,6 @@ func NewWord2vecBuilderFromViper() (*Word2vecBuilder, error) {
 	}
 
 	return &Word2vecBuilder{
-		inputFile: viper.GetString(config.InputFile.String()),
-
 		dimension:      viper.GetInt(config.Dimension.String()),
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
@@ -133,12 +123,6 @@ func NewWord2vecBuilderFromViper() (*Word2vecBuilder, error) {
 		subsampleThreshold: viper.GetFloat64(config.SubsampleThreshold.String()),
 		theta:              viper.GetFloat64(config.Theta.String()),
 	}, nil
-}
-
-// InputFile sets input file string.
-func (wb *Word2vecBuilder) InputFile(inputFile string) *Word2vecBuilder {
-	wb.inputFile = inputFile
-	return wb
 }
 
 // Dimension sets dimension of word vector.
@@ -238,17 +222,8 @@ func (wb *Word2vecBuilder) Theta(theta float64) *Word2vecBuilder {
 
 // Build creates model.Model interface.
 func (wb *Word2vecBuilder) Build() (model.Model, error) {
-	if !validate.FileExists(wb.inputFile) {
-		return nil, errors.Errorf("Not such a file %s", wb.inputFile)
-	}
-
 	if wb.optimizer == word2vec.HIERARCHICAL_SOFTMAX && wb.saveVectorType == model.ADD {
 		return nil, errors.Errorf("Invalid pair of optimizer=%s and save vector type=%s", wb.optimizer, wb.saveVectorType)
-	}
-
-	input, err := os.Open(wb.inputFile)
-	if err != nil {
-		return nil, err
 	}
 
 	o := &model.Option{
@@ -291,5 +266,5 @@ func (wb *Word2vecBuilder) Build() (model.Model, error) {
 		Theta:              wb.theta,
 	}
 
-	return word2vec.NewWord2vec(input, o, w)
+	return word2vec.NewWord2vec(o, w), nil
 }

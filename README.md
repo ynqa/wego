@@ -83,6 +83,8 @@ It's also able to train word vectors using wego APIs. Examples are as follows.
 package main
 
 import (
+	"os"
+
 	"github.com/ynqa/wego/builder"
 	"github.com/ynqa/wego/model/word2vec"
 )
@@ -90,8 +92,7 @@ import (
 func main() {
 	b := builder.NewWord2vecBuilder()
 
-	b.InputFile("text8").
-		Dimension(10).
+	b.Dimension(10).
 		Window(5).
 		Model(word2vec.CBOW).
 		Optimizer(word2vec.NEGATIVE_SAMPLING).
@@ -103,8 +104,10 @@ func main() {
 		// Failed to build word2vec.
 	}
 
+	input, _ := os.Open("text8")
+
 	// Start to Train.
-	if err = m.Train(); err != nil {
+	if err = m.Train(input); err != nil {
 		// Failed to train by word2vec.
 	}
 

@@ -19,17 +19,6 @@ import (
 	"testing"
 )
 
-func TestWord2vecInputFile(t *testing.T) {
-	b := &Word2vecBuilder{}
-
-	expectedInputFile := "inputfile"
-	b.InputFile(expectedInputFile)
-
-	if b.inputFile != expectedInputFile {
-		t.Errorf("Expected builder.inputFile=%v: %v", expectedInputFile, b.inputFile)
-	}
-}
-
 func TestWord2vecDimension(t *testing.T) {
 	b := &Word2vecBuilder{}
 

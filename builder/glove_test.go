@@ -20,17 +20,6 @@ import (
 	"github.com/ynqa/wego/model/glove"
 )
 
-func TestGloveInputFile(t *testing.T) {
-	b := &GloveBuilder{}
-
-	expectedInputFile := "inputfile"
-	b.InputFile(expectedInputFile)
-
-	if b.inputFile != expectedInputFile {
-		t.Errorf("Expected builder.inputFile=%v: %v", expectedInputFile, b.inputFile)
-	}
-}
-
 func TestGloveDimension(t *testing.T) {
 	b := &GloveBuilder{}
 

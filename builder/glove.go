@@ -15,22 +15,16 @@
 package builder
 
 import (
-	"os"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 
 	"github.com/ynqa/wego/config"
 	"github.com/ynqa/wego/model"
 	"github.com/ynqa/wego/model/glove"
-	"github.com/ynqa/wego/validate"
 )
 
 // GloveBuilder manages the members to build Model interface.
 type GloveBuilder struct {
-	// input file path.
-	inputFile string
-
 	// common configs.
 	dimension      int
 	iteration      int
@@ -52,8 +46,6 @@ type GloveBuilder struct {
 // NewGloveBuilder creates *GloveBuilder
 func NewGloveBuilder() *GloveBuilder {
 	return &GloveBuilder{
-		inputFile: config.DefaultInputFile,
-
 		dimension:      config.DefaultDimension,
 		iteration:      config.DefaultIteration,
 		minCount:       config.DefaultMinCount,
@@ -95,8 +87,6 @@ func NewGloveBuilderFromViper() (*GloveBuilder, error) {
 		return nil, errors.Errorf("Invalid solver type=%s", solverTypeStr)
 	}
 	return &GloveBuilder{
-		inputFile: viper.GetString(config.InputFile.String()),
-
 		dimension:      viper.GetInt(config.Dimension.String()),
 		iteration:      viper.GetInt(config.Iteration.String()),
 		minCount:       viper.GetInt(config.MinCount.String()),
@@ -112,12 +102,6 @@ func NewGloveBuilderFromViper() (*GloveBuilder, error) {
 		xmax:   viper.GetInt(config.Xmax.String()),
 		alpha:  viper.GetFloat64(config.Alpha.String()),
 	}, nil
-}
-
-// InputFile sets input file string.
-func (gb *GloveBuilder) InputFile(inputFile string) *GloveBuilder {
-	gb.inputFile = inputFile
-	return gb
 }
 
 // Dimension sets dimension of word vector.
@@ -199,15 +183,6 @@ func (gb *GloveBuilder) Alpha(alpha float64) *GloveBuilder {
 
 // Build creates model.Model interface.
 func (gb *GloveBuilder) Build() (model.Model, error) {
-	if !validate.FileExists(gb.inputFile) {
-		return nil, errors.Errorf("Not such a file %s", gb.inputFile)
-	}
-
-	input, err := os.Open(gb.inputFile)
-	if err != nil {
-		return nil, err
-	}
-
 	o := &model.Option{
 		Dimension:      gb.dimension,
 		Iteration:      gb.iteration,
@@ -237,5 +212,5 @@ func (gb *GloveBuilder) Build() (model.Model, error) {
 		Alpha:  gb.alpha,
 	}
 
-	return glove.NewGlove(input, o, g)
+	return glove.NewGlove(o, g), nil
 }
