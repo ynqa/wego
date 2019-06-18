@@ -35,7 +35,7 @@ $ bin/wego -h
 
 ## Demo
 
-Run the following command, and start to download [text8](http://mattmahoney.net/dc/textdata) corpus and train them by Word2Vec.
+Run the following command, and start to download [text8](http://mattmahoney.net/dc/textdata.html) corpus and train them by Word2Vec.
 
 ```
 $ sh demo.sh
@@ -66,7 +66,7 @@ For more information about each sub-command, see below:
 ## File I/O
 
 ### Input 
-Input corpus requires the format that is divided by space between words like [text8](http://mattmahoney.net/dc/textdata) since wego parse with `scanner.Split(bufio.ScanWords)`.
+Input corpus requires the format that is divided by space between words like [text8](http://mattmahoney.net/dc/textdata.html) since wego parse with `scanner.Split(bufio.ScanWords)`.
 
 ###  Output
 Wego outputs a .txt file that is described word vector is subject to the following format:
