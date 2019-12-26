@@ -25,7 +25,7 @@ Like this example, models generate word vectors that could calculate word meanin
 ## Installation
 
 ```
-$ go get -u github.com/ynqa/wego/cmd
+$ go get -u github.com/ynqa/wego
 $ bin/wego -h
 ```
 

@@ -16,10 +16,12 @@ package main
 
 import (
 	"os"
+
+	"github.com/ynqa/wego/cmd"
 )
 
 func main() {
-	if err := RootCmd.Execute(); err != nil {
+	if err := cmd.RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
