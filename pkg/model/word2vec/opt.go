@@ -12,35 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package word2vec
 
 import (
-	"testing"
-
-	"github.com/spf13/viper"
+	"github.com/ynqa/wego/pkg/corpus"
 )
 
-const gloveFlagSize = 3
-
-func TestGloveBind(t *testing.T) {
-	defer viper.Reset()
-
-	bindGlove(gloveCmd)
-
-	if len(viper.AllKeys()) != gloveFlagSize {
-		t.Errorf("Expected gloveBind maps %v keys: %v",
-			gloveFlagSize, viper.AllKeys())
-	}
+// Optimizer is the interface to initialize after scanning corpus once, and update the word vector.
+type Optimizer interface {
+	initialize(cps *corpus.Word2vecCorpus, dimension int) error
+	update(word int, lr float64, vector, poolVector []float64)
 }
 
-func TestGloveCmdPreRun(t *testing.T) {
-	defer viper.Reset()
+type OptimizerType int
 
-	var empty []string
-	gloveCmd.PreRun(gloveCmd, empty)
+const (
+	NEGATIVE_SAMPLING OptimizerType = iota
+	HIERARCHICAL_SOFTMAX
+)
 
-	if len(viper.AllKeys()) != gloveFlagSize+configFlagSize {
-		t.Errorf("Expected PreRun of gloveCmd maps %v keys: %v",
-			gloveFlagSize+configFlagSize, viper.AllKeys())
+func (t OptimizerType) String() string {
+	switch t {
+	case NEGATIVE_SAMPLING:
+		return "ns"
+	case HIERARCHICAL_SOFTMAX:
+		return "hs"
+	default:
+		return "unknown"
 	}
 }

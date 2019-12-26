@@ -4,7 +4,7 @@
 [![GoDoc](https://godoc.org/github.com/ynqa/wego?status.svg)](https://godoc.org/github.com/ynqa/wego)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/wego)](https://goreportcard.com/report/github.com/ynqa/wego)
 
-Wego is the implementations for word embedding (a.k.a word representation) models in Go. [Word embedding](https://en.wikipedia.org/wiki/Word_embedding) makes word's meaning, structure, and concept mapping into vector space with low dimension.  For representative instance:
+`wego` is the implementations for word embedding (a.k.a word representation) models in Go. [Word embedding](https://en.wikipedia.org/wiki/Word_embedding) makes word's meaning, structure, and concept mapping into vector space with low dimension.  For representative instance:
 
 ```
 Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
@@ -12,7 +12,7 @@ Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
 
 Like this example, models generate word vectors that could calculate word meaning by arithmetic operations for other vectors.
 
-Wego provides CLI that includes not only training model for embedding but also similarity search between words.
+`wego` provides CLI that includes not only training model for embedding but also similarity search between words.
 
 ## Models
 
@@ -29,7 +29,7 @@ Wego provides CLI that includes not only training model for embedding but also s
 ## Installation
 
 ```
-$ go get -u github.com/ynqa/wego
+$ go get -u github.com/ynqa/wego/cmd
 $ bin/wego -h
 ```
 
@@ -38,7 +38,7 @@ $ bin/wego -h
 Run the following command, and start to download [text8](http://mattmahoney.net/dc/textdata.html) corpus and train them by Word2Vec.
 
 ```
-$ sh demo.sh
+$ sh scripts/demo.sh
 ```
 
 ## Usage
@@ -59,9 +59,6 @@ Available Commands:
 Flags:
   -h, --help   help for wego
 ```
-
-For more information about each sub-command, see below:
-[word2vec](./model/README.md#Word2Vec), [glove](./model/README.md#GloVe), [lexvec](./model/README.md#Lexvec), [search](./search/README.md), [repl](./repl/README.md)
 
 ## File I/O
 
@@ -85,8 +82,8 @@ package main
 import (
 	"os"
 
-	"github.com/ynqa/wego/builder"
-	"github.com/ynqa/wego/model/word2vec"
+	"github.com/ynqa/wego/pkg/builder"
+	"github.com/ynqa/wego/pkg/model/word2vec"
 )
 
 func main() {
