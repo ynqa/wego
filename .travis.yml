@@ -17,15 +17,13 @@ env:
   - GO111MODULE=on
 
 before_install:
-  - go get golang.org/x/lint/golint
   - go get github.com/mattn/goveralls
 
 install:
   - go mod vendor
 
 script:
-  - go test -cover -b `go list ./...`
-  - golint `go list ./...`
+  - go test -cover $(go list ./...)
 
 after_script: |
   if [[ $TRAVIS_GO_VERSION == 1.13* ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then

@@ -4,15 +4,11 @@
 [![GoDoc](https://godoc.org/github.com/ynqa/wego?status.svg)](https://godoc.org/github.com/ynqa/wego)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/wego)](https://goreportcard.com/report/github.com/ynqa/wego)
 
-`wego` is the implementations for word embedding (a.k.a word representation) models in Go. [Word embedding](https://en.wikipedia.org/wiki/Word_embedding) makes word's meaning, structure, and concept mapping into vector space with low dimension.  For representative instance:
-
+wego is the implementations for word embedding (a.k.a word representation) models in Go. [Word embedding](https://en.wikipedia.org/wiki/Word_embedding) makes word's meaning, structure, and concept mapping into vector space with low dimension.  For representative instance:
 ```
 Vector("King") - Vector("Man") + Vector("Woman") = Vector("Queen")
 ```
-
-Like this example, models generate word vectors that could calculate word meaning by arithmetic operations for other vectors.
-
-`wego` provides CLI that includes not only training model for embedding but also similarity search between words.
+Like this example, models generate word vectors that could calculate word meaning by arithmetic operations for other vectors. wego provides CLI that includes not only training model for embedding but also similarity search between words.
 
 ## Models
 
