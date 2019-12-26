@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
 	"os"
@@ -20,8 +20,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/wego/config"
-	"github.com/ynqa/wego/repl"
+	"github.com/ynqa/wego/pkg/config"
+	"github.com/ynqa/wego/pkg/repl"
 )
 
 var replCmd = &cobra.Command{

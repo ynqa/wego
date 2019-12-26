@@ -15,20 +15,32 @@
 package main
 
 import (
-	"testing"
+	"os"
 
-	"github.com/spf13/viper"
+	"github.com/ynqa/wego/pkg/builder"
+	"github.com/ynqa/wego/pkg/model/glove"
 )
 
-const replFlagSize = 2
+func main() {
+	b := builder.NewGloveBuilder()
 
-func TestReplBind(t *testing.T) {
-	defer viper.Reset()
+	b.Dimension(10).
+		Window(5).
+		Solver(glove.SGD).
+		Verbose()
 
-	replBind(replCmd)
-
-	if len(viper.AllKeys()) != replFlagSize {
-		t.Errorf("Expected replBind maps %v keys: %v",
-			replFlagSize, viper.AllKeys())
+	m, err := b.Build()
+	if err != nil {
+		// Failed to build word2vec.
 	}
+
+	input, _ := os.Open("text8")
+
+	// Start to Train.
+	if err = m.Train(input); err != nil {
+		// Failed to train by word2vec.
+	}
+
+	// Save word vectors to a text file.
+	m.Save("example.txt")
 }

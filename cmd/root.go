@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package main
 
 import (
 	"github.com/pkg/errors"
@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/ynqa/wego/config"
+	"github.com/ynqa/wego/pkg/config"
 )
 
 // RootCmd is the root command for word embedding.

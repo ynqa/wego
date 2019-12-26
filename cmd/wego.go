@@ -1,4 +1,4 @@
-// Copyright © 2019 Makoto Ito
+// Copyright © 2017 Makoto Ito
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,20 +15,11 @@
 package main
 
 import (
-	"testing"
-
-	"github.com/spf13/viper"
+	"os"
 )
 
-const replFlagSize = 2
-
-func TestReplBind(t *testing.T) {
-	defer viper.Reset()
-
-	replBind(replCmd)
-
-	if len(viper.AllKeys()) != replFlagSize {
-		t.Errorf("Expected replBind maps %v keys: %v",
-			replFlagSize, viper.AllKeys())
+func main() {
+	if err := RootCmd.Execute(); err != nil {
+		os.Exit(1)
 	}
 }

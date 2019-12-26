@@ -14,7 +14,7 @@ RUN dep ensure -v -vendor-only
 RUN go build -v -o wego .
 
 FROM busybox
-COPY --from=builder /go/src/github.com/ynqa/wego/wego /usr/local/bin/wego
+COPY --from=builder /go/src/github.com/ynqa/wego/pkg/wego /usr/local/bin/wego
 
 ENTRYPOINT ["wego"]
 CMD ["help"]
