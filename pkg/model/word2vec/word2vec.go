@@ -1,221 +1,232 @@
-// Copyright © 2017 Makoto Ito
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package word2vec
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"math"
 	"math/rand"
 	"sync"
 
-	"github.com/pkg/errors"
-	"gopkg.in/cheggaaa/pb.v1"
+	"golang.org/x/sync/semaphore"
 
+	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	"github.com/ynqa/wego/pkg/model"
+	"github.com/ynqa/wego/pkg/model/modelutil"
+	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
+	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/subsample"
+	"github.com/ynqa/wego/pkg/verbose"
 )
 
-type Word2vecOption struct {
-	Mod                Model
-	Opt                Optimizer
-	SubsampleThreshold float64
-	Theta              float64
+type word2vec struct {
+	opts Options
+
+	corpus *corpus.Corpus
+
+	param      *matrix.Matrix
+	subsampler *subsample.Subsampler
+	currentlr  float64
+	mod        mod
+	optimizer  optimizer
+
+	verbose *verbose.Verbose
 }
 
-// Word2vec stores the configs for Word2vec models.
-type Word2vec struct {
-	*model.Option
-	*Word2vecOption
-	*corpus.Word2vecCorpus
+func New(opts ...ModelOption) (model.Model, error) {
+	options := Options{
+		CorpusOptions: corpus.DefaultOptions(),
+		ModelOptions:  model.DefaultOptions(),
 
-	subSamples []float64
+		MaxDepth:           defaultMaxDepth,
+		ModelType:          defaultModelType,
+		NegativeSampleSize: defaultNegativeSampleSize,
+		OptimizerType:      defaultOptimizerType,
+		SubsampleThreshold: defaultSubsampleThreshold,
+		Theta:              defaultTheta,
+	}
 
-	// words' vector.
-	vector []float64
+	for _, fn := range opts {
+		fn(&options)
+	}
 
-	// manage learning rate.
-	currentlr        float64
-	trained          chan struct{}
-	trainedWordCount int
-
-	// manage data range per thread.
-	indexPerThread []int
-
-	// progress bar.
-	progress *pb.ProgressBar
+	return NewForOptions(options)
 }
 
-// NewWord2vec creates *Word2Vec.
-func NewWord2vec(option *model.Option, word2vecOption *Word2vecOption) *Word2vec {
-	return &Word2vec{
-		Option:         option,
-		Word2vecOption: word2vecOption,
+func NewForOptions(opts Options) (model.Model, error) {
+	// TODO: validate Options
+	v := verbose.New(opts.ModelOptions.Verbose)
+	return &word2vec{
+		opts: opts,
 
-		currentlr: option.Initlr,
-		trained:   make(chan struct{}),
-	}
+		corpus: corpus.New(opts.CorpusOptions, v),
+
+		currentlr: opts.ModelOptions.Initlr,
+
+		verbose: v,
+	}, nil
 }
 
-func (w *Word2vec) initialize() error {
-	// Store subsumple before training.
-	w.subSamples = make([]float64, w.Word2vecCorpus.Size())
-	for i := 0; i < w.Word2vecCorpus.Size(); i++ {
-		z := float64(w.Word2vecCorpus.IDFreq(i)) / float64(w.Word2vecCorpus.TotalFreq())
-		w.subSamples[i] = (math.Sqrt(z/w.SubsampleThreshold) + 1.0) *
-			w.SubsampleThreshold / z
+func (w *word2vec) preTrain(r io.Reader) error {
+	if err := w.corpus.Build(r); err != nil {
+		return err
 	}
 
-	// Initialize word vector.
-	vectorSize := w.Word2vecCorpus.Size() * w.Dimension
-	w.vector = make([]float64, vectorSize)
-	for i := 0; i < vectorSize; i++ {
-		w.vector[i] = (rand.Float64() - 0.5) / float64(w.Dimension)
+	dic, dim := w.corpus.Dictionary(), w.opts.ModelOptions.Dim
+
+	w.param = matrix.New(
+		dic.Len(),
+		dim,
+		func(vec []float64) {
+			for i := 0; i < dim; i++ {
+				vec[i] = (rand.Float64() - 0.5) / float64(dim)
+			}
+		},
+	)
+
+	w.subsampler = subsample.New(dic, w.opts.SubsampleThreshold)
+
+	switch w.opts.ModelType {
+	case SkipGram:
+		w.mod = newSkipGram(w.opts)
+	case Cbow:
+		w.mod = newCbow(w.opts)
+	default:
+		return invalidModelTypeError(w.opts.ModelType)
 	}
 
-	// Initialize optimizer.
-	return w.Opt.initialize(w.Word2vecCorpus, w.Dimension)
-}
-
-// Train trains words' vector on corpus.
-func (w *Word2vec) Train(f io.Reader) error {
-	c := corpus.NewWord2vecCorpus()
-	if err := c.Parse(f, w.ToLower, w.MinCount, w.BatchSize, w.Verbose); err != nil {
-		return errors.Wrap(err, "Failed to parse corpus")
-	}
-	w.Word2vecCorpus = c
-	if err := w.initialize(); err != nil {
-		return errors.Wrap(err, "Failed to initialize")
-	}
-	return w.train()
-}
-
-func (w *Word2vec) train() error {
-	document := w.Document
-	documentSize := len(document)
-	if documentSize <= 0 {
-		return errors.New("No words for training")
-	}
-
-	w.indexPerThread = model.IndexPerThread(w.ThreadSize, documentSize)
-
-	for i := 1; i <= w.Iteration; i++ {
-		if w.Verbose {
-			fmt.Printf("Train %d-th:\n", i)
-			w.progress = pb.New(documentSize).SetWidth(80)
-			w.progress.Start()
-		}
-		go w.observeLearningRate()
-
-		semaphore := make(chan struct{}, w.ThreadSize)
-		waitGroup := &sync.WaitGroup{}
-
-		for j := 0; j < w.ThreadSize; j++ {
-			waitGroup.Add(1)
-			go w.trainPerThread(document[w.indexPerThread[j]:w.indexPerThread[j+1]], w.Mod.trainOne,
-				semaphore, waitGroup)
-		}
-		waitGroup.Wait()
-		if w.Verbose {
-			w.progress.Finish()
-		}
+	switch w.opts.OptimizerType {
+	case NegativeSampling:
+		w.optimizer = newNegativeSampling(
+			w.corpus.Dictionary(),
+			w.opts,
+		)
+	case HierarchicalSoftmax:
+		w.optimizer = newHierarchicalSoftmax(
+			w.corpus.Dictionary(),
+			w.opts,
+		)
+	default:
+		return invalidOptimizerTypeError(w.opts.OptimizerType)
 	}
 	return nil
 }
 
-func (w *Word2vec) trainPerThread(document []int,
-	trainOne func(document []int, wordIndex int, wordVector []float64, lr float64, optimizer Optimizer),
-	semaphore chan struct{}, waitGroup *sync.WaitGroup) {
+func (w *word2vec) Train(r io.Reader) error {
+	if err := w.preTrain(r); err != nil {
+		return err
+	}
 
+	doc := w.corpus.Doc()
+	indexPerThread := modelutil.IndexPerThread(
+		w.opts.ModelOptions.ThreadSize,
+		len(doc),
+	)
+
+	for i := 1; i <= w.opts.ModelOptions.Iter; i++ {
+		trained, clk := make(chan struct{}), clock.New()
+		go w.observe(trained, clk)
+
+		sem := semaphore.NewWeighted(int64(w.opts.ModelOptions.ThreadSize))
+		wg := &sync.WaitGroup{}
+
+		for i := 0; i < w.opts.ModelOptions.ThreadSize; i++ {
+			wg.Add(1)
+			s, e := indexPerThread[i], indexPerThread[i+1]
+			go w.trainPerThread(doc[s:e], trained, sem, wg)
+		}
+
+		wg.Wait()
+		close(trained)
+	}
+	return nil
+}
+
+func (w *word2vec) trainPerThread(
+	doc []int,
+	trained chan struct{},
+	sem *semaphore.Weighted,
+	wg *sync.WaitGroup,
+) error {
 	defer func() {
-		<-semaphore
-		waitGroup.Done()
+		wg.Done()
+		sem.Release(1)
 	}()
 
-	semaphore <- struct{}{}
-	for idx, wordID := range document {
-		if w.Verbose {
-			w.progress.Increment()
-		}
-
-		bernoulliTrial := rand.Float64()
-		p := w.subSamples[wordID]
-		if p < bernoulliTrial {
-			continue
-		}
-		trainOne(document, idx, w.vector, w.currentlr, w.Opt)
-		w.trained <- struct{}{}
+	if err := sem.Acquire(context.Background(), 1); err != nil {
+		return err
 	}
+
+	dic := w.corpus.Dictionary()
+	for pos, id := range doc {
+		if w.subsampler.Trial(id) && dic.IDFreq(id) > w.opts.ModelOptions.MinCount {
+			w.mod.trainOne(doc, pos, w.currentlr, w.param, w.optimizer)
+		}
+		trained <- struct{}{}
+	}
+
+	return nil
 }
 
-func (w *Word2vec) observeLearningRate() {
-	for range w.trained {
-		w.trainedWordCount++
-		if w.trainedWordCount%w.BatchSize == 0 {
-			w.currentlr = w.Initlr * (1.0 - float64(w.trainedWordCount)/float64(w.TotalFreq()))
-			if w.currentlr < w.Initlr*w.Theta {
-				w.currentlr = w.Initlr * w.Theta
+func (w *word2vec) observe(trained chan struct{}, clk *clock.Clock) {
+	var cnt int
+	for range trained {
+		cnt++
+		if cnt%w.opts.ModelOptions.BatchSize == 0 {
+			lower := w.opts.ModelOptions.Initlr * w.opts.Theta
+			if w.currentlr < lower {
+				w.currentlr = lower
+			} else {
+				w.currentlr = w.opts.ModelOptions.Initlr * (1.0 - float64(cnt)/float64(w.corpus.Len()))
 			}
+			w.verbose.Do(func() {
+				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
+			})
 		}
 	}
+	w.verbose.Do(func() {
+		fmt.Printf("trained %d words %v\r\n", cnt, clk.AllElapsed())
+	})
 }
 
-// Save saves the word vector to output writer.
-func (w *Word2vec) Save(output io.Writer) error {
-	if output == nil {
-		return errors.New("Invalid output writer: must not be nil")
-	}
+func (w *word2vec) Save(f io.Writer, typ save.VectorType) error {
+	writer := bufio.NewWriter(f)
+	defer writer.Flush()
 
-	wordSize := w.Size()
-	if w.Verbose {
-		fmt.Println("Save:")
-		w.progress = pb.New(wordSize).SetWidth(80)
-		defer w.progress.Finish()
-		w.progress.Start()
-	}
-
-	var contextVector []float64
-	switch opt := w.Opt.(type) {
-	case *NegativeSampling:
-		contextVector = opt.ContextVector
+	dic := w.corpus.Dictionary()
+	var ctx *matrix.Matrix
+	ng, ok := w.optimizer.(*negativeSampling)
+	if ok {
+		ctx = ng.ctx
 	}
 
 	var buf bytes.Buffer
-	for i := 0; i < wordSize; i++ {
-		word, _ := w.Word(i)
+	clk := clock.New()
+	for i := 0; i < dic.Len(); i++ {
+		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < w.Dimension; j++ {
+		for j := 0; j < w.opts.ModelOptions.Dim; j++ {
 			var v float64
-			l := i*w.Dimension + j
 			switch {
-			case w.SaveVectorType == model.ADD && len(contextVector) != 0:
-				v = w.vector[l] + contextVector[l]
-			case w.SaveVectorType == model.NORMAL:
-				v = w.vector[l]
+			case typ == save.AggregatedVector && ctx.Row() > i:
+				v = w.param.Slice(i)[j] + ctx.Slice(i)[j]
+			case typ == save.SingleVector:
+				v = w.param.Slice(i)[j]
 			default:
-				return errors.Errorf("Invalid case to save vector type=%s", w.SaveVectorType)
+				return save.InvalidVectorTypeError(typ)
 			}
 			fmt.Fprintf(&buf, "%f ", v)
 		}
 		fmt.Fprintln(&buf)
-		if w.Verbose {
-			w.progress.Increment()
-		}
+		w.verbose.Do(func() {
+			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+		})
 	}
-
-	output.Write(buf.Bytes())
+	writer.WriteString(fmt.Sprintf("%v", buf.String()))
+	w.verbose.Do(func() {
+		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+	})
 	return nil
 }

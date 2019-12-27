@@ -68,7 +68,7 @@ Wego outputs a .txt file that is described word vector is subject to the followi
 <word> <value1> <value2> ...
 ```
 
-## Example
+## API
 
 It's also able to train word vectors using wego APIs. Examples are as follows.
 
@@ -78,41 +78,28 @@ package main
 import (
 	"os"
 
-	"github.com/ynqa/wego/pkg/builder"
+	"github.com/ynqa/wego/pkg/model/modelutil/save"
 	"github.com/ynqa/wego/pkg/model/word2vec"
 )
 
 func main() {
-	b := builder.NewWord2vecBuilder()
-
-	b.Dimension(10).
-		Window(5).
-		Model(word2vec.CBOW).
-		Optimizer(word2vec.NEGATIVE_SAMPLING).
-		NegativeSampleSize(5).
-		Verbose()
-
-	m, err := b.Build()
+	model, err := word2vec.New(
+		word2vec.WithWindow(5),
+		word2vec.WithModel(word2vec.Cbow),
+		word2vec.WithOptimizer(word2vec.NegativeSampling),
+		word2vec.WithNegativeSampleSize(5),
+		word2vec.Verbose(),
+	)
 	if err != nil {
-		// Failed to build word2vec.
+		// failed to create word2vec.
 	}
 
 	input, _ := os.Open("text8")
-
-	// Start to Train.
-	if err = m.Train(input); err != nil {
-		// Failed to train by word2vec.
+	if err = model.Train(input); err != nil {
+		// failed to train.
 	}
 
-	output, err := os.Create("example.txt")
-	if err != nil {
-		// Failed to create output file.
-	}
-
-	defer func() {
-		output.Close()
-	}()
-
-	m.Save(output)
+	// write word vector.
+	model.Save(os.Stdin, save.AggregatedVector)
 }
 ```

@@ -1,200 +1,210 @@
-// Copyright © 2017 Makoto Ito
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package glove
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"math/rand"
 	"sync"
 
-	"github.com/pkg/errors"
-	"gopkg.in/cheggaaa/pb.v1"
+	"golang.org/x/sync/semaphore"
 
+	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
+	"github.com/ynqa/wego/pkg/corpus/pairwise"
 	"github.com/ynqa/wego/pkg/model"
+	"github.com/ynqa/wego/pkg/model/modelutil"
+	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
+	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/subsample"
+	"github.com/ynqa/wego/pkg/verbose"
 )
 
-type GloveOption struct {
-	Solver Solver
-	Xmax   int
-	Alpha  float64
+type glove struct {
+	opts Options
+
+	corpus *corpus.Corpus
+
+	param      *matrix.Matrix
+	subsampler *subsample.Subsampler
+	solver     solver
+
+	verbose *verbose.Verbose
 }
 
-// Glove stores the configs for Glove models.
-type Glove struct {
-	*model.Option
-	*GloveOption
-	*corpus.CountModelCorpus
+func New(opts ...ModelOption) (model.Model, error) {
+	options := Options{
+		CorpusOptions:   corpus.DefaultOptions(),
+		PairwiseOptions: pairwise.DefaultOptions(),
+		ModelOptions:    model.DefaultOptions(),
 
-	// word pairs.
-	pairs []corpus.Pair
+		Alpha:      defaultAlpha,
+		SolverType: defaultSolverType,
+		Xmax:       defaultXmax,
+	}
 
-	// words' vector.
-	vector []float64
+	for _, fn := range opts {
+		fn(&options)
+	}
 
-	// manage data range per thread.
-	indexPerThread []int
-
-	// progress bar.
-	progress *pb.ProgressBar
+	return NewForOptions(options)
 }
 
-// NewGlove creates *Glove.
-func NewGlove(option *model.Option, gloveOption *GloveOption) *Glove {
-	return &Glove{
-		Option:      option,
-		GloveOption: gloveOption,
-	}
+func NewForOptions(opts Options) (model.Model, error) {
+	// TODO: validate Options
+	v := verbose.New(opts.ModelOptions.Verbose)
+	return &glove{
+		opts: opts,
+
+		corpus: corpus.New(opts.CorpusOptions, v),
+
+		verbose: v,
+	}, nil
 }
 
-func (g *Glove) initialize() (err error) {
-	// Build pairs based on co-occurrence.
-	g.pairs, err = g.CountModelCorpus.PairsIntoGlove(g.Window, g.Xmax, g.Alpha, g.Verbose)
-	if err != nil {
-		return errors.Wrapf(err, "Failed to initialize for GloVe")
+func (g *glove) preTrain(r io.Reader) error {
+	if err := g.corpus.BuildWithPairwise(
+		r,
+		g.opts.PairwiseOptions,
+		g.opts.ModelOptions.Window,
+	); err != nil {
+		return err
 	}
 
-	// Initialize word vector.
-	vectorSize := g.CountModelCorpus.Size() * (g.Dimension + 1) * 2
-	g.vector = make([]float64, vectorSize)
-	for i := 0; i < vectorSize; i++ {
-		g.vector[i] = rand.Float64() / float64(g.Dimension)
-	}
+	dic, dim := g.corpus.Dictionary(), g.opts.ModelOptions.Dim
 
-	// Initialize solver.
-	switch solver := g.Solver.(type) {
-	case *AdaGrad:
-		solver.initialize(vectorSize)
+	g.param = matrix.New(
+		dic.Len()*2,
+		(dim + 1),
+		func(vec []float64) {
+			for i := 0; i < dim+1; i++ {
+				vec[i] = rand.Float64() / float64(dim)
+			}
+		},
+	)
+
+	g.subsampler = subsample.New(dic, g.opts.SubsampleThreshold)
+
+	switch g.opts.SolverType {
+	case Stochastic:
+		g.solver = newStochastic(g.opts.ModelOptions)
+	case AdaGrad:
+		g.solver = newAdaGrad(dic, g.opts.ModelOptions)
+	default:
+		return invalidSolverTypeError(g.opts.SolverType)
 	}
 	return nil
 }
 
-// Train trains words' vector on corpus.
-func (g *Glove) Train(f io.Reader) error {
-	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, g.ToLower, g.MinCount, g.BatchSize, g.Verbose); err != nil {
-		return errors.Wrap(err, "Unable to generate *Glove")
-	}
-	g.CountModelCorpus = c
-	if err := g.initialize(); err != nil {
-		return errors.Wrap(err, "Failed to initialize")
-	}
-	return g.train()
-}
-
-func (g *Glove) train() error {
-	pairSize := len(g.pairs)
-	if pairSize <= 0 {
-		return errors.Errorf("No pairs for training")
+func (g *glove) Train(r io.Reader) error {
+	if err := g.preTrain(r); err != nil {
+		return err
 	}
 
-	g.indexPerThread = model.IndexPerThread(g.ThreadSize, pairSize)
+	items := g.preCalculateItems(g.corpus.Pairwise())
+	itemSize := len(items)
+	indexPerThread := modelutil.IndexPerThread(
+		g.opts.ModelOptions.ThreadSize,
+		itemSize,
+	)
 
-	semaphore := make(chan struct{}, g.ThreadSize)
-	waitGroup := &sync.WaitGroup{}
+	for i := 0; i < g.opts.ModelOptions.Iter; i++ {
+		trained, clk := make(chan struct{}), clock.New()
+		go g.observe(trained, clk)
 
-	for i := 1; i <= g.Iteration; i++ {
-		if g.Verbose {
-			fmt.Printf("Train %d-th:\n", i)
-			g.progress = pb.New(pairSize).SetWidth(80)
-			g.progress.Start()
+		sem := semaphore.NewWeighted(int64(g.opts.ModelOptions.ThreadSize))
+		wg := &sync.WaitGroup{}
+
+		for i := 0; i < g.opts.ModelOptions.ThreadSize; i++ {
+			wg.Add(1)
+			s, e := indexPerThread[i], indexPerThread[i+1]
+			go g.trainPerThread(items[s:e], trained, sem, wg)
 		}
 
-		for j := 0; j < g.ThreadSize; j++ {
-			waitGroup.Add(1)
-			go g.trainPerThread(g.indexPerThread[j], g.indexPerThread[j+1],
-				semaphore, waitGroup)
-		}
-
-		switch solver := g.Solver.(type) {
-		case *Sgd:
-			solver.postOneIter()
-		}
-
-		waitGroup.Wait()
-		if g.Verbose {
-			g.progress.Finish()
-		}
+		wg.Wait()
+		close(trained)
 	}
 	return nil
 }
 
-func (g *Glove) trainPerThread(beginIdx, endIdx int,
-	semaphore chan struct{}, waitGroup *sync.WaitGroup) {
-
+func (g *glove) trainPerThread(
+	items []item,
+	trained chan struct{},
+	sem *semaphore.Weighted,
+	wg *sync.WaitGroup,
+) error {
 	defer func() {
-		<-semaphore
-		waitGroup.Done()
+		wg.Done()
+		sem.Release(1)
 	}()
 
-	semaphore <- struct{}{}
-	for i := beginIdx; i < endIdx; i++ {
-		if g.Verbose {
-			g.progress.Increment()
-		}
-		pair := g.pairs[i]
-		l1 := pair.L1 * (g.Dimension + 1)
-		l2 := (pair.L2 + g.CountModelCorpus.Size()) * (g.Dimension + 1)
-		g.Solver.trainOne(l1, l2, pair.F, pair.Coefficient, g.vector)
-		ll1 := (pair.L1 + g.CountModelCorpus.Size()) * (g.Dimension + 1)
-		ll2 := pair.L2 * (g.Dimension + 1)
-		g.Solver.trainOne(ll1, ll2, pair.F, pair.Coefficient, g.vector)
+	if err := sem.Acquire(context.Background(), 1); err != nil {
+		return err
 	}
+
+	dic := g.corpus.Dictionary()
+	for _, item := range items {
+		if g.subsampler.Trial(item.l1) &&
+			g.subsampler.Trial(item.l2) &&
+			dic.IDFreq(item.l1) > g.opts.ModelOptions.MinCount &&
+			dic.IDFreq(item.l2) > g.opts.ModelOptions.MinCount {
+			g.solver.trainOne(item.l1, item.l2+dic.Len(), g.param, item.f, item.coef)
+			g.solver.trainOne(item.l1+dic.Len(), item.l2, g.param, item.f, item.coef)
+		}
+		trained <- struct{}{}
+	}
+
+	return nil
 }
 
-// Save saves the word vector to output writer.
-func (g *Glove) Save(output io.Writer) error {
-	if output == nil {
-		return errors.New("Invalid output writer: must not be nil")
+func (g *glove) observe(trained chan struct{}, clk *clock.Clock) {
+	var cnt int
+	for range trained {
+		g.verbose.Do(func() {
+			cnt++
+			if cnt%g.opts.ModelOptions.BatchSize == 0 {
+				fmt.Printf("trained %d items %v\r", cnt, clk.AllElapsed())
+			}
+		})
 	}
+	g.verbose.Do(func() {
+		fmt.Printf("trained %d items %v\r\n", cnt, clk.AllElapsed())
+	})
+}
 
-	wordSize := g.CountModelCorpus.Size()
-	if g.Verbose {
-		fmt.Println("Save:")
-		g.progress = pb.New(wordSize).SetWidth(80)
-		defer g.progress.Finish()
-		g.progress.Start()
-	}
+func (g *glove) Save(f io.Writer, typ save.VectorType) error {
+	writer := bufio.NewWriter(f)
+	defer writer.Flush()
+
+	dic := g.corpus.Dictionary()
 
 	var buf bytes.Buffer
-	for i := 0; i < wordSize; i++ {
-		word, _ := g.CountModelCorpus.Word(i)
+	clk := clock.New()
+	for i := 0; i < dic.Len(); i++ {
+		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < g.Dimension; j++ {
-			l1 := i*(g.Dimension+1) + j
+		for j := 0; j < g.opts.ModelOptions.Dim; j++ {
 			var v float64
-			switch g.SaveVectorType {
-			case model.NORMAL:
-				v = g.vector[l1]
-			case model.ADD:
-				l2 := (i+wordSize)*(g.Dimension+1) + j
-				v = g.vector[l1] + g.vector[l2]
+			switch {
+			case typ == save.AggregatedVector:
+				v = g.param.Slice(i)[j] + g.param.Slice(i + dic.Len())[j]
+			case typ == save.SingleVector:
+				v = g.param.Slice(i)[j]
 			default:
-				return errors.Errorf("Invalid save vector type=%s", g.SaveVectorType)
+				return save.InvalidVectorTypeError(typ)
 			}
-
-			fmt.Fprintf(&buf, "%v ", v)
+			fmt.Fprintf(&buf, "%f ", v)
 		}
 		fmt.Fprintln(&buf)
-		if g.Verbose {
-			g.progress.Increment()
-		}
+		g.verbose.Do(func() {
+			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+		})
 	}
-
-	output.Write(buf.Bytes())
+	writer.WriteString(fmt.Sprintf("%v", buf.String()))
+	g.verbose.Do(func() {
+		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+	})
 	return nil
 }

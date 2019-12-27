@@ -17,11 +17,43 @@ package main
 import (
 	"os"
 
-	"github.com/ynqa/wego/cmd"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
+
+	"github.com/ynqa/wego/cmd/model/glove"
+	"github.com/ynqa/wego/cmd/model/lexvec"
+	"github.com/ynqa/wego/cmd/model/word2vec"
+	"github.com/ynqa/wego/cmd/search"
+	"github.com/ynqa/wego/cmd/search/repl"
 )
 
 func main() {
-	if err := cmd.RootCmd.Execute(); err != nil {
+	word2vec := word2vec.New()
+	glove := glove.New()
+	lexvec := lexvec.New()
+	search := search.New()
+	repl := repl.New()
+
+	cmd := &cobra.Command{
+		Use:   "wego",
+		Short: "tools for embedding words into vector space",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return errors.Errorf("Set sub-command. One of %s|%s|%s|%s|%s",
+				word2vec.Name(),
+				glove.Name(),
+				lexvec.Name(),
+				search.Name(),
+				repl.Name(),
+			)
+		},
+	}
+	cmd.AddCommand(word2vec)
+	cmd.AddCommand(glove)
+	cmd.AddCommand(lexvec)
+	cmd.AddCommand(search)
+	cmd.AddCommand(repl)
+
+	if err := cmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }

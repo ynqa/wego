@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package cmdutil
 
 import (
-	"testing"
+	"github.com/spf13/cobra"
 )
 
-func TestSigmoid(t *testing.T) {
-	table := newSigmoidTable()
-	f := table.sigmoid(3)
-	if !(f >= 0 || f <= 1) {
-		t.Errorf("Expected range is 0 < sigmoid(x) < 1, but got %v", f)
-	}
+const (
+	defaultInputFile = "example/word_vectors.txt"
+	defaultRank      = 10
+)
+
+func AddInputFlags(cmd *cobra.Command, input *string) {
+	cmd.Flags().StringVarP(input, "input", "i", defaultInputFile, "input file path for trained word vector")
+}
+
+func AddRankFlags(cmd *cobra.Command, rank *int) {
+	cmd.Flags().IntVarP(rank, "rank", "r", defaultRank, "how many similar words will be displayed")
 }

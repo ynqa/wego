@@ -1,262 +1,248 @@
-// Copyright © 2019 Makoto Ito
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package lexvec
 
 import (
+	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
-	"math"
 	"math/rand"
 	"sync"
 
-	"github.com/pkg/errors"
-	"gopkg.in/cheggaaa/pb.v1"
+	"golang.org/x/sync/semaphore"
 
-	"github.com/ynqa/wego/pkg/co"
+	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
+	"github.com/ynqa/wego/pkg/corpus/pairwise"
+	"github.com/ynqa/wego/pkg/corpus/pairwise/encode"
 	"github.com/ynqa/wego/pkg/model"
+	"github.com/ynqa/wego/pkg/model/modelutil"
+	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
+	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/subsample"
+	"github.com/ynqa/wego/pkg/verbose"
 )
 
-type LexvecOption struct {
-	NegativeSampleSize int
-	SubSampleThreshold float64
-	Theta              float64
-	Smooth             float64
-	RelationType       corpus.RelationType
+type lexvec struct {
+	opts Options
+
+	corpus *corpus.Corpus
+
+	param      *matrix.Matrix
+	subsampler *subsample.Subsampler
+	currentlr  float64
+
+	verbose *verbose.Verbose
 }
 
-// Lexvec stores the configs for Lexvec models.
-type Lexvec struct {
-	*model.Option
-	*LexvecOption
-	*corpus.CountModelCorpus
+func New(opts ...ModelOption) (model.Model, error) {
+	options := Options{
+		CorpusOptions: corpus.DefaultOptions(),
+		ModelOptions:  model.DefaultOptions(),
 
-	subSamples []float64
-
-	// word pairs.
-	pairs corpus.PairMap
-
-	// words' vector.
-	vector []float64
-
-	// manage learning rate.
-	currentlr        float64
-	trained          chan struct{}
-	trainedWordCount int
-
-	// data size per thread.
-	indexPerThread []int
-
-	// progress bar.
-	progress *pb.ProgressBar
-}
-
-// NewLexvec create *Lexvec.
-func NewLexvec(option *model.Option, lexvecOption *LexvecOption) *Lexvec {
-	return &Lexvec{
-		Option:       option,
-		LexvecOption: lexvecOption,
-
-		currentlr: option.Initlr,
-		trained:   make(chan struct{}),
+		NegativeSampleSize: defaultNegativeSampleSize,
+		RelationType:       defaultRelationType,
+		Smooth:             defaultSmooth,
+		SubsampleThreshold: defaultSubsampleThreshold,
+		Theta:              defaultTheta,
 	}
+
+	for _, fn := range opts {
+		fn(&options)
+	}
+
+	return NewForOptions(options)
 }
 
-func (l *Lexvec) initialize() (err error) {
-	// Build pairs based on co-occurrence.
-	l.pairs, err = l.CountModelCorpus.PairsIntoLexvec(l.Window, l.RelationType, l.Smooth, l.Verbose)
+func NewForOptions(opts Options) (model.Model, error) {
+	// TODO: validate Options
+	v := verbose.New(opts.ModelOptions.Verbose)
+	return &lexvec{
+		opts: opts,
 
-	// Store subsample before training.
-	l.subSamples = make([]float64, l.Corpus.Size())
-	for i := 0; i < l.Corpus.Size(); i++ {
-		z := 1. - math.Sqrt(l.SubSampleThreshold/float64(l.IDFreq(i)))
-		if z < 0 {
-			z = 0
+		corpus: corpus.New(opts.CorpusOptions, v),
+
+		currentlr: opts.ModelOptions.Initlr,
+
+		verbose: v,
+	}, nil
+}
+
+func (l *lexvec) preTrain(r io.Reader) error {
+	if err := l.corpus.BuildWithPairwise(
+		r,
+		pairwise.Options{
+			CountType: pairwise.Increment,
+		},
+		l.opts.ModelOptions.Window,
+	); err != nil {
+		return err
+	}
+
+	dic, dim := l.corpus.Dictionary(), l.opts.ModelOptions.Dim
+
+	l.param = matrix.New(
+		dic.Len()*2,
+		dim,
+		func(vec []float64) {
+			for i := 0; i < dim; i++ {
+				vec[i] = (rand.Float64() - 0.5) / float64(dim)
+			}
+		},
+	)
+
+	l.subsampler = subsample.New(dic, l.opts.SubsampleThreshold)
+	return nil
+}
+
+func (l *lexvec) Train(r io.Reader) error {
+	if err := l.preTrain(r); err != nil {
+		return err
+	}
+
+	items, err := l.preCalculateItems(l.corpus.Pairwise())
+	if err != nil {
+		return err
+	}
+	doc := l.corpus.Doc()
+	indexPerThread := modelutil.IndexPerThread(
+		l.opts.ModelOptions.ThreadSize,
+		len(doc),
+	)
+
+	for i := 1; i <= l.opts.ModelOptions.Iter; i++ {
+		trained, clk := make(chan struct{}), clock.New()
+		go l.observe(trained, clk)
+
+		sem := semaphore.NewWeighted(int64(l.opts.ModelOptions.ThreadSize))
+		wg := &sync.WaitGroup{}
+
+		for i := 0; i < l.opts.ModelOptions.ThreadSize; i++ {
+			wg.Add(1)
+			s, e := indexPerThread[i], indexPerThread[i+1]
+			go l.trainPerThread(doc[s:e], items, trained, sem, wg)
 		}
-		l.subSamples[i] = z
-	}
 
-	// Initialize word vector.
-	vectorSize := l.Corpus.Size() * l.Dimension * 2
-	l.vector = make([]float64, vectorSize)
-	for i := 0; i < vectorSize; i++ {
-		l.vector[i] = (rand.Float64() - 0.5) / float64(l.Dimension)
+		wg.Wait()
+		close(trained)
 	}
 	return nil
 }
 
-// Train trains words' vector on corpus.
-func (l *Lexvec) Train(f io.Reader) error {
-	c := corpus.NewCountModelCorpus()
-	if err := c.Parse(f, l.ToLower, l.MinCount, l.BatchSize, l.Verbose); err != nil {
-		return errors.Wrap(err, "Failed to parse corpus")
-	}
-	l.CountModelCorpus = c
-	if err := l.initialize(); err != nil {
-		return errors.Wrap(err, "Failed to initialize")
-	}
-	return l.train()
-}
-
-func (l *Lexvec) train() error {
-	document := l.Document
-	documentSize := len(document)
-	if documentSize <= 0 {
-		return errors.New("No words for training")
-	}
-
-	l.indexPerThread = model.IndexPerThread(l.ThreadSize, documentSize)
-
-	for i := 1; i <= l.Iteration; i++ {
-		if l.Verbose {
-			fmt.Printf("Train %d-th:\n", i)
-			l.progress = pb.New(documentSize).SetWidth(80)
-			l.progress.Start()
-		}
-		go l.observeLearningRate(i)
-
-		semaphore := make(chan struct{}, l.ThreadSize)
-		waitGroup := &sync.WaitGroup{}
-
-		for j := 0; j < l.ThreadSize; j++ {
-			waitGroup.Add(1)
-			go l.trainPerThread(document[l.indexPerThread[j]:l.indexPerThread[j+1]], semaphore, waitGroup)
-		}
-
-		waitGroup.Wait()
-		if l.Verbose {
-			l.progress.Finish()
-		}
-	}
-	return nil
-}
-
-func (l *Lexvec) trainPerThread(document []int, semaphore chan struct{}, waitGroup *sync.WaitGroup) {
+func (l *lexvec) trainPerThread(
+	doc []int,
+	items map[uint64]float64,
+	trained chan struct{},
+	sem *semaphore.Weighted,
+	wg *sync.WaitGroup,
+) error {
 	defer func() {
-		waitGroup.Done()
-		<-semaphore
+		wg.Done()
+		sem.Release(1)
 	}()
 
-	semaphore <- struct{}{}
-	for idx, wordID := range document {
-		if l.Verbose {
-			l.progress.Increment()
-		}
-
-		bernoulliTrial := rand.Float64()
-		p := l.subSamples[wordID]
-		if p < bernoulliTrial {
-			continue
-		}
-		l.scan(document, idx, l.vector, l.currentlr)
-		l.trained <- struct{}{}
+	if err := sem.Acquire(context.Background(), 1); err != nil {
+		return err
 	}
+
+	dic := l.corpus.Dictionary()
+	for pos, id := range doc {
+		if l.subsampler.Trial(id) && dic.IDFreq(id) > l.opts.ModelOptions.MinCount {
+			l.trainOne(doc, pos, items)
+		}
+		trained <- struct{}{}
+	}
+
+	return nil
 }
 
-func (l *Lexvec) scan(document []int, wordIndex int, wordVector []float64, lr float64) {
-	word := document[wordIndex]
-	l1 := word * l.Dimension
-	shrinkage := model.NextRandom(l.Window)
-	for a := shrinkage; a < l.Window*2+1-shrinkage; a++ {
-		if a == l.Window {
+func (l *lexvec) trainOne(doc []int, pos int, items map[uint64]float64) {
+	dic := l.corpus.Dictionary()
+	del := modelutil.NextRandom(l.opts.ModelOptions.Window)
+	for a := del; a < l.opts.ModelOptions.Window*2+1-del; a++ {
+		if a == l.opts.ModelOptions.Window {
 			continue
 		}
-		c := wordIndex - l.Window + a
-		if c < 0 || c >= len(document) {
+		c := pos - l.opts.ModelOptions.Window + a
+		if c < 0 || c >= len(doc) {
 			continue
 		}
-		context := document[c]
-		l2 := context * l.Dimension
-		encoded := co.EncodeBigram(uint64(word), uint64(context))
-		l.trainOne(l1, l2, l.pairs[encoded])
-		for n := 0; n < l.NegativeSampleSize; n++ {
-			sample := model.NextRandom(l.CountModelCorpus.Size())
-			encoded := co.EncodeBigram(uint64(word), uint64(sample))
-			l2 := (sample + l.CountModelCorpus.Size()) * l.Dimension
-			l.trainOne(l1, l2, l.pairs[encoded])
+		enc := encode.EncodeBigram(uint64(doc[pos]), uint64(doc[c]))
+		l.update(doc[pos], doc[c], items[enc])
+		for n := 0; n < l.opts.NegativeSampleSize; n++ {
+			sample := modelutil.NextRandom(dic.Len())
+			enc := encode.EncodeBigram(uint64(doc[pos]), uint64(sample))
+			l.update(doc[pos], sample+dic.Len(), items[enc])
 		}
 	}
 }
 
-func (l *Lexvec) trainOne(l1, l2 int, f float64) {
+func (l *lexvec) update(l1, l2 int, f float64) {
 	var diff float64
-	for i := 0; i < l.Dimension; i++ {
-		diff += l.vector[l1+i] * l.vector[l2+i]
+	for i := 0; i < l.opts.ModelOptions.Dim; i++ {
+		diff += l.param.Slice(l1)[i] * l.param.Slice(l2)[i]
 	}
 	diff = (diff - f) * l.currentlr
-	for i := 0; i < l.Dimension; i++ {
-		t1 := diff * l.vector[l2+i]
-		t2 := diff * l.vector[l1+i]
-		l.vector[l1+i] -= t1
-		l.vector[l2+i] -= t2
+	for i := 0; i < l.opts.ModelOptions.Dim; i++ {
+		t1 := diff * l.param.Slice(l2)[i]
+		t2 := diff * l.param.Slice(l1)[i]
+		l.param.Slice(l1)[i] -= t1
+		l.param.Slice(l2)[i] -= t2
 	}
 }
 
-func (l *Lexvec) observeLearningRate(iteration int) {
-	for range l.trained {
-		l.trainedWordCount++
-		if l.trainedWordCount%l.BatchSize == 0 {
-			l.currentlr = l.Initlr *
-				(1. - float64(l.trainedWordCount)/
-					(float64(l.Corpus.TotalFreq())-float64(iteration)))
-			if l.currentlr < l.Initlr*l.Theta {
-				l.currentlr = l.Initlr * l.Theta
+func (l *lexvec) observe(trained chan struct{}, clk *clock.Clock) {
+	var cnt int
+	for range trained {
+		cnt++
+		if cnt%l.opts.ModelOptions.BatchSize == 0 {
+			lower := l.opts.ModelOptions.Initlr * l.opts.Theta
+			if l.currentlr < lower {
+				l.currentlr = lower
+			} else {
+				l.currentlr = l.opts.ModelOptions.Initlr * (1.0 - float64(cnt)/float64(l.corpus.Len()))
 			}
+			l.verbose.Do(func() {
+				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
+			})
 		}
 	}
+	l.verbose.Do(func() {
+		fmt.Printf("trained %d words %v\r\n", cnt, clk.AllElapsed())
+	})
 }
 
-// Save saves the word vector to output writer.
-func (l *Lexvec) Save(output io.Writer) error {
-	if output == nil {
-		return errors.New("Invalid output writer: must not be nil")
-	}
+func (l *lexvec) Save(f io.Writer, typ save.VectorType) error {
+	writer := bufio.NewWriter(f)
+	defer writer.Flush()
 
-	wordSize := l.CountModelCorpus.Size()
-	if l.Verbose {
-		fmt.Println("Save:")
-		l.progress = pb.New(wordSize).SetWidth(80)
-		defer l.progress.Finish()
-		l.progress.Start()
-	}
+	dic := l.corpus.Dictionary()
 
 	var buf bytes.Buffer
-	for i := 0; i < wordSize; i++ {
-		word, _ := l.CountModelCorpus.Word(i)
+	clk := clock.New()
+	for i := 0; i < dic.Len(); i++ {
+		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < l.Dimension; j++ {
-			l1 := i*l.Dimension + j
+		for j := 0; j < l.opts.ModelOptions.Dim; j++ {
 			var v float64
-			switch l.SaveVectorType {
-			case model.NORMAL:
-				v = l.vector[l1]
-			case model.ADD:
-				l2 := (i+wordSize)*l.Dimension + j
-				v = l.vector[l1] + l.vector[l2]
+			switch {
+			case typ == save.AggregatedVector:
+				v = l.param.Slice(i)[j] + l.param.Slice(i)[j]
+			case typ == save.SingleVector:
+				v = l.param.Slice(i)[j]
 			default:
-				return errors.Errorf("Invalid save vector type=%s", l.SaveVectorType)
+				return save.InvalidVectorTypeError(typ)
 			}
-			fmt.Fprintf(&buf, "%v ", v)
+			fmt.Fprintf(&buf, "%f ", v)
 		}
 		fmt.Fprintln(&buf)
-		if l.Verbose {
-			l.progress.Increment()
-		}
+		l.verbose.Do(func() {
+			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+		})
 	}
-
-	output.Write(buf.Bytes())
+	writer.WriteString(fmt.Sprintf("%v", buf.String()))
+	l.verbose.Do(func() {
+		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+	})
 	return nil
 }

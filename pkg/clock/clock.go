@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package word2vec
+package clock
 
 import (
-	"testing"
+	"time"
 )
 
-func TestSigmoid(t *testing.T) {
-	table := newSigmoidTable()
-	f := table.sigmoid(3)
-	if !(f >= 0 || f <= 1) {
-		t.Errorf("Expected range is 0 < sigmoid(x) < 1, but got %v", f)
+type Clock struct {
+	start, last time.Time
+}
+
+func New() *Clock {
+	n := time.Now()
+	return &Clock{
+		start: n,
+		last:  n,
 	}
+}
+
+func (c *Clock) AllElapsed() time.Duration {
+	return time.Now().Sub(c.start)
 }

@@ -17,61 +17,197 @@ package search
 import (
 	"bytes"
 	"io/ioutil"
+	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ynqa/wego/pkg/item"
 )
 
-func TestSearchWithQuery(t *testing.T) {
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
-	defer f.Close()
-
-	searcher, err := NewSearcher(f)
-	if err != nil {
-		t.Errorf("Failed to create searcher: %s", err.Error())
+func TestNewForVectorFile(t *testing.T) {
+	testCases := []struct {
+		name     string
+		contents string
+		itemSize int
+	}{
+		{
+			name: "read vector file",
+			contents: `apple 1 1 1 1 1
+			banana 1 1 1 1 1
+			chocolate 0 0 0 0 0
+			dragon -1 -1 -1 -1 -1`,
+			itemSize: 4,
+		},
 	}
 
-	neighbors, err := searcher.SearchWithQuery("banana", 20)
-	if err != nil {
-		t.Errorf("Failed to search with word=banana, rank=20: %s", err.Error())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := ioutil.NopCloser(bytes.NewReader([]byte(tc.contents)))
+			defer r.Close()
+
+			s, _ := NewForVectorFile(r)
+			assert.Equal(t, tc.itemSize, len(s.Items))
+		})
+	}
+}
+
+func TestInternalSearch(t *testing.T) {
+	type args struct {
+		word string
+		k    int
 	}
 
-	if len(searcher.Vectors) != testNumVector {
-		t.Errorf("Expected searcher.Vectors len=%d, but got %d", testNumVector, len(searcher.Vectors))
+	testCases := []struct {
+		name   string
+		items  []item.Item
+		args   args
+		expect Neighbors
+	}{
+		{
+			name: "internal search",
+			items: []item.Item{
+				{
+					Word:   "apple",
+					Dim:    5,
+					Vector: []float64{1, 1, 1, 1, 1},
+				},
+				{
+					Word:   "banana",
+					Dim:    5,
+					Vector: []float64{1, 1, 1, 1, 1},
+				},
+				{
+					Word:   "chocolate",
+					Dim:    5,
+					Vector: []float64{0, 0, 0, 0, 0},
+				},
+				{
+					Word:   "dragon",
+					Dim:    5,
+					Vector: []float64{-1, -1, -1, -1, -1},
+				},
+			},
+			args: args{
+				word: "apple",
+				k:    1,
+			},
+			expect: Neighbors{
+				{
+					Word:       "banana",
+					Rank:       1,
+					Similarity: 1.,
+				},
+			},
+		},
 	}
 
-	if len(neighbors) != testNumVector-1 {
-		t.Errorf("Expected neighbors len=%d, but got %d", testNumVector-1, len(neighbors))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, _ := New(tc.items...)
+			neighbors, _ := s.InternalSearch(tc.args.word, tc.args.k)
+			assert.Truef(t, reflect.DeepEqual(neighbors, tc.expect), "Must be equal %v and %v", neighbors, tc.expect)
+		})
 	}
-
-	// NOTE: temporarily comment out the following lines
-	// if neighbors[0].word != "apple" {
-	// 	t.Errorf("Expected the most near word is `apple` for `banana`, but got neighbors=%v", neighbors)
-	// }
 }
 
 func TestSearch(t *testing.T) {
-	f := ioutil.NopCloser(bytes.NewReader([]byte(testVectorStr)))
-	defer f.Close()
-
-	searcher, err := NewSearcher(f)
-	if err != nil {
-		t.Errorf("Failed to create searcher: %s", err.Error())
+	type args struct {
+		query []float64
+		k     int
 	}
 
-	neighbors, err := searcher.Search(dragonVector, 20)
-	if err != nil {
-		t.Errorf("Failed to search with vector=%v, rank=20: %s", dragonVector, err.Error())
+	testCases := []struct {
+		name   string
+		items  []item.Item
+		args   args
+		expect Neighbors
+	}{
+		{
+			name: "internal search",
+			items: []item.Item{
+				{
+					Word:   "apple",
+					Dim:    5,
+					Vector: []float64{1, 1, 1, 1, 1},
+				},
+				{
+					Word:   "banana",
+					Dim:    5,
+					Vector: []float64{1, 1, 1, 1, 1},
+				},
+				{
+					Word:   "chocolate",
+					Dim:    5,
+					Vector: []float64{0, 0, 0, 0, 0},
+				},
+				{
+					Word:   "dragon",
+					Dim:    5,
+					Vector: []float64{-1, -1, -1, -1, -1},
+				},
+			},
+			args: args{
+				query: []float64{-1, -1, -1, -1, -1},
+				k:     1,
+			},
+			expect: Neighbors{
+				{
+					Word:       "dragon",
+					Rank:       1,
+					Similarity: 1.,
+				},
+			},
+		},
 	}
 
-	if len(searcher.Vectors) != testNumVector {
-		t.Errorf("Expected searcher.Vectors len=%d, but got %d", testNumVector, len(searcher.Vectors))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, _ := New(tc.items...)
+			neighbors, _ := s.Search(tc.args.query, tc.args.k)
+			assert.Truef(t, reflect.DeepEqual(tc.expect, neighbors), "Must be equal %v and %v", tc.expect, neighbors)
+		})
+	}
+}
+
+func TestNorm(t *testing.T) {
+	testCases := []struct {
+		name   string
+		vec    []float64
+		expect float64
+	}{
+		{
+			name:   "norm",
+			vec:    []float64{1, 1, 1, 1, 0, 0},
+			expect: 2.,
+		},
 	}
 
-	if len(neighbors) != testNumVector {
-		t.Errorf("Expected neighbors len=%d, but got %d", testNumVector, len(neighbors))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, norm(tc.vec))
+		})
+	}
+}
+
+func TestCosine(t *testing.T) {
+	testCases := []struct {
+		name   string
+		v1     []float64
+		v2     []float64
+		expect float64
+	}{
+		{
+			name:   "cosine",
+			v1:     []float64{1, 1, 1, 1, 0, 0},
+			v2:     []float64{1, 1, 0, 0, 1, 1},
+			expect: 0.5,
+		},
 	}
 
-	// NOTE: temporarily comment out the following lines
-	// if neighbors[0].word != "dragon" {
-	// 	t.Errorf("Expected the most near word is vector=%v for `dragon`, but got neighbors=%v", dragonVector, neighbors)
-	// }
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, cosine(tc.v1, tc.v2, norm(tc.v1), norm(tc.v2)))
+		})
+	}
 }
