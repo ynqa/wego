@@ -15,14 +15,10 @@
 package glove
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"math/rand"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -160,30 +156,11 @@ func (g *Glove) trainPerThread(beginIdx, endIdx int,
 	}
 }
 
-// Save saves the word vector to outputFile.
-func (g *Glove) Save(outputPath string) error {
-	extractDir := func(path string) string {
-		e := strings.Split(path, "/")
-		return strings.Join(e[:len(e)-1], "/")
+// Save saves the word vector to output writer.
+func (g *Glove) Save(output io.Writer) error {
+	if output == nil {
+		return errors.New("Invalid output writer: must not be nil")
 	}
-
-	dir := extractDir(outputPath)
-
-	if err := os.MkdirAll("."+string(filepath.Separator)+dir, 0777); err != nil {
-		return err
-	}
-
-	file, err := os.Create(outputPath)
-
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(file)
-
-	defer func() {
-		w.Flush()
-		file.Close()
-	}()
 
 	wordSize := g.CountModelCorpus.Size()
 	if g.Verbose {
@@ -217,6 +194,7 @@ func (g *Glove) Save(outputPath string) error {
 			g.progress.Increment()
 		}
 	}
-	w.WriteString(fmt.Sprintf("%v", buf.String()))
+
+	output.Write(buf.Bytes())
 	return nil
 }

@@ -15,15 +15,11 @@
 package word2vec
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"math"
 	"math/rand"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -177,30 +173,11 @@ func (w *Word2vec) observeLearningRate() {
 	}
 }
 
-// Save saves the word vector to outputFile.
-func (w *Word2vec) Save(outputPath string) error {
-	extractDir := func(path string) string {
-		e := strings.Split(path, "/")
-		return strings.Join(e[:len(e)-1], "/")
+// Save saves the word vector to output writer.
+func (w *Word2vec) Save(output io.Writer) error {
+	if output == nil {
+		return errors.New("Invalid output writer: must not be nil")
 	}
-
-	dir := extractDir(outputPath)
-
-	if err := os.MkdirAll("."+string(filepath.Separator)+dir, 0777); err != nil {
-		return err
-	}
-
-	file, err := os.Create(outputPath)
-
-	if err != nil {
-		return err
-	}
-	wr := bufio.NewWriter(file)
-
-	defer func() {
-		wr.Flush()
-		file.Close()
-	}()
 
 	wordSize := w.Size()
 	if w.Verbose {
@@ -238,6 +215,7 @@ func (w *Word2vec) Save(outputPath string) error {
 			w.progress.Increment()
 		}
 	}
-	wr.WriteString(fmt.Sprintf("%v", buf.String()))
+
+	output.Write(buf.Bytes())
 	return nil
 }
