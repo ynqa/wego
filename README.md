@@ -104,7 +104,15 @@ func main() {
 		// Failed to train by word2vec.
 	}
 
-	// Save word vectors to a text file.
-	m.Save("example.txt")
+	output, err := os.Create("example.txt")
+	if err != nil {
+		// Failed to create output file.
+	}
+
+	defer func() {
+		output.Close()
+	}()
+
+	m.Save(output)
 }
 ```

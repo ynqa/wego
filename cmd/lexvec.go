@@ -67,9 +67,9 @@ func bindLexvec(cmd *cobra.Command) {
 }
 
 func runLexvec() error {
-	outputFile := viper.GetString(config.OutputFile.String())
-	if validate.FileExists(outputFile) {
-		return errors.Errorf("%s is already existed", outputFile)
+	outputFileName := viper.GetString(config.OutputFile.String())
+	if validate.FileExists(outputFileName) {
+		return errors.Errorf("%s is already existed", outputFileName)
 	}
 	lexvec, err := builder.NewLexvecBuilderFromViper()
 	if err != nil {
@@ -90,5 +90,12 @@ func runLexvec() error {
 	if err := mod.Train(input); err != nil {
 		return err
 	}
+	outputFile, err := os.Create(outputFileName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		outputFile.Close()
+	}()
 	return mod.Save(outputFile)
 }

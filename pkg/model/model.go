@@ -21,7 +21,7 @@ import (
 // Model is the interface that has Train, Save.
 type Model interface {
 	Train(f io.Reader) error
-	Save(outputFile string) error
+	Save(o io.Writer) error
 }
 
 // SaveVectorType is a list of types to save model.

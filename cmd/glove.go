@@ -64,9 +64,9 @@ func bindGlove(cmd *cobra.Command) {
 }
 
 func runGlove() error {
-	outputFile := viper.GetString(config.OutputFile.String())
-	if validate.FileExists(outputFile) {
-		return errors.Errorf("%s is already existed", outputFile)
+	outputFileName := viper.GetString(config.OutputFile.String())
+	if validate.FileExists(outputFileName) {
+		return errors.Errorf("%s is already existed", outputFileName)
 	}
 	glove, err := builder.NewGloveBuilderFromViper()
 	if err != nil {
@@ -87,5 +87,12 @@ func runGlove() error {
 	if err := mod.Train(input); err != nil {
 		return err
 	}
+	outputFile, err := os.Create(outputFileName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		outputFile.Close()
+	}()
 	return mod.Save(outputFile)
 }

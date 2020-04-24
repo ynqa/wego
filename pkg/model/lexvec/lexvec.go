@@ -15,15 +15,11 @@
 package lexvec
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"math"
 	"math/rand"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -223,29 +219,11 @@ func (l *Lexvec) observeLearningRate(iteration int) {
 	}
 }
 
-func (l *Lexvec) Save(outputPath string) error {
-	extractDir := func(path string) string {
-		e := strings.Split(path, "/")
-		return strings.Join(e[:len(e)-1], "/")
+// Save saves the word vector to output writer.
+func (l *Lexvec) Save(output io.Writer) error {
+	if output == nil {
+		return errors.New("Invalid output writer: must not be nil")
 	}
-
-	dir := extractDir(outputPath)
-
-	if err := os.MkdirAll("."+string(filepath.Separator)+dir, 0777); err != nil {
-		return err
-	}
-
-	file, err := os.Create(outputPath)
-
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(file)
-
-	defer func() {
-		w.Flush()
-		file.Close()
-	}()
 
 	wordSize := l.CountModelCorpus.Size()
 	if l.Verbose {
@@ -278,6 +256,7 @@ func (l *Lexvec) Save(outputPath string) error {
 			l.progress.Increment()
 		}
 	}
-	w.WriteString(fmt.Sprintf("%v", buf.String()))
+
+	output.Write(buf.Bytes())
 	return nil
 }
