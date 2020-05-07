@@ -15,7 +15,7 @@ type item struct {
 	coef   float64
 }
 
-func (g *glove) preCalculateItems(pairwise *pairwise.Pairwise) []item {
+func (g *glove) makeItems(pairwise *pairwise.Pairwise) []item {
 	col := pairwise.Colloc()
 	res, idx, clk := make([]item, len(col)), 0, clock.New()
 	for enc, f := range col {

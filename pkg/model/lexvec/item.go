@@ -10,7 +10,7 @@ import (
 	"github.com/ynqa/wego/pkg/corpus/pairwise/encode"
 )
 
-func (l *lexvec) preCalculateItems(pairwise *pairwise.Pairwise) (map[uint64]float64, error) {
+func (l *lexvec) makeItems(pairwise *pairwise.Pairwise) (map[uint64]float64, error) {
 	col := pairwise.Colloc()
 	res, idx, clk := make(map[uint64]float64), 0, clock.New()
 	logTotalFreq := math.Log(math.Pow(float64(l.corpus.Len()), l.opts.Smooth))

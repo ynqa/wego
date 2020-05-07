@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ynqa/wego/pkg/item"
+	"github.com/ynqa/wego/pkg/search/searchutil"
 )
 
 func TestNewForVectorFile(t *testing.T) {
@@ -185,7 +186,7 @@ func TestNorm(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expect, norm(tc.vec))
+			assert.Equal(t, tc.expect, searchutil.Norm(tc.vec))
 		})
 	}
 }
@@ -207,7 +208,7 @@ func TestCosine(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.expect, cosine(tc.v1, tc.v2, norm(tc.v1), norm(tc.v2)))
+			assert.Equal(t, tc.expect, searchutil.Cosine(tc.v1, tc.v2, searchutil.Norm(tc.v1), searchutil.Norm(tc.v2)))
 		})
 	}
 }

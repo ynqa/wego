@@ -103,7 +103,7 @@ func (g *glove) Train(r io.Reader) error {
 		return err
 	}
 
-	items := g.preCalculateItems(g.corpus.Pairwise())
+	items := g.makeItems(g.corpus.Pairwise())
 	itemSize := len(items)
 	indexPerThread := modelutil.IndexPerThread(
 		g.opts.ModelOptions.ThreadSize,

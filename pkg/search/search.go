@@ -17,7 +17,6 @@ package search
 import (
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"sort"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/ynqa/wego/pkg/item"
+	"github.com/ynqa/wego/pkg/search/searchutil"
 )
 
 // Neighbor stores the word with cosine similarity value on the target.
@@ -89,7 +89,7 @@ func New(items ...item.Item) (*Searcher, error) {
 		}
 		elems[i] = Item{
 			Item: item,
-			Norm: norm(item.Vector),
+			Norm: searchutil.Norm(item.Vector),
 		}
 		wholeDim = item.Dim
 	}
@@ -113,7 +113,7 @@ func NewForVectorFile(r io.Reader) (*Searcher, error) {
 		}
 		elems = append(elems, Item{
 			Item: item,
-			Norm: norm(item.Vector),
+			Norm: searchutil.Norm(item.Vector),
 		})
 		i++
 		wholeDim = item.Dim
@@ -163,7 +163,7 @@ func (s *Searcher) Search(query []float64, k int) (Neighbors, error) {
 		Item: item.Item{
 			Vector: query,
 		},
-		Norm: norm(query),
+		Norm: searchutil.Norm(query),
 	}, k)
 }
 
@@ -177,7 +177,7 @@ func (s *Searcher) search(query Item, k int, ignoreWord ...string) (Neighbors, e
 		if !ignore {
 			neighbors[i] = Neighbor{
 				Word:       item.Word,
-				Similarity: cosine(query.Vector, item.Vector, query.Norm, item.Norm),
+				Similarity: searchutil.Cosine(query.Vector, item.Vector, query.Norm, item.Norm),
 			}
 		}
 	}
@@ -192,23 +192,4 @@ func (s *Searcher) search(query Item, k int, ignoreWord ...string) (Neighbors, e
 		k = len(s.Items)
 	}
 	return neighbors[:k], nil
-}
-
-func norm(vec []float64) float64 {
-	var n float64
-	for _, v := range vec {
-		n += math.Pow(v, 2)
-	}
-	return math.Sqrt(n)
-}
-
-func cosine(v1, v2 []float64, n1, n2 float64) float64 {
-	if n1 == 0 || n2 == 0 {
-		return 0
-	}
-	var dot float64
-	for i := range v1 {
-		dot += v1[i] * v2[i]
-	}
-	return dot / n1 / n2
 }

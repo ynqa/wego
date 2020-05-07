@@ -100,7 +100,7 @@ func (l *lexvec) Train(r io.Reader) error {
 		return err
 	}
 
-	items, err := l.preCalculateItems(l.corpus.Pairwise())
+	items, err := l.makeItems(l.corpus.Pairwise())
 	if err != nil {
 		return err
 	}
