@@ -19,7 +19,7 @@ import (
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
-	"github.com/ynqa/wego/pkg/model/subsample"
+	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
 	"github.com/ynqa/wego/pkg/verbose"
 )
 
