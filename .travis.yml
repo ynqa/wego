@@ -1,9 +1,7 @@
 language: go
 
 go:
-  - "1.12.x"
-  - "1.13.x"
-  - tip
+  - "1.14.x"
 
 services:
   - docker
@@ -12,9 +10,6 @@ addons:
   apt:
     packages:
       - docker-ce
-
-env:
-  - GO111MODULE=on
 
 before_install:
   - go get github.com/mattn/goveralls
@@ -26,7 +21,7 @@ script:
   - go test -cover $(go list ./...)
 
 after_script: |
-  if [[ $TRAVIS_GO_VERSION == 1.13* ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
+  if [[ $TRAVIS_GO_VERSION == 1.14* ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
     goveralls -repotoken ${COVERALLS_TOKEN}
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     docker build -t ynqa/wego:latest .
