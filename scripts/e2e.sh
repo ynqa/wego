@@ -1,23 +1,26 @@
 #!/bin/bash -e
 
-e2e=$(basename $0)
+E2E=$(basename $0)
+function usage() {
+	cat <<EOF
+Usage:
+	${E2E} [flags]
 
-usage() {
-	echo "Usage: $e2e [flags]"
-	echo "Flags:"
-	echo "  -h, --help"
-	echo "  -a, --all"
-	echo "  --all-word2vec"
-	echo "  --all-glove"
-	echo "  --all-lexvec"
-	echo "  -t, --train"
-	echo "  --train-word2vec"
-	echo "  --train-glove"
-	echo "  --train-lexvec"
-	echo "  -s, --search"
-	echo "  --search-word2vec"
-	echo "  --search-glove"
-	echo "  --search-lexvec"
+Flags:
+	-a, --all         run all jobs for all models
+	--all-word2vec    run all jobs for word2vec
+	--all-glove       run all jobs for glove
+	--all-lexvec      run all jobs for lexvec
+	-t, --train       run train job for all models
+	--train-word2vec  run train job for word2vec
+	--train-glove     run train job for glove
+	--train-lexvec    run train job for lexvec
+	-s, --search      run search job for all models
+	--search-word2vec run search job for word2vec
+	--search-glove    run search job for glove
+	--search-lexvec   run search job for lexvec
+	-h, --help        print usage
+EOF
 }
 
 function build() {
@@ -97,7 +100,7 @@ function search_lexvec() {
 }
 
 for OPT in "$@"; do
-	case "$OPT" in
+	case "${OPT}" in
 	'-h' | '--help')
 		usage
 		exit 1
@@ -179,7 +182,7 @@ for OPT in "$@"; do
 		search_lexvec
 		;;
 	-*)
-		echo "$e2e: illegal option $1"
+		echo "${E2E}: illegal option $1"
 		usage
 		exit 1
 		;;
