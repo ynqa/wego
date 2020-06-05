@@ -16,9 +16,9 @@ type item struct {
 }
 
 func (g *glove) makeItems(pairwise *pairwise.Pairwise) []item {
-	col := pairwise.Colloc()
-	res, idx, clk := make([]item, len(col)), 0, clock.New()
-	for enc, f := range col {
+	pm := pairwise.PairMap()
+	res, idx, clk := make([]item, len(pm)), 0, clock.New()
+	for enc, f := range pm {
 		u1, u2 := encode.DecodeBigram(enc)
 		l1, l2 := int(u1), int(u2)
 		coef := 1.

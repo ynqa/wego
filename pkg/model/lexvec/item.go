@@ -11,10 +11,10 @@ import (
 )
 
 func (l *lexvec) makeItems(pairwise *pairwise.Pairwise) (map[uint64]float64, error) {
-	col := pairwise.Colloc()
+	pm := pairwise.PairMap()
 	res, idx, clk := make(map[uint64]float64), 0, clock.New()
 	logTotalFreq := math.Log(math.Pow(float64(l.corpus.Len()), l.opts.Smooth))
-	for enc, f := range col {
+	for enc, f := range pm {
 		u1, u2 := encode.DecodeBigram(enc)
 		l1, l2 := int(u1), int(u2)
 		v, err := l.calculateRelation(
