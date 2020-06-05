@@ -5,19 +5,23 @@ import (
 )
 
 const (
-	defaultToLower = false
+	defaultMinCount = 5
+	defaultToLower  = false
 )
 
 type Options struct {
-	ToLower bool
+	MinCount int
+	ToLower  bool
 }
 
 func DefaultOptions() Options {
 	return Options{
-		ToLower: defaultToLower,
+		MinCount: defaultMinCount,
+		ToLower:  defaultToLower,
 	}
 }
 
 func LoadForCmd(cmd *cobra.Command, opts *Options) {
+	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter rare words")
 	cmd.Flags().BoolVar(&opts.ToLower, "lower", defaultToLower, "whether the words on corpus convert to lowercase or not")
 }

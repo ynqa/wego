@@ -145,9 +145,8 @@ func (l *lexvec) trainPerThread(
 		return err
 	}
 
-	dic := l.corpus.Dictionary()
 	for pos, id := range doc {
-		if l.subsampler.Trial(id) && dic.IDFreq(id) > l.opts.ModelOptions.MinCount {
+		if l.subsampler.Trial(id) {
 			l.trainOne(doc, pos, items)
 		}
 		trained <- struct{}{}

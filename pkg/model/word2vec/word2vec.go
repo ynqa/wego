@@ -159,9 +159,8 @@ func (w *word2vec) trainPerThread(
 		return err
 	}
 
-	dic := w.corpus.Dictionary()
 	for pos, id := range doc {
-		if w.subsampler.Trial(id) && dic.IDFreq(id) > w.opts.ModelOptions.MinCount {
+		if w.subsampler.Trial(id) {
 			w.mod.trainOne(doc, pos, w.currentlr, w.param, w.optimizer)
 		}
 		trained <- struct{}{}

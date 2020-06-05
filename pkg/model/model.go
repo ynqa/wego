@@ -32,7 +32,6 @@ var (
 	defaultDim        = 10
 	defaultInitlr     = 0.025
 	defaultIter       = 15
-	defaultMinCount   = 5
 	defaultThreadSize = runtime.NumCPU()
 	defaultWindow     = 5
 	defaultVerbose    = false
@@ -44,7 +43,6 @@ type Options struct {
 	Dim        int
 	Initlr     float64
 	Iter       int
-	MinCount   int
 	ThreadSize int
 	Window     int
 	Verbose    bool
@@ -56,7 +54,6 @@ func DefaultOptions() Options {
 		Dim:        defaultDim,
 		Initlr:     defaultInitlr,
 		Iter:       defaultIter,
-		MinCount:   defaultMinCount,
 		ThreadSize: defaultThreadSize,
 		Window:     defaultWindow,
 		Verbose:    defaultVerbose,
@@ -68,7 +65,6 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 	cmd.Flags().IntVarP(&opts.Dim, "dim", "d", defaultDim, "dimension for word vector")
 	cmd.Flags().Float64Var(&opts.Initlr, "initlr", defaultInitlr, "initial learning rate")
 	cmd.Flags().IntVar(&opts.Iter, "iter", defaultIter, "number of iteration")
-	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter rare words")
 	cmd.Flags().IntVar(&opts.ThreadSize, "thread", defaultThreadSize, "number of goroutine")
 	cmd.Flags().IntVarP(&opts.Window, "window", "w", defaultWindow, "context window size")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", defaultVerbose, "verbose mode")

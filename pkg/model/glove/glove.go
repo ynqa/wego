@@ -18,7 +18,6 @@ import (
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
-	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
 	"github.com/ynqa/wego/pkg/verbose"
 )
 
@@ -27,9 +26,8 @@ type glove struct {
 
 	corpus *corpus.Corpus
 
-	param      *matrix.Matrix
-	subsampler *subsample.Subsampler
-	solver     solver
+	param  *matrix.Matrix
+	solver solver
 
 	verbose *verbose.Verbose
 }
@@ -84,8 +82,6 @@ func (g *glove) preTrain(r io.Reader) error {
 			}
 		},
 	)
-
-	g.subsampler = subsample.New(dic, g.opts.SubsampleThreshold)
 
 	switch g.opts.SolverType {
 	case Stochastic:
@@ -146,13 +142,8 @@ func (g *glove) trainPerThread(
 
 	dic := g.corpus.Dictionary()
 	for _, item := range items {
-		if g.subsampler.Trial(item.l1) &&
-			g.subsampler.Trial(item.l2) &&
-			dic.IDFreq(item.l1) > g.opts.ModelOptions.MinCount &&
-			dic.IDFreq(item.l2) > g.opts.ModelOptions.MinCount {
-			g.solver.trainOne(item.l1, item.l2+dic.Len(), g.param, item.f, item.coef)
-			g.solver.trainOne(item.l1+dic.Len(), item.l2, g.param, item.f, item.coef)
-		}
+		g.solver.trainOne(item.l1, item.l2+dic.Len(), g.param, item.f, item.coef)
+		g.solver.trainOne(item.l1+dic.Len(), item.l2, g.param, item.f, item.coef)
 		trained <- struct{}{}
 	}
 

@@ -59,7 +59,7 @@ func (c *Corpus) Build(r io.Reader) error {
 	scanner := bufio.NewScanner(r)
 	scanner.Split(bufio.ScanWords)
 
-	cnt, clk := 0, clock.New()
+	clk := clock.New()
 	for scanner.Scan() {
 		word := scanner.Text()
 		if c.opts.ToLower {
@@ -72,10 +72,9 @@ func (c *Corpus) Build(r io.Reader) error {
 		c.maxLen++
 
 		c.verbose.Do(func() {
-			if cnt%100000 == 0 {
-				fmt.Printf("read %d words %v\r", cnt, clk.AllElapsed())
+			if c.maxLen%100000 == 0 {
+				fmt.Printf("read %d words %v\r", c.maxLen, clk.AllElapsed())
 			}
-			cnt++
 		})
 	}
 	if err := scanner.Err(); err != nil && err != io.EOF {
@@ -83,8 +82,26 @@ func (c *Corpus) Build(r io.Reader) error {
 	}
 
 	c.verbose.Do(func() {
-		fmt.Printf("read %d words %v\r\n", cnt, clk.AllElapsed())
+		fmt.Printf("read %d words %v\r\n", c.maxLen, clk.AllElapsed())
 	})
+
+	if err := c.filter(); err != nil {
+		return err
+	}
+	c.verbose.Do(func() {
+		fmt.Printf("filtered to %d words %v\r\n", len(c.doc), clk.AllElapsed())
+	})
+	return nil
+}
+
+func (c *Corpus) filter() error {
+	dst := make([]int, 0)
+	for _, id := range c.doc {
+		if c.dic.IDFreq(id) > c.opts.MinCount {
+			dst = append(dst, id)
+		}
+	}
+	c.doc = dst
 	return nil
 }
 

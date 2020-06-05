@@ -87,6 +87,12 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 type ModelOption func(*Options)
 
 // corpus options
+func WithMinCount(v int) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.CorpusOptions.MinCount = v
+	})
+}
+
 func ToLower() ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.CorpusOptions.ToLower = true
@@ -115,12 +121,6 @@ func WithInitLearningRate(v float64) ModelOption {
 func WithIteration(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.ModelOptions.Iter = v
-	})
-}
-
-func WithMinCount(v int) ModelOption {
-	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.MinCount = v
 	})
 }
 
