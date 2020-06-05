@@ -65,10 +65,10 @@ func NewForOptions(opts Options) (model.Model, error) {
 }
 
 func (g *glove) preTrain(r io.Reader) error {
-	if err := g.corpus.BuildWithPairwise(
+	g.opts.PairwiseOptions.Window = g.opts.ModelOptions.Window
+	if err := g.corpus.BuildForPairwise(
 		r,
 		g.opts.PairwiseOptions,
-		g.opts.ModelOptions.Window,
 	); err != nil {
 		return err
 	}

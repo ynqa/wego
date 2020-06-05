@@ -88,7 +88,7 @@ func (c *Corpus) Build(r io.Reader) error {
 	return nil
 }
 
-func (c *Corpus) BuildWithPairwise(r io.Reader, opts pairwise.Options, window int) error {
+func (c *Corpus) BuildForPairwise(r io.Reader, opts pairwise.Options) error {
 	c.pair = pairwise.New(opts)
 
 	if err := c.Build(r); err != nil {
@@ -96,7 +96,7 @@ func (c *Corpus) BuildWithPairwise(r io.Reader, opts pairwise.Options, window in
 	}
 
 	for i := 0; i < len(c.doc); i++ {
-		for j := i + 1; j < len(c.doc) && j <= i+window; j++ {
+		for j := i + 1; j < len(c.doc) && j <= i+opts.Window; j++ {
 			if err := c.pair.Add(c.doc[i], c.doc[j]); err != nil {
 				return err
 			}

@@ -17,6 +17,7 @@ const (
 	Increment        CountType = "inc"
 	Distance         CountType = "dis"
 	defaultCountType           = Increment
+	defaultWindow              = 5
 )
 
 func (t *CountType) String() string {
@@ -41,11 +42,13 @@ func (t *CountType) Type() string {
 
 type Options struct {
 	CountType CountType
+	Window    int
 }
 
 func DefaultOptions() Options {
 	return Options{
 		CountType: defaultCountType,
+		Window:    defaultWindow,
 	}
 }
 

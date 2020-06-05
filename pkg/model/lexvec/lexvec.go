@@ -69,12 +69,12 @@ func NewForOptions(opts Options) (model.Model, error) {
 }
 
 func (l *lexvec) preTrain(r io.Reader) error {
-	if err := l.corpus.BuildWithPairwise(
+	if err := l.corpus.BuildForPairwise(
 		r,
 		pairwise.Options{
 			CountType: pairwise.Increment,
+			Window:    l.opts.ModelOptions.Window,
 		},
-		l.opts.ModelOptions.Window,
 	); err != nil {
 		return err
 	}
