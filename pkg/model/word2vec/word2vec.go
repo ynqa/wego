@@ -1,3 +1,17 @@
+// Copyright © 2020 wego authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package word2vec
 
 import (
@@ -209,9 +223,9 @@ func (w *word2vec) Save(f io.Writer, typ save.VectorType) error {
 		for j := 0; j < w.opts.ModelOptions.Dim; j++ {
 			var v float64
 			switch {
-			case typ == save.AggregatedVector && ctx.Row() > i:
+			case typ == save.Aggregated && ctx.Row() > i:
 				v = w.param.Slice(i)[j] + ctx.Slice(i)[j]
-			case typ == save.SingleVector:
+			case typ == save.Single:
 				v = w.param.Slice(i)[j]
 			default:
 				return save.InvalidVectorTypeError(typ)

@@ -1,24 +1,24 @@
 language: go
 
 go:
-  - "1.14.x"
+- "1.14.x"
 
 services:
-  - docker
+- docker
 
 addons:
   apt:
     packages:
-      - docker-ce
+    - docker-ce
 
 before_install:
-  - go get github.com/mattn/goveralls
+- go get github.com/mattn/goveralls
 
 install:
-  - go mod vendor
+- go mod vendor
 
 script:
-  - go test -cover $(go list ./...)
+- go test -cover $(go list ./...)
 
 after_script: |
   if [[ $TRAVIS_GO_VERSION == 1.14* ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then

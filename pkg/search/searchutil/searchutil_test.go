@@ -14,13 +14,32 @@
 
 package searchutil
 
-func Cosine(v1, v2 []float64, n1, n2 float64) float64 {
-	if n1 == 0 || n2 == 0 {
-		return 0
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/ynqa/wego/pkg/embedding/embutil"
+)
+
+func TestCosine(t *testing.T) {
+	testCases := []struct {
+		name   string
+		v1     []float64
+		v2     []float64
+		expect float64
+	}{
+		{
+			name:   "cosine",
+			v1:     []float64{1, 1, 1, 1, 0, 0},
+			v2:     []float64{1, 1, 0, 0, 1, 1},
+			expect: 0.5,
+		},
 	}
-	var dot float64
-	for i := range v1 {
-		dot += v1[i] * v2[i]
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, Cosine(tc.v1, tc.v2, embutil.Norm(tc.v1), embutil.Norm(tc.v2)))
+		})
 	}
-	return dot / n1 / n2
 }

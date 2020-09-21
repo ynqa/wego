@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2020 wego authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ynqa/wego/cmd/search/cmdutil"
+	"github.com/ynqa/wego/pkg/embedding"
 	"github.com/ynqa/wego/pkg/search"
 )
 
@@ -60,11 +61,15 @@ func execute(args []string) error {
 		return err
 	}
 	defer input.Close()
-	searcher, err := search.NewForVectorFile(input)
+	embs, err := embedding.Load(input)
 	if err != nil {
 		return err
 	}
-	neighbors, err := searcher.InternalSearch(args[0], rank)
+	searcher, err := search.New(embs...)
+	if err != nil {
+		return err
+	}
+	neighbors, err := searcher.SearchInternal(args[0], rank)
 	if err != nil {
 		return err
 	}

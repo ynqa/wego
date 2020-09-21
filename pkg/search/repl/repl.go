@@ -1,4 +1,4 @@
-// Copyright © 2019 Makoto Ito
+// Copyright © 2020 wego authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,41 +19,43 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"io"
 
 	"github.com/peterh/liner"
 	"github.com/pkg/errors"
+	"github.com/ynqa/wego/pkg/embedding"
+	"github.com/ynqa/wego/pkg/embedding/embutil"
 	"github.com/ynqa/wego/pkg/search"
 )
 
-var (
-	vector []float64
-)
-
-type searchParam struct {
+type searchparams struct {
 	dim int
 	k   int
+}
+
+type searchcursor struct {
+	w1, w2 string
+	vector []float64
 }
 
 type Repl struct {
 	*liner.State
 	searcher *search.Searcher
-	param    *searchParam
+	cursor   *searchcursor
+	params   *searchparams
 }
 
-func New(r io.Reader, k int) (*Repl, error) {
-	searcher, err := search.NewForVectorFile(r)
-	if err != nil {
-		return nil, err
-	}
+func New(searcher *search.Searcher, k int) (*Repl, error) {
 	if searcher.Items.Empty() {
 		return nil, errors.New("Number of items for searcher must be over 0")
 	}
 	return &Repl{
 		State:    liner.NewLiner(),
 		searcher: searcher,
-		param: &searchParam{
-			dim: len(searcher.Items),
+		cursor: &searchcursor{
+			vector: make([]float64, searcher.Items[0].Dim),
+		},
+		params: &searchparams{
+			dim: searcher.Items[0].Dim,
 			k:   k,
 		},
 	}, nil
@@ -81,7 +83,9 @@ func (r *Repl) Run() error {
 
 func (r *Repl) eval(l string) error {
 	defer func() {
-		vector = make([]float64, r.param.dim)
+		r.cursor.w1 = ""
+		r.cursor.w2 = ""
+		r.cursor.vector = make([]float64, r.params.dim)
 	}()
 
 	expr, err := parser.ParseExpr(l)
@@ -92,7 +96,7 @@ func (r *Repl) eval(l string) error {
 	var neighbors search.Neighbors
 	switch e := expr.(type) {
 	case *ast.Ident:
-		neighbors, err = r.searcher.InternalSearch(e.String(), r.param.k)
+		neighbors, err = r.searcher.SearchInternal(e.String(), r.params.k)
 		if err != nil {
 			fmt.Printf("failed to search with word=%s\n", e.String())
 		}
@@ -100,9 +104,12 @@ func (r *Repl) eval(l string) error {
 		if err := r.evalExpr(expr); err != nil {
 			return err
 		}
-		neighbors, err = r.searcher.Search(vector, r.param.k)
+		neighbors, err = r.searcher.Search(embedding.Embedding{
+			Vector: r.cursor.vector,
+			Norm:   embutil.Norm(r.cursor.vector),
+		}, r.params.k, r.cursor.w1, r.cursor.w2)
 		if err != nil {
-			fmt.Printf("failed to search with vector=%v\n", vector)
+			fmt.Printf("failed to search with vector=%v\n", r.cursor.vector)
 		}
 	default:
 		return errors.Errorf("invalid type %v", e)
@@ -123,31 +130,33 @@ func (r *Repl) evalExpr(expr ast.Expr) error {
 }
 
 func (r *Repl) evalBinaryExpr(expr *ast.BinaryExpr) error {
-	xi, err := r.evalAsItem(expr.X)
+	xi, err := r.evalAsEmbedding(expr.X)
 	if err != nil {
 		return err
 	}
-	yi, err := r.evalAsItem(expr.Y)
+	yi, err := r.evalAsEmbedding(expr.Y)
 	if err != nil {
 		return nil
 	}
-	vector, err = arithmetic(xi.Vector, expr.Op, yi.Vector)
+	r.cursor.w1 = xi.Word
+	r.cursor.w2 = yi.Word
+	r.cursor.vector, err = arithmetic(xi.Vector, expr.Op, yi.Vector)
 	return err
 }
 
-func (r *Repl) evalAsItem(expr ast.Expr) (search.Item, error) {
+func (r *Repl) evalAsEmbedding(expr ast.Expr) (embedding.Embedding, error) {
 	if err := r.evalExpr(expr); err != nil {
-		return search.Item{}, err
+		return embedding.Embedding{}, err
 	}
 	v, ok := expr.(*ast.Ident)
 	if !ok {
-		return search.Item{}, errors.Errorf("failed to parse %v", expr)
+		return embedding.Embedding{}, errors.Errorf("failed to parse %v", expr)
 	}
 	vi, ok := r.searcher.Items.Find(v.String())
 	if !ok {
-		return search.Item{}, errors.Errorf("not found word=%s in vector map", v.String())
+		return embedding.Embedding{}, errors.Errorf("not found word=%s in vector map", v.String())
 	} else if err := vi.Validate(); err != nil {
-		return search.Item{}, err
+		return embedding.Embedding{}, err
 	}
 	return vi, nil
 }

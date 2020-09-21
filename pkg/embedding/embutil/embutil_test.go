@@ -12,15 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package searchutil
+package embutil
 
-func Cosine(v1, v2 []float64, n1, n2 float64) float64 {
-	if n1 == 0 || n2 == 0 {
-		return 0
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestNorm(t *testing.T) {
+	testCases := []struct {
+		name   string
+		vec    []float64
+		expect float64
+	}{
+		{
+			name:   "norm",
+			vec:    []float64{1, 1, 1, 1, 0, 0},
+			expect: 2.,
+		},
 	}
-	var dot float64
-	for i := range v1 {
-		dot += v1[i] * v2[i]
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expect, Norm(tc.vec))
+		})
 	}
-	return dot / n1 / n2
 }

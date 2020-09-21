@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2020 wego authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@ package search
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"sort"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 
-	"github.com/ynqa/wego/pkg/item"
+	"github.com/ynqa/wego/pkg/embedding"
+	"github.com/ynqa/wego/pkg/embedding/embutil"
 	"github.com/ynqa/wego/pkg/search/searchutil"
 )
 
@@ -53,82 +53,21 @@ func (neighbors Neighbors) Describe() {
 	writer.Render()
 }
 
-type Item struct {
-	item.Item
-	Norm float64
-}
-
-type Items []Item
-
-func (items Items) Empty() bool {
-	return len(items) == 0
-}
-
-func (items Items) Find(word string) (Item, bool) {
-	for _, item := range items {
-		if word == item.Word {
-			return item, true
-		}
-	}
-	return Item{}, false
-}
-
 type Searcher struct {
-	Items Items
+	Items embedding.Embeddings
 }
 
-func New(items ...item.Item) (*Searcher, error) {
-	elems := make(Items, len(items))
-	wholeDim := 0
-	for i, item := range items {
-		if err := item.Validate(); err != nil {
-			return nil, err
-		}
-		if i != 0 && wholeDim != item.Dim {
-			return nil, errors.Errorf("whole of word Dim for searcher must be same, maybe %d but got %d", wholeDim, item.Dim)
-		}
-		elems[i] = Item{
-			Item: item,
-			Norm: searchutil.Norm(item.Vector),
-		}
-		wholeDim = item.Dim
-	}
-	return &Searcher{
-		Items: elems,
-	}, nil
-}
-
-func NewForVectorFile(r io.Reader) (*Searcher, error) {
-	var (
-		elems    Items
-		i        int
-		wholeDim int
-	)
-	err := item.Parse(r, item.ItemOp(func(item item.Item) error {
-		if err := item.Validate(); err != nil {
-			return err
-		}
-		if i != 0 && wholeDim != item.Dim {
-			return errors.Errorf("whole of dim for searcher must be same, maybe %d but got %d", wholeDim, item.Dim)
-		}
-		elems = append(elems, Item{
-			Item: item,
-			Norm: searchutil.Norm(item.Vector),
-		})
-		i++
-		wholeDim = item.Dim
-		return nil
-	}))
-	if err != nil {
+func New(embs ...embedding.Embedding) (*Searcher, error) {
+	if err := embedding.Embeddings(embs).Validate(); err != nil {
 		return nil, err
 	}
 	return &Searcher{
-		Items: elems,
+		Items: embs,
 	}, nil
 }
 
-func (s *Searcher) InternalSearch(word string, k int) (Neighbors, error) {
-	var q Item
+func (s *Searcher) SearchInternal(word string, k int) (Neighbors, error) {
+	var q embedding.Embedding
 	for _, item := range s.Items {
 		if item.Word == word {
 			q = item
@@ -139,35 +78,21 @@ func (s *Searcher) InternalSearch(word string, k int) (Neighbors, error) {
 		return nil, errors.Errorf("%s is not found in searcher", word)
 	}
 
-	neighbors, err := s.search(q, k, word)
+	neighbors, err := s.Search(q, k, word)
 	if err != nil {
 		return nil, err
-	}
-
-	idx := -1
-	for i, neighbor := range neighbors {
-		if neighbor.Word == word {
-			idx = i
-			break
-		}
-	}
-
-	if idx >= 0 {
-		neighbors = append(neighbors[:idx], neighbors[idx+1:]...)
 	}
 	return neighbors, nil
 }
 
-func (s *Searcher) Search(query []float64, k int) (Neighbors, error) {
-	return s.search(Item{
-		Item: item.Item{
-			Vector: query,
-		},
-		Norm: searchutil.Norm(query),
+func (s *Searcher) SearchVector(query []float64, k int) (Neighbors, error) {
+	return s.Search(embedding.Embedding{
+		Vector: query,
+		Norm:   embutil.Norm(query),
 	}, k)
 }
 
-func (s *Searcher) search(query Item, k int, ignoreWord ...string) (Neighbors, error) {
+func (s *Searcher) Search(query embedding.Embedding, k int, ignoreWord ...string) (Neighbors, error) {
 	neighbors := make(Neighbors, len(s.Items))
 	for i, item := range s.Items {
 		var ignore bool

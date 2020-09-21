@@ -1,4 +1,4 @@
-// Copyright © 2017 Makoto Ito
+// Copyright © 2020 wego authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,5 +41,5 @@ func AddProfFlags(cmd *cobra.Command, prof *bool) {
 }
 
 func AddSaveVectorTypeFlags(cmd *cobra.Command, typ *save.VectorType) {
-	cmd.Flags().Var(typ, "save-vec", fmt.Sprintf("save vector type. One of: %s|%s", save.SingleVector, save.AggregatedVector))
+	cmd.Flags().Var(typ, "save-type", fmt.Sprintf("save vector type. One of: %s|%s", save.Single, save.Aggregated))
 }

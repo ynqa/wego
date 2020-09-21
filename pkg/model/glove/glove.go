@@ -1,3 +1,17 @@
+// Copyright © 2020 wego authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package glove
 
 import (
@@ -179,9 +193,9 @@ func (g *glove) Save(f io.Writer, typ save.VectorType) error {
 		for j := 0; j < g.opts.ModelOptions.Dim; j++ {
 			var v float64
 			switch {
-			case typ == save.AggregatedVector:
+			case typ == save.Aggregated:
 				v = g.param.Slice(i)[j] + g.param.Slice(i + dic.Len())[j]
-			case typ == save.SingleVector:
+			case typ == save.Single:
 				v = g.param.Slice(i)[j]
 			default:
 				return save.InvalidVectorTypeError(typ)
