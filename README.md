@@ -100,6 +100,6 @@ func main() {
 	}
 
 	// write word vector.
-	model.Save(os.Stdin, save.AggregatedVector)
+	model.Save(os.Stdin, save.Aggregated)
 }
 ```
