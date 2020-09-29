@@ -21,7 +21,7 @@ import (
 func Norm(vec []float64) float64 {
 	var n float64
 	for _, v := range vec {
-		n += math.Pow(v, 2)
+		n += v * v
 	}
 	return math.Sqrt(n)
 }
