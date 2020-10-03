@@ -133,7 +133,7 @@ func main() {
 				lexvec.BatchSize(10000),
 				lexvec.Dim(50),
 				lexvec.Goroutines(20),
-				lexvec.Iter(3),
+				lexvec.Iter(1),
 				lexvec.MinCount(10),
 				lexvec.Relation(lexvec.PPMI),
 				lexvec.Verbose(),
