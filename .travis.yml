@@ -18,7 +18,7 @@ install:
 - go mod vendor
 
 script:
-- go test -cover $(go list ./...)
+- go test -cover $(go list ./... | grep -v -e "github.com/ynqa/wego/examples")
 
 after_script: |
   if [[ $TRAVIS_GO_VERSION == 1.14* ]] && [[ "$TRAVIS_BRANCH" == "master" ]] && [[ "$TRAVIS_PULL_REQUEST" == "false" ]]; then
