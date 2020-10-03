@@ -6,18 +6,18 @@ import (
 
 const (
 	defaultDocInMemory = false
-	defaultToLower  = false
+	defaultToLower     = false
 )
 
 type Options struct {
 	DocInMemory bool
-	ToLower  bool
+	ToLower     bool
 }
 
 func DefaultOptions() Options {
 	return Options{
 		DocInMemory: defaultDocInMemory,
-		ToLower:  defaultToLower,
+		ToLower:     defaultToLower,
 	}
 }
 
