@@ -64,10 +64,10 @@ function train_word2vec() {
 function train_glove() {
 	echo "train: glove with sgd"
 	./wego glove -d 50 -i text8 -o glove_sgd.txt --in-memory \
-		--iter 10 --thread 12 --initlr 0.05 --min-count 5 -w 15 --solver sgd --save-type agg --verbose
+		--iter 5 --thread 12 --initlr 0.01 --min-count 5 -w 10 --solver sgd --save-type agg --verbose
 	echo "train: glove with adagrad"
 	./wego glove -d 50 -i text8 -o glove_adagrad.txt --in-memory \
-		--iter 10 --thread 12 --initlr 0.05 --min-count 5 -w 15 --solver adagrad --save-type agg --verbose
+		--iter 5 --thread 12 --initlr 0.05 --min-count 5 -w 10 --solver adagrad --save-type agg --verbose
 }
 
 function train_lexvec() {
