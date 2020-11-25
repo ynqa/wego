@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repl
+package console
 
 import (
 	"os"
@@ -20,10 +20,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ynqa/wego/cmd/search/cmdutil"
+	"github.com/ynqa/wego/cmd/query/cmdutil"
 	"github.com/ynqa/wego/pkg/embedding"
 	"github.com/ynqa/wego/pkg/search"
-	"github.com/ynqa/wego/pkg/search/repl"
+	"github.com/ynqa/wego/pkg/search/console"
 )
 
 var (
@@ -33,10 +33,9 @@ var (
 
 func New() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "search-repl",
-		Short: "Search similar words (REPL mode)",
-		Long:  "Search similar words (REPL mode)",
-		Example: "  wego search-repl -i example/word_vectors.txt\n" +
+		Use:   "console",
+		Short: "Console to investigate word vectors",
+		Example: "  wego console -i example/word_vectors.txt\n" +
 			"  >> apple + banana\n" +
 			"  ...",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -70,9 +69,9 @@ func execute() error {
 	if err != nil {
 		return err
 	}
-	repl, err := repl.New(searcher, rank)
+	console, err := console.New(searcher, rank)
 	if err != nil {
 		return err
 	}
-	return repl.Run()
+	return console.Run()
 }

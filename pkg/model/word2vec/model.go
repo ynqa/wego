@@ -35,13 +35,13 @@ type skipGram struct {
 }
 
 func newSkipGram(opts Options) mod {
-	ch := make(chan []float64, opts.ModelOptions.ThreadSize)
-	for i := 0; i < opts.ModelOptions.ThreadSize; i++ {
-		ch <- make([]float64, opts.ModelOptions.Dim)
+	ch := make(chan []float64, opts.Goroutines)
+	for i := 0; i < opts.Goroutines; i++ {
+		ch <- make([]float64, opts.Dim)
 	}
 	return &skipGram{
 		ch:     ch,
-		window: opts.ModelOptions.Window,
+		window: opts.Window,
 	}
 }
 
@@ -83,13 +83,13 @@ type cbow struct {
 }
 
 func newCbow(opts Options) mod {
-	ch := make(chan []float64, opts.ModelOptions.ThreadSize*2)
-	for i := 0; i < opts.ModelOptions.ThreadSize; i++ {
-		ch <- make([]float64, opts.ModelOptions.Dim)
+	ch := make(chan []float64, opts.Goroutines*2)
+	for i := 0; i < opts.Goroutines; i++ {
+		ch <- make([]float64, opts.Dim)
 	}
 	return &cbow{
 		ch:     ch,
-		window: opts.ModelOptions.Window,
+		window: opts.Window,
 	}
 }
 

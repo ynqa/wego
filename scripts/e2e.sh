@@ -48,55 +48,55 @@ function get_corpus() {
 
 function train_word2vec() {
 	echo "train: skipgram with ns"
-	./wego word2vec -i text8 -o word2vec_sg_ns.txt \
-		--model skipgram --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --thread 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_sg_ns.txt --in-memory \
+		--model skipgram --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
 	echo "train: skipgram with hs"
-	./wego word2vec -i text8 -o word2vec_sg_hs.txt \
-		--model skipgram --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --thread 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_sg_hs.txt --in-memory \
+		--model skipgram --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
 	echo "train: cbow with ns"
-	./wego word2vec -i text8 -o word2vec_cbow_ns.txt \
-		--model cbow --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --thread 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_cbow_ns.txt --in-memory \
+		--model cbow --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
 	echo "train: cbow with hs"
-	./wego word2vec -i text8 -o word2vec_cbow_hs.txt \
-		--model cbow --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --thread 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_cbow_hs.txt --in-memory \
+		--model cbow --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
 }
 
 function train_glove() {
 	echo "train: glove with sgd"
-	./wego glove -d 50 -i text8 -o glove_sgd.txt \
-		--iter 10 --thread 12 --initlr 0.05 --min-count 5 -w 15 --solver sgd --save-type agg --verbose
+	./wego glove -d 50 -i text8 -o glove_sgd.txt --in-memory \
+		--iter 5 --goroutines 12 --initlr 0.01 --min-count 5 -w 10 --solver sgd --save-type agg --verbose
 	echo "train: glove with adagrad"
-	./wego glove -d 50 -i text8 -o glove_adagrad.txt \
-		--iter 10 --thread 12 --initlr 0.05 --min-count 5 -w 15 --solver adagrad --save-type agg --verbose
+	./wego glove -d 50 -i text8 -o glove_adagrad.txt --in-memory \
+		--iter 5 --goroutines 12 --initlr 0.05 --min-count 5 -w 10 --solver adagrad --save-type agg --verbose
 }
 
 function train_lexvec() {
 	echo "train: lexvec"
-	./wego lexvec -d 50 -i text8 -o lexvec.txt \
-		--iter 3 --thread 12 --initlr 0.05 --min-count 5 -w 5 --rel ppmi --save-type agg --verbose
+	./wego lexvec -d 50 -i text8 -o lexvec.txt --in-memory \
+		--iter 3 --goroutines 12 --initlr 0.05 --min-count 5 -w 5 --rel ppmi --save-type agg --verbose
 }
 
 function search_word2vec() {
 	echo "similarity search: skipgram with ns"
-	./wego search -i word2vec_sg_ns.txt microsoft
+	./wego query -i word2vec_sg_ns.txt microsoft
 	echo "similarity search: skipgram with hs"
-	./wego search -i word2vec_sg_hs.txt microsoft
+	./wego query -i word2vec_sg_hs.txt microsoft
 	echo "similarity search: cbow with ns"
-	./wego search -i word2vec_cbow_ns.txt microsoft
+	./wego query -i word2vec_cbow_ns.txt microsoft
 	echo "similarity search: cbow with hs"
-	./wego search -i word2vec_cbow_hs.txt microsoft
+	./wego query -i word2vec_cbow_hs.txt microsoft
 }
 
 function search_glove() {
 	echo "similarity search: glove with sgd"
-	./wego search -i glove_sgd.txt microsoft
+	./wego query -i glove_sgd.txt microsoft
 	echo "similarity search: glove with adagrad"
-	./wego search -i glove_adagrad.txt microsoft
+	./wego query -i glove_adagrad.txt microsoft
 }
 
 function search_lexvec() {
 	echo "similarity search: lexvec"
-	./wego search -i lexvec.txt microsoft
+	./wego query -i lexvec.txt microsoft
 }
 
 for OPT in "$@"; do

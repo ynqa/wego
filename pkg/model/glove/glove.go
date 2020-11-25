@@ -27,7 +27,8 @@ import (
 
 	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
-	"github.com/ynqa/wego/pkg/corpus/pairwise"
+	"github.com/ynqa/wego/pkg/corpus/fs"
+	"github.com/ynqa/wego/pkg/corpus/memory"
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
@@ -38,7 +39,7 @@ import (
 type glove struct {
 	opts Options
 
-	corpus *corpus.Corpus
+	corpus corpus.Corpus
 
 	param  *matrix.Matrix
 	solver solver
@@ -47,16 +48,7 @@ type glove struct {
 }
 
 func New(opts ...ModelOption) (model.Model, error) {
-	options := Options{
-		CorpusOptions:   corpus.DefaultOptions(),
-		PairwiseOptions: pairwise.DefaultOptions(),
-		ModelOptions:    model.DefaultOptions(),
-
-		Alpha:      defaultAlpha,
-		SolverType: defaultSolverType,
-		Xmax:       defaultXmax,
-	}
-
+	options := DefaultOptions()
 	for _, fn := range opts {
 		fn(&options)
 	}
@@ -66,26 +58,29 @@ func New(opts ...ModelOption) (model.Model, error) {
 
 func NewForOptions(opts Options) (model.Model, error) {
 	// TODO: validate Options
-	v := verbose.New(opts.ModelOptions.Verbose)
+	v := verbose.New(opts.Verbose)
 	return &glove{
 		opts: opts,
-
-		corpus: corpus.New(opts.CorpusOptions, v),
 
 		verbose: v,
 	}, nil
 }
 
 func (g *glove) preTrain(r io.Reader) error {
-	g.opts.PairwiseOptions.Window = g.opts.ModelOptions.Window
-	if err := g.corpus.BuildForPairwise(
-		r,
-		g.opts.PairwiseOptions,
-	); err != nil {
+	if g.opts.DocInMemory {
+		g.corpus = memory.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
+	} else {
+		g.corpus = fs.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
+	}
+
+	if err := g.corpus.LoadForDictionary(); err != nil {
+		return err
+	}
+	if err := g.corpus.LoadForCooccurrence(g.opts.CountType, g.opts.Window); err != nil {
 		return err
 	}
 
-	dic, dim := g.corpus.Dictionary(), g.opts.ModelOptions.Dim
+	dic, dim := g.corpus.Dictionary(), g.opts.Dim
 
 	g.param = matrix.New(
 		dic.Len()*2,
@@ -99,9 +94,9 @@ func (g *glove) preTrain(r io.Reader) error {
 
 	switch g.opts.SolverType {
 	case Stochastic:
-		g.solver = newStochastic(g.opts.ModelOptions)
+		g.solver = newStochastic(g.opts)
 	case AdaGrad:
-		g.solver = newAdaGrad(dic, g.opts.ModelOptions)
+		g.solver = newAdaGrad(dic, g.opts)
 	default:
 		return invalidSolverTypeError(g.opts.SolverType)
 	}
@@ -113,21 +108,21 @@ func (g *glove) Train(r io.Reader) error {
 		return err
 	}
 
-	items := g.makeItems(g.corpus.Pairwise())
+	items := g.makeItems(g.corpus.Cooccurrence())
 	itemSize := len(items)
 	indexPerThread := modelutil.IndexPerThread(
-		g.opts.ModelOptions.ThreadSize,
+		g.opts.Goroutines,
 		itemSize,
 	)
 
-	for i := 0; i < g.opts.ModelOptions.Iter; i++ {
+	for i := 0; i < g.opts.Iter; i++ {
 		trained, clk := make(chan struct{}), clock.New()
 		go g.observe(trained, clk)
 
-		sem := semaphore.NewWeighted(int64(g.opts.ModelOptions.ThreadSize))
+		sem := semaphore.NewWeighted(int64(g.opts.Goroutines))
 		wg := &sync.WaitGroup{}
 
-		for i := 0; i < g.opts.ModelOptions.ThreadSize; i++ {
+		for i := 0; i < g.opts.Goroutines; i++ {
 			wg.Add(1)
 			s, e := indexPerThread[i], indexPerThread[i+1]
 			go g.trainPerThread(items[s:e], trained, sem, wg)
@@ -169,7 +164,7 @@ func (g *glove) observe(trained chan struct{}, clk *clock.Clock) {
 	for range trained {
 		g.verbose.Do(func() {
 			cnt++
-			if cnt%g.opts.ModelOptions.BatchSize == 0 {
+			if cnt%g.opts.BatchSize == 0 {
 				fmt.Printf("trained %d items %v\r", cnt, clk.AllElapsed())
 			}
 		})
@@ -190,7 +185,7 @@ func (g *glove) Save(f io.Writer, typ save.VectorType) error {
 	for i := 0; i < dic.Len(); i++ {
 		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < g.opts.ModelOptions.Dim; j++ {
+		for j := 0; j < g.opts.Dim; j++ {
 			var v float64
 			switch {
 			case typ == save.Aggregated:

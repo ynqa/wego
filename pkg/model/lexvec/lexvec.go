@@ -27,8 +27,10 @@ import (
 
 	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
-	"github.com/ynqa/wego/pkg/corpus/pairwise"
-	"github.com/ynqa/wego/pkg/corpus/pairwise/encode"
+	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
+	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
+	"github.com/ynqa/wego/pkg/corpus/fs"
+	"github.com/ynqa/wego/pkg/corpus/memory"
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
@@ -40,7 +42,7 @@ import (
 type lexvec struct {
 	opts Options
 
-	corpus *corpus.Corpus
+	corpus corpus.Corpus
 
 	param      *matrix.Matrix
 	subsampler *subsample.Subsampler
@@ -50,17 +52,7 @@ type lexvec struct {
 }
 
 func New(opts ...ModelOption) (model.Model, error) {
-	options := Options{
-		CorpusOptions: corpus.DefaultOptions(),
-		ModelOptions:  model.DefaultOptions(),
-
-		NegativeSampleSize: defaultNegativeSampleSize,
-		RelationType:       defaultRelationType,
-		Smooth:             defaultSmooth,
-		SubsampleThreshold: defaultSubsampleThreshold,
-		Theta:              defaultTheta,
-	}
-
+	options := DefaultOptions()
 	for _, fn := range opts {
 		fn(&options)
 	}
@@ -70,30 +62,30 @@ func New(opts ...ModelOption) (model.Model, error) {
 
 func NewForOptions(opts Options) (model.Model, error) {
 	// TODO: validate Options
-	v := verbose.New(opts.ModelOptions.Verbose)
+	v := verbose.New(opts.Verbose)
 	return &lexvec{
 		opts: opts,
 
-		corpus: corpus.New(opts.CorpusOptions, v),
-
-		currentlr: opts.ModelOptions.Initlr,
+		currentlr: opts.Initlr,
 
 		verbose: v,
 	}, nil
 }
 
 func (l *lexvec) preTrain(r io.Reader) error {
-	if err := l.corpus.BuildForPairwise(
-		r,
-		pairwise.Options{
-			CountType: pairwise.Increment,
-			Window:    l.opts.ModelOptions.Window,
-		},
-	); err != nil {
+	if l.opts.DocInMemory {
+		l.corpus = memory.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
+	} else {
+		l.corpus = fs.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
+	}
+	if err := l.corpus.LoadForDictionary(); err != nil {
+		return err
+	}
+	if err := l.corpus.LoadForCooccurrence(co.Increment, l.opts.Window); err != nil {
 		return err
 	}
 
-	dic, dim := l.corpus.Dictionary(), l.opts.ModelOptions.Dim
+	dic, dim := l.corpus.Dictionary(), l.opts.Dim
 
 	l.param = matrix.New(
 		dic.Len()*2,
@@ -114,24 +106,24 @@ func (l *lexvec) Train(r io.Reader) error {
 		return err
 	}
 
-	items, err := l.makeItems(l.corpus.Pairwise())
+	items, err := l.makeItems(l.corpus.Cooccurrence())
 	if err != nil {
 		return err
 	}
-	doc := l.corpus.Doc()
+	doc := l.corpus.IndexedDoc()
 	indexPerThread := modelutil.IndexPerThread(
-		l.opts.ModelOptions.ThreadSize,
+		l.opts.Goroutines,
 		len(doc),
 	)
 
-	for i := 1; i <= l.opts.ModelOptions.Iter; i++ {
+	for i := 1; i <= l.opts.Iter; i++ {
 		trained, clk := make(chan struct{}), clock.New()
 		go l.observe(trained, clk)
 
-		sem := semaphore.NewWeighted(int64(l.opts.ModelOptions.ThreadSize))
+		sem := semaphore.NewWeighted(int64(l.opts.Goroutines))
 		wg := &sync.WaitGroup{}
 
-		for i := 0; i < l.opts.ModelOptions.ThreadSize; i++ {
+		for i := 0; i < l.opts.Goroutines; i++ {
 			wg.Add(1)
 			s, e := indexPerThread[i], indexPerThread[i+1]
 			go l.trainPerThread(doc[s:e], items, trained, sem, wg)
@@ -171,12 +163,12 @@ func (l *lexvec) trainPerThread(
 
 func (l *lexvec) trainOne(doc []int, pos int, items map[uint64]float64) {
 	dic := l.corpus.Dictionary()
-	del := modelutil.NextRandom(l.opts.ModelOptions.Window)
-	for a := del; a < l.opts.ModelOptions.Window*2+1-del; a++ {
-		if a == l.opts.ModelOptions.Window {
+	del := modelutil.NextRandom(l.opts.Window)
+	for a := del; a < l.opts.Window*2+1-del; a++ {
+		if a == l.opts.Window {
 			continue
 		}
-		c := pos - l.opts.ModelOptions.Window + a
+		c := pos - l.opts.Window + a
 		if c < 0 || c >= len(doc) {
 			continue
 		}
@@ -192,11 +184,11 @@ func (l *lexvec) trainOne(doc []int, pos int, items map[uint64]float64) {
 
 func (l *lexvec) update(l1, l2 int, f float64) {
 	var diff float64
-	for i := 0; i < l.opts.ModelOptions.Dim; i++ {
+	for i := 0; i < l.opts.Dim; i++ {
 		diff += l.param.Slice(l1)[i] * l.param.Slice(l2)[i]
 	}
 	diff = (diff - f) * l.currentlr
-	for i := 0; i < l.opts.ModelOptions.Dim; i++ {
+	for i := 0; i < l.opts.Dim; i++ {
 		t1 := diff * l.param.Slice(l2)[i]
 		t2 := diff * l.param.Slice(l1)[i]
 		l.param.Slice(l1)[i] -= t1
@@ -208,12 +200,12 @@ func (l *lexvec) observe(trained chan struct{}, clk *clock.Clock) {
 	var cnt int
 	for range trained {
 		cnt++
-		if cnt%l.opts.ModelOptions.BatchSize == 0 {
-			lower := l.opts.ModelOptions.Initlr * l.opts.Theta
+		if cnt%l.opts.BatchSize == 0 {
+			lower := l.opts.Initlr * l.opts.Theta
 			if l.currentlr < lower {
 				l.currentlr = lower
 			} else {
-				l.currentlr = l.opts.ModelOptions.Initlr * (1.0 - float64(cnt)/float64(l.corpus.Len()))
+				l.currentlr = l.opts.Initlr * (1.0 - float64(cnt)/float64(l.corpus.Len()))
 			}
 			l.verbose.Do(func() {
 				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
@@ -236,7 +228,7 @@ func (l *lexvec) Save(f io.Writer, typ save.VectorType) error {
 	for i := 0; i < dic.Len(); i++ {
 		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < l.opts.ModelOptions.Dim; j++ {
+		for j := 0; j < l.opts.Dim; j++ {
 			var v float64
 			switch {
 			case typ == save.Aggregated:

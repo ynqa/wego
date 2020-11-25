@@ -23,10 +23,10 @@ import (
 
 func main() {
 	model, err := word2vec.New(
-		word2vec.WithWindow(5),
-		word2vec.WithModel(word2vec.Cbow),
-		word2vec.WithOptimizer(word2vec.NegativeSampling),
-		word2vec.WithNegativeSampleSize(5),
+		word2vec.Window(5),
+		word2vec.Model(word2vec.Cbow),
+		word2vec.Optimizer(word2vec.NegativeSampling),
+		word2vec.NegativeSampleSize(5),
 		word2vec.Verbose(),
 	)
 	if err != nil {

@@ -12,19 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package corpus
+package encode
 
-import (
-	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
-	"github.com/ynqa/wego/pkg/corpus/dictionary"
-)
+// data structure for co-occurrence mapping:
+// - https://blog.chewxy.com/2017/07/12/21-bits-english/
 
-type Corpus interface {
-	IndexedDoc() []int
-	BatchWords(chan []int, int) error
-	Dictionary() *dictionary.Dictionary
-	Cooccurrence() *co.Cooccurrence
-	Len() int
-	LoadForDictionary() error
-	LoadForCooccurrence(co.CountType, int) error
+// EncodeBigram creates id between two words.
+func EncodeBigram(l1, l2 uint64) uint64 {
+	if l1 < l2 {
+		return encode(l1, l2)
+	} else {
+		return encode(l2, l1)
+	}
+}
+
+func encode(l1, l2 uint64) uint64 {
+	return l1 | (l2 << 32)
+}
+
+// DecodeBigram reverts pair id to two word ids.
+func DecodeBigram(pid uint64) (uint64, uint64) {
+	f := pid >> 32
+	return pid - (f << 32), f
 }

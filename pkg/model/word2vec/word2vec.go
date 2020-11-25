@@ -27,6 +27,8 @@ import (
 
 	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
+	"github.com/ynqa/wego/pkg/corpus/fs"
+	"github.com/ynqa/wego/pkg/corpus/memory"
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
@@ -38,7 +40,7 @@ import (
 type word2vec struct {
 	opts Options
 
-	corpus *corpus.Corpus
+	corpus corpus.Corpus
 
 	param      *matrix.Matrix
 	subsampler *subsample.Subsampler
@@ -50,18 +52,7 @@ type word2vec struct {
 }
 
 func New(opts ...ModelOption) (model.Model, error) {
-	options := Options{
-		CorpusOptions: corpus.DefaultOptions(),
-		ModelOptions:  model.DefaultOptions(),
-
-		MaxDepth:           defaultMaxDepth,
-		ModelType:          defaultModelType,
-		NegativeSampleSize: defaultNegativeSampleSize,
-		OptimizerType:      defaultOptimizerType,
-		SubsampleThreshold: defaultSubsampleThreshold,
-		Theta:              defaultTheta,
-	}
-
+	options := DefaultOptions()
 	for _, fn := range opts {
 		fn(&options)
 	}
@@ -71,24 +62,27 @@ func New(opts ...ModelOption) (model.Model, error) {
 
 func NewForOptions(opts Options) (model.Model, error) {
 	// TODO: validate Options
-	v := verbose.New(opts.ModelOptions.Verbose)
+	v := verbose.New(opts.Verbose)
 	return &word2vec{
 		opts: opts,
 
-		corpus: corpus.New(opts.CorpusOptions, v),
-
-		currentlr: opts.ModelOptions.Initlr,
+		currentlr: opts.Initlr,
 
 		verbose: v,
 	}, nil
 }
 
 func (w *word2vec) preTrain(r io.Reader) error {
-	if err := w.corpus.Build(r); err != nil {
+	if w.opts.DocInMemory {
+		w.corpus = memory.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
+	} else {
+		w.corpus = fs.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
+	}
+	if err := w.corpus.LoadForDictionary(); err != nil {
 		return err
 	}
 
-	dic, dim := w.corpus.Dictionary(), w.opts.ModelOptions.Dim
+	dic, dim := w.corpus.Dictionary(), w.opts.Dim
 
 	w.param = matrix.New(
 		dic.Len(),
@@ -133,20 +127,20 @@ func (w *word2vec) Train(r io.Reader) error {
 		return err
 	}
 
-	doc := w.corpus.Doc()
+	doc := w.corpus.IndexedDoc()
 	indexPerThread := modelutil.IndexPerThread(
-		w.opts.ModelOptions.ThreadSize,
+		w.opts.Goroutines,
 		len(doc),
 	)
 
-	for i := 1; i <= w.opts.ModelOptions.Iter; i++ {
+	for i := 1; i <= w.opts.Iter; i++ {
 		trained, clk := make(chan struct{}), clock.New()
 		go w.observe(trained, clk)
 
-		sem := semaphore.NewWeighted(int64(w.opts.ModelOptions.ThreadSize))
+		sem := semaphore.NewWeighted(int64(w.opts.Goroutines))
 		wg := &sync.WaitGroup{}
 
-		for i := 0; i < w.opts.ModelOptions.ThreadSize; i++ {
+		for i := 0; i < w.opts.Goroutines; i++ {
 			wg.Add(1)
 			s, e := indexPerThread[i], indexPerThread[i+1]
 			go w.trainPerThread(doc[s:e], trained, sem, wg)
@@ -187,12 +181,12 @@ func (w *word2vec) observe(trained chan struct{}, clk *clock.Clock) {
 	var cnt int
 	for range trained {
 		cnt++
-		if cnt%w.opts.ModelOptions.BatchSize == 0 {
-			lower := w.opts.ModelOptions.Initlr * w.opts.Theta
+		if cnt%w.opts.BatchSize == 0 {
+			lower := w.opts.Initlr * w.opts.Theta
 			if w.currentlr < lower {
 				w.currentlr = lower
 			} else {
-				w.currentlr = w.opts.ModelOptions.Initlr * (1.0 - float64(cnt)/float64(w.corpus.Len()))
+				w.currentlr = w.opts.Initlr * (1.0 - float64(cnt)/float64(w.corpus.Len()))
 			}
 			w.verbose.Do(func() {
 				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
@@ -220,7 +214,7 @@ func (w *word2vec) Save(f io.Writer, typ save.VectorType) error {
 	for i := 0; i < dic.Len(); i++ {
 		word, _ := dic.Word(i)
 		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < w.opts.ModelOptions.Dim; j++ {
+		for j := 0; j < w.opts.Dim; j++ {
 			var v float64
 			switch {
 			case typ == save.Aggregated && ctx.Row() > i:

@@ -23,8 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ynqa/wego/cmd/model/cmdutil"
-	"github.com/ynqa/wego/pkg/corpus"
-	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/lexvec"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
 )
@@ -50,9 +48,6 @@ func New() *cobra.Command {
 	cmdutil.AddOutputFlags(cmd, &outputFile)
 	cmdutil.AddProfFlags(cmd, &prof)
 	cmdutil.AddSaveVectorTypeFlags(cmd, &saveVectorType)
-
-	corpus.LoadForCmd(cmd, &opts.CorpusOptions)
-	model.LoadForCmd(cmd, &opts.ModelOptions)
 	lexvec.LoadForCmd(cmd, &opts)
 	return cmd
 }

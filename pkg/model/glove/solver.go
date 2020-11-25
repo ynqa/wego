@@ -18,7 +18,6 @@ import (
 	"math"
 
 	"github.com/ynqa/wego/pkg/corpus/dictionary"
-	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 )
 
@@ -30,7 +29,7 @@ type stochastic struct {
 	initlr float64
 }
 
-func newStochastic(opts model.Options) solver {
+func newStochastic(opts Options) solver {
 	return &stochastic{
 		initlr: opts.Initlr,
 	}
@@ -58,7 +57,7 @@ type adaGrad struct {
 	gradsq *matrix.Matrix
 }
 
-func newAdaGrad(dic *dictionary.Dictionary, opts model.Options) solver {
+func newAdaGrad(dic *dictionary.Dictionary, opts Options) solver {
 	dimAndBias := opts.Dim + 1
 	return &adaGrad{
 		initlr: opts.Initlr,

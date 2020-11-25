@@ -23,9 +23,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ynqa/wego/cmd/model/cmdutil"
-	"github.com/ynqa/wego/pkg/corpus"
-	"github.com/ynqa/wego/pkg/corpus/pairwise"
-	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/glove"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
 )
@@ -51,10 +48,6 @@ func New() *cobra.Command {
 	cmdutil.AddOutputFlags(cmd, &outputFile)
 	cmdutil.AddProfFlags(cmd, &prof)
 	cmdutil.AddSaveVectorTypeFlags(cmd, &saveVectorType)
-
-	corpus.LoadForCmd(cmd, &opts.CorpusOptions)
-	pairwise.LoadForCmd(cmd, &opts.PairwiseOptions)
-	model.LoadForCmd(cmd, &opts.ModelOptions)
 	glove.LoadForCmd(cmd, &opts)
 	return cmd
 }

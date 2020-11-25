@@ -16,12 +16,10 @@ package word2vec
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
-	"github.com/ynqa/wego/pkg/corpus"
-	"github.com/ynqa/wego/pkg/model"
 )
 
 func invalidModelTypeError(typ ModelType) error {
@@ -87,125 +85,187 @@ func (t *OptimizerType) Type() string {
 	return t.String()
 }
 
-const (
+var (
+	defaultBatchSize          = 100000
+	defaultDim                = 10
+	defaultDocInMemory        = false
+	defaultGoroutines         = runtime.NumCPU()
+	defaultInitlr             = 0.025
+	defaultIter               = 15
+	defaultMaxCount           = -1
 	defaultMaxDepth           = 100
+	defaultMinCount           = 5
 	defaultNegativeSampleSize = 5
 	defaultSubsampleThreshold = 1.0e-3
 	defaultTheta              = 1.0e-4
+	defaultToLower            = false
+	defaultWindow             = 5
+	defaultVerbose            = false
 )
 
 type Options struct {
-	CorpusOptions corpus.Options
-	ModelOptions  model.Options
-
+	BatchSize          int
+	Dim                int
+	DocInMemory        bool
+	Goroutines         int
+	Initlr             float64
+	Iter               int
+	MaxCount           int
 	MaxDepth           int
+	MinCount           int
 	ModelType          ModelType
 	NegativeSampleSize int
 	OptimizerType      OptimizerType
 	SubsampleThreshold float64
 	Theta              float64
+	ToLower            bool
+	Verbose            bool
+	Window             int
+}
+
+func DefaultOptions() Options {
+	return Options{
+		BatchSize:          defaultBatchSize,
+		Dim:                defaultDim,
+		DocInMemory:        defaultDocInMemory,
+		Goroutines:         defaultGoroutines,
+		Initlr:             defaultInitlr,
+		Iter:               defaultIter,
+		MaxCount:           defaultMaxCount,
+		MaxDepth:           defaultMaxDepth,
+		MinCount:           defaultMinCount,
+		ModelType:          defaultModelType,
+		NegativeSampleSize: defaultNegativeSampleSize,
+		OptimizerType:      defaultOptimizerType,
+		SubsampleThreshold: defaultSubsampleThreshold,
+		Theta:              defaultTheta,
+		ToLower:            defaultToLower,
+		Verbose:            defaultVerbose,
+		Window:             defaultWindow,
+	}
 }
 
 func LoadForCmd(cmd *cobra.Command, opts *Options) {
-	cmd.Flags().IntVar(&opts.MaxDepth, "maxDepth", defaultMaxDepth, "times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
+	cmd.Flags().IntVar(&opts.BatchSize, "batch", defaultBatchSize, "batch size to train")
+	cmd.Flags().IntVarP(&opts.Dim, "dim", "d", defaultDim, "dimension for word vector")
+	cmd.Flags().IntVar(&opts.Goroutines, "goroutines", defaultGoroutines, "number of goroutine")
+	cmd.Flags().BoolVar(&opts.DocInMemory, "in-memory", defaultDocInMemory, "whether to store the doc in memory")
+	cmd.Flags().Float64Var(&opts.Initlr, "initlr", defaultInitlr, "initial learning rate")
+	cmd.Flags().IntVar(&opts.Iter, "iter", defaultIter, "number of iteration")
+	cmd.Flags().IntVar(&opts.MaxCount, "max-count", defaultMaxCount, "upper limit to filter words")
+	cmd.Flags().IntVar(&opts.MaxDepth, "max-depth", defaultMaxDepth, "times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
+	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter words")
 	cmd.Flags().Var(&opts.ModelType, "model", fmt.Sprintf("which model does it use? one of: %s|%s", Cbow, SkipGram))
 	cmd.Flags().IntVar(&opts.NegativeSampleSize, "sample", defaultNegativeSampleSize, "negative sample size(for negative sampling only)")
 	cmd.Flags().Var(&opts.OptimizerType, "optimizer", fmt.Sprintf("which optimizer does it use? one of: %s|%s", HierarchicalSoftmax, NegativeSampling))
 	cmd.Flags().Float64Var(&opts.SubsampleThreshold, "threshold", defaultSubsampleThreshold, "threshold for subsampling")
 	cmd.Flags().Float64Var(&opts.Theta, "theta", defaultTheta, "lower limit of learning rate (lr >= initlr * theta)")
+	cmd.Flags().BoolVar(&opts.ToLower, "to-lower", defaultToLower, "whether the words on corpus convert to lowercase or not")
+	cmd.Flags().BoolVar(&opts.Verbose, "verbose", defaultVerbose, "verbose mode")
+	cmd.Flags().IntVarP(&opts.Window, "window", "w", defaultWindow, "context window size")
+
 }
 
 type ModelOption func(*Options)
 
-// corpus options
-func WithMinCount(v int) ModelOption {
+func BatchSize(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.CorpusOptions.MinCount = v
+		opts.BatchSize = v
 	})
 }
 
-func ToLower() ModelOption {
+func DocInMemory() ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.CorpusOptions.ToLower = true
+		opts.DocInMemory = true
 	})
 }
 
-// model options
-func WithBatchSize(v int) ModelOption {
+func Goroutines(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.BatchSize = v
+		opts.Goroutines = v
 	})
 }
 
-func WithDimension(v int) ModelOption {
+func Dim(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.Dim = v
+		opts.Dim = v
 	})
 }
 
-func WithInitLearningRate(v float64) ModelOption {
+func Initlr(v float64) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.Initlr = v
+		opts.Initlr = v
 	})
 }
 
-func WithIteration(v int) ModelOption {
+func Iter(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.Iter = v
+		opts.Iter = v
 	})
 }
 
-func WithThreadSize(v int) ModelOption {
+func MaxCount(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.ThreadSize = v
+		opts.MaxCount = v
 	})
 }
 
-func WithWindow(v int) ModelOption {
-	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.Window = v
-	})
-}
-
-func Verbose() ModelOption {
-	return ModelOption(func(opts *Options) {
-		opts.ModelOptions.Verbose = true
-	})
-}
-
-// word2vec options
-func WithMaxDepth(v int) ModelOption {
+func MaxDepth(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.MaxDepth = v
 	})
 }
 
-func WithModel(typ ModelType) ModelOption {
+func MinCount(v int) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.MinCount = v
+	})
+}
+
+func Model(typ ModelType) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.ModelType = typ
 	})
 }
 
-func WithNegativeSampleSize(v int) ModelOption {
+func NegativeSampleSize(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.NegativeSampleSize = v
 	})
 }
 
-func WithOptimizer(typ OptimizerType) ModelOption {
+func Optimizer(typ OptimizerType) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.OptimizerType = typ
 	})
 }
 
-func WithSubsampleThreshold(v float64) ModelOption {
+func SubsampleThreshold(v float64) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.SubsampleThreshold = v
 	})
 }
 
-func WithTheta(v float64) ModelOption {
+func Theta(v float64) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.Theta = v
+	})
+}
+
+func ToLower() ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.ToLower = true
+	})
+}
+
+func Verbose() ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.Verbose = true
+	})
+}
+
+func Window(v int) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.Window = v
 	})
 }

@@ -20,15 +20,15 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/ynqa/wego/pkg/clock"
-	"github.com/ynqa/wego/pkg/corpus/pairwise"
-	"github.com/ynqa/wego/pkg/corpus/pairwise/encode"
+	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
+	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
 )
 
-func (l *lexvec) makeItems(pairwise *pairwise.Pairwise) (map[uint64]float64, error) {
-	pm := pairwise.PairMap()
+func (l *lexvec) makeItems(cooc *co.Cooccurrence) (map[uint64]float64, error) {
+	em := cooc.EncodedMatrix()
 	res, idx, clk := make(map[uint64]float64), 0, clock.New()
 	logTotalFreq := math.Log(math.Pow(float64(l.corpus.Len()), l.opts.Smooth))
-	for enc, f := range pm {
+	for enc, f := range em {
 		u1, u2 := encode.DecodeBigram(enc)
 		l1, l2 := int(u1), int(u2)
 		v, err := l.calculateRelation(

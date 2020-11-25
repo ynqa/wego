@@ -34,14 +34,13 @@ type negativeSampling struct {
 }
 
 func newNegativeSampling(dic *dictionary.Dictionary, opts Options) optimizer {
-	dim := opts.ModelOptions.Dim
 	return &negativeSampling{
 		ctx: matrix.New(
 			dic.Len(),
-			dim,
+			opts.Dim,
 			func(vec []float64) {
-				for i := 0; i < dim; i++ {
-					vec[i] = (rand.Float64() - 0.5) / float64(dim)
+				for i := 0; i < opts.Dim; i++ {
+					vec[i] = (rand.Float64() - 0.5) / float64(opts.Dim)
 				}
 			},
 		),
@@ -100,7 +99,7 @@ type hierarchicalSoftmax struct {
 func newHierarchicalSoftmax(dic *dictionary.Dictionary, opts Options) optimizer {
 	return &hierarchicalSoftmax{
 		sigtable: newSigmoidTable(),
-		nodeset:  dic.HuffnamTree(opts.ModelOptions.Dim),
+		nodeset:  dic.HuffnamTree(opts.Dim),
 		maxDepth: opts.MaxDepth,
 	}
 }

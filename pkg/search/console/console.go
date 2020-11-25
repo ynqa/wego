@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repl
+package console
 
 import (
 	"fmt"
@@ -37,18 +37,18 @@ type searchcursor struct {
 	vector []float64
 }
 
-type Repl struct {
+type Console struct {
 	*liner.State
 	searcher *search.Searcher
 	cursor   *searchcursor
 	params   *searchparams
 }
 
-func New(searcher *search.Searcher, k int) (*Repl, error) {
+func New(searcher *search.Searcher, k int) (*Console, error) {
 	if searcher.Items.Empty() {
 		return nil, errors.New("Number of items for searcher must be over 0")
 	}
-	return &Repl{
+	return &Console{
 		State:    liner.NewLiner(),
 		searcher: searcher,
 		cursor: &searchcursor{
@@ -61,10 +61,10 @@ func New(searcher *search.Searcher, k int) (*Repl, error) {
 	}, nil
 }
 
-func (r *Repl) Run() error {
-	defer r.Close()
+func (c *Console) Run() error {
+	defer c.Close()
 	for {
-		l, err := r.Prompt(">> ")
+		l, err := c.Prompt(">> ")
 		if err != nil {
 			fmt.Println("error: ", err)
 		}
@@ -74,18 +74,18 @@ func (r *Repl) Run() error {
 		case "":
 			continue
 		default:
-			if err := r.eval(l); err != nil {
+			if err := c.eval(l); err != nil {
 				fmt.Println(err)
 			}
 		}
 	}
 }
 
-func (r *Repl) eval(l string) error {
+func (c *Console) eval(l string) error {
 	defer func() {
-		r.cursor.w1 = ""
-		r.cursor.w2 = ""
-		r.cursor.vector = make([]float64, r.params.dim)
+		c.cursor.w1 = ""
+		c.cursor.w2 = ""
+		c.cursor.vector = make([]float64, c.params.dim)
 	}()
 
 	expr, err := parser.ParseExpr(l)
@@ -96,20 +96,20 @@ func (r *Repl) eval(l string) error {
 	var neighbors search.Neighbors
 	switch e := expr.(type) {
 	case *ast.Ident:
-		neighbors, err = r.searcher.SearchInternal(e.String(), r.params.k)
+		neighbors, err = c.searcher.SearchInternal(e.String(), c.params.k)
 		if err != nil {
 			fmt.Printf("failed to search with word=%s\n", e.String())
 		}
 	case *ast.BinaryExpr:
-		if err := r.evalExpr(expr); err != nil {
+		if err := c.evalExpr(expr); err != nil {
 			return err
 		}
-		neighbors, err = r.searcher.Search(embedding.Embedding{
-			Vector: r.cursor.vector,
-			Norm:   embutil.Norm(r.cursor.vector),
-		}, r.params.k, r.cursor.w1, r.cursor.w2)
+		neighbors, err = c.searcher.Search(embedding.Embedding{
+			Vector: c.cursor.vector,
+			Norm:   embutil.Norm(c.cursor.vector),
+		}, c.params.k, c.cursor.w1, c.cursor.w2)
 		if err != nil {
-			fmt.Printf("failed to search with vector=%v\n", r.cursor.vector)
+			fmt.Printf("failed to search with vector=%v\n", c.cursor.vector)
 		}
 	default:
 		return errors.Errorf("invalid type %v", e)
@@ -118,10 +118,10 @@ func (r *Repl) eval(l string) error {
 	return nil
 }
 
-func (r *Repl) evalExpr(expr ast.Expr) error {
+func (c *Console) evalExpr(expr ast.Expr) error {
 	switch e := expr.(type) {
 	case *ast.BinaryExpr:
-		return r.evalBinaryExpr(e)
+		return c.evalBinaryExpr(e)
 	case *ast.Ident:
 		return nil
 	default:
@@ -129,30 +129,30 @@ func (r *Repl) evalExpr(expr ast.Expr) error {
 	}
 }
 
-func (r *Repl) evalBinaryExpr(expr *ast.BinaryExpr) error {
-	xi, err := r.evalAsEmbedding(expr.X)
+func (c *Console) evalBinaryExpr(expr *ast.BinaryExpr) error {
+	xi, err := c.evalAsEmbedding(expr.X)
 	if err != nil {
 		return err
 	}
-	yi, err := r.evalAsEmbedding(expr.Y)
+	yi, err := c.evalAsEmbedding(expr.Y)
 	if err != nil {
 		return nil
 	}
-	r.cursor.w1 = xi.Word
-	r.cursor.w2 = yi.Word
-	r.cursor.vector, err = arithmetic(xi.Vector, expr.Op, yi.Vector)
+	c.cursor.w1 = xi.Word
+	c.cursor.w2 = yi.Word
+	c.cursor.vector, err = arithmetic(xi.Vector, expr.Op, yi.Vector)
 	return err
 }
 
-func (r *Repl) evalAsEmbedding(expr ast.Expr) (embedding.Embedding, error) {
-	if err := r.evalExpr(expr); err != nil {
+func (c *Console) evalAsEmbedding(expr ast.Expr) (embedding.Embedding, error) {
+	if err := c.evalExpr(expr); err != nil {
 		return embedding.Embedding{}, err
 	}
 	v, ok := expr.(*ast.Ident)
 	if !ok {
 		return embedding.Embedding{}, errors.Errorf("failed to parse %v", expr)
 	}
-	vi, ok := r.searcher.Items.Find(v.String())
+	vi, ok := c.searcher.Items.Find(v.String())
 	if !ok {
 		return embedding.Embedding{}, errors.Errorf("not found word=%s in vector map", v.String())
 	} else if err := vi.Validate(); err != nil {

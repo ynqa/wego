@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package search
+package query
 
 import (
 	"os"
@@ -20,7 +20,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 
-	"github.com/ynqa/wego/cmd/search/cmdutil"
+	"github.com/ynqa/wego/cmd/query/cmdutil"
 	"github.com/ynqa/wego/pkg/embedding"
 	"github.com/ynqa/wego/pkg/search"
 )
@@ -32,10 +32,9 @@ var (
 
 func New() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "search",
-		Short:   "Search similar words",
-		Long:    "Search similar words",
-		Example: "  wego search -i example/word_vectors.txt microsoft",
+		Use:     "query",
+		Short:   "Query similar words",
+		Example: "  wego query -i example/word_vectors.txt microsoft",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return execute(args)
 		},

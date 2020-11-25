@@ -19,8 +19,8 @@ import (
 	"math"
 
 	"github.com/ynqa/wego/pkg/clock"
-	"github.com/ynqa/wego/pkg/corpus/pairwise"
-	"github.com/ynqa/wego/pkg/corpus/pairwise/encode"
+	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
+	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
 )
 
 type item struct {
@@ -29,10 +29,10 @@ type item struct {
 	coef   float64
 }
 
-func (g *glove) makeItems(pairwise *pairwise.Pairwise) []item {
-	pm := pairwise.PairMap()
-	res, idx, clk := make([]item, len(pm)), 0, clock.New()
-	for enc, f := range pm {
+func (g *glove) makeItems(cooc *co.Cooccurrence) []item {
+	em := cooc.EncodedMatrix()
+	res, idx, clk := make([]item, len(em)), 0, clock.New()
+	for enc, f := range em {
 		u1, u2 := encode.DecodeBigram(enc)
 		l1, l2 := int(u1), int(u2)
 		coef := 1.

@@ -23,16 +23,16 @@ import (
 	"github.com/ynqa/wego/cmd/model/glove"
 	"github.com/ynqa/wego/cmd/model/lexvec"
 	"github.com/ynqa/wego/cmd/model/word2vec"
-	"github.com/ynqa/wego/cmd/search"
-	"github.com/ynqa/wego/cmd/search/repl"
+	"github.com/ynqa/wego/cmd/query"
+	"github.com/ynqa/wego/cmd/query/console"
 )
 
 func main() {
 	word2vec := word2vec.New()
 	glove := glove.New()
 	lexvec := lexvec.New()
-	search := search.New()
-	repl := repl.New()
+	query := query.New()
+	console := console.New()
 
 	cmd := &cobra.Command{
 		Use:   "wego",
@@ -42,16 +42,16 @@ func main() {
 				word2vec.Name(),
 				glove.Name(),
 				lexvec.Name(),
-				search.Name(),
-				repl.Name(),
+				query.Name(),
+				console.Name(),
 			)
 		},
 	}
 	cmd.AddCommand(word2vec)
 	cmd.AddCommand(glove)
 	cmd.AddCommand(lexvec)
-	cmd.AddCommand(search)
-	cmd.AddCommand(repl)
+	cmd.AddCommand(query)
+	cmd.AddCommand(console)
 
 	if err := cmd.Execute(); err != nil {
 		os.Exit(1)

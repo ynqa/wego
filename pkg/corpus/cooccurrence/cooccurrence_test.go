@@ -12,19 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package corpus
+package co
 
 import (
-	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
-	"github.com/ynqa/wego/pkg/corpus/dictionary"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-type Corpus interface {
-	IndexedDoc() []int
-	BatchWords(chan []int, int) error
-	Dictionary() *dictionary.Dictionary
-	Cooccurrence() *co.Cooccurrence
-	Len() int
-	LoadForDictionary() error
-	LoadForCooccurrence(co.CountType, int) error
+func TestCooccurrence(t *testing.T) {
+	pw, err := New(Increment)
+	assert.NoError(t, err)
+	assert.NoError(t, pw.Add(1, 2))
+	assert.Equal(t, 1, len(pw.EncodedMatrix()))
+}
+
+func TestCooccurrenceWithInvalidCountType(t *testing.T) {
+	_, err := New(CountType("invalid type"))
+	assert.Error(t, err)
 }
