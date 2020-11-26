@@ -23,40 +23,16 @@ import (
 	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
 )
 
-const (
-	DefaultCountType = Increment
-)
-
-func invalidCountTypeError(typ CountType) error {
-	return fmt.Errorf("invalid relation type: %s not in %s|%s", typ, Increment, Proximity)
-}
-
-type CountType string
-
-func (t *CountType) String() string {
-	if *t == CountType("") {
-		*t = DefaultCountType
-	}
-	return string(*t)
-}
-
-func (t *CountType) Set(name string) error {
-	typ := CountType(name)
-	if typ == Increment || typ == Proximity {
-		*t = typ
-		return nil
-	}
-	return invalidCountTypeError(typ)
-}
-
-func (t *CountType) Type() string {
-	return t.String()
-}
+type CountType = string
 
 const (
 	Increment CountType = "inc"
 	Proximity CountType = "prox"
 )
+
+func invalidCountTypeError(typ CountType) error {
+	return fmt.Errorf("invalid relation type: %s not in %s|%s", typ, Increment, Proximity)
+}
 
 type Cooccurrence struct {
 	typ CountType

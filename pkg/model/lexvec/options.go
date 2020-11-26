@@ -18,43 +18,17 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func invalidRelationTypeError(typ RelationType) error {
-	return errors.Errorf("invalid relation type: %s not in %s|%s|%s|%s", typ, PPMI, PMI, Collocation, LogCollocation)
-}
-
-type RelationType string
+type RelationType = string
 
 const (
-	PPMI                RelationType = "ppmi"
-	PMI                 RelationType = "pmi"
-	Collocation         RelationType = "co"
-	LogCollocation      RelationType = "logco"
-	defaultRelationType              = PPMI
+	PPMI           RelationType = "ppmi"
+	PMI            RelationType = "pmi"
+	Collocation    RelationType = "co"
+	LogCollocation RelationType = "logco"
 )
-
-func (t *RelationType) String() string {
-	if *t == RelationType("") {
-		*t = defaultRelationType
-	}
-	return string(*t)
-}
-
-func (t *RelationType) Set(name string) error {
-	typ := RelationType(name)
-	if typ == PPMI || typ == PMI || typ == Collocation || typ == LogCollocation {
-		*t = typ
-		return nil
-	}
-	return invalidRelationTypeError(typ)
-}
-
-func (t *RelationType) Type() string {
-	return t.String()
-}
 
 var (
 	defaultBatchSize          = 100000
@@ -66,13 +40,13 @@ var (
 	defaultMaxCount           = -1
 	defaultMinCount           = 5
 	defaultNegativeSampleSize = 5
+	defaultRelationType       = PPMI
 	defaultSmooth             = 0.75
 	defaultSubsampleThreshold = 1.0e-3
 	defaultTheta              = 1.0e-4
 	defaultToLower            = false
 	defaultVerbose            = false
-
-	defaultWindow = 5
+	defaultWindow             = 5
 )
 
 type Options struct {
@@ -91,8 +65,7 @@ type Options struct {
 	Theta              float64
 	ToLower            bool
 	Verbose            bool
-
-	Window int
+	Window             int
 }
 
 func DefaultOptions() Options {
@@ -125,7 +98,7 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 	cmd.Flags().IntVar(&opts.MaxCount, "max-count", defaultMaxCount, "upper limit to filter words")
 	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter words")
 	cmd.Flags().IntVar(&opts.NegativeSampleSize, "sample", defaultNegativeSampleSize, "negative sample size")
-	cmd.Flags().Var(&opts.RelationType, "rel", fmt.Sprintf("relation type for co-occurrence words. One of %s|%s|%s|%s", PPMI, PMI, Collocation, LogCollocation))
+	cmd.Flags().StringVar(&opts.RelationType, "rel", defaultRelationType, fmt.Sprintf("relation type for co-occurrence words. One of %s|%s|%s|%s", PPMI, PMI, Collocation, LogCollocation))
 	cmd.Flags().Float64Var(&opts.Smooth, "smooth", defaultSmooth, "smoothing value for co-occurence value")
 	cmd.Flags().Float64Var(&opts.SubsampleThreshold, "threshold", defaultSubsampleThreshold, "threshold for subsampling")
 	cmd.Flags().Float64Var(&opts.Theta, "theta", defaultTheta, "lower limit of learning rate (lr >= initlr * theta)")

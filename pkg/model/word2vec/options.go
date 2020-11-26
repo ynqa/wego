@@ -18,72 +18,22 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func invalidModelTypeError(typ ModelType) error {
-	return errors.Errorf("invalid model: %s not in %s|%s", typ, Cbow, SkipGram)
-}
-func invalidOptimizerTypeError(typ OptimizerType) error {
-	return errors.Errorf("invalid optimizer: %s not in %s|%s", typ, NegativeSampling, HierarchicalSoftmax)
-}
-
-type ModelType string
+type ModelType = string
 
 const (
-	Cbow             ModelType = "cbow"
-	SkipGram         ModelType = "skipgram"
-	defaultModelType           = Cbow
+	Cbow     ModelType = "cbow"
+	SkipGram ModelType = "skipgram"
 )
 
-func (t *ModelType) String() string {
-	if *t == ModelType("") {
-		*t = defaultModelType
-	}
-	return string(*t)
-}
-
-func (t *ModelType) Set(name string) error {
-	typ := ModelType(name)
-	if typ == SkipGram || typ == Cbow {
-		*t = typ
-		return nil
-	}
-	return invalidModelTypeError(typ)
-}
-
-func (t *ModelType) Type() string {
-	return t.String()
-}
-
-type OptimizerType string
+type OptimizerType = string
 
 const (
-	NegativeSampling     OptimizerType = "ns"
-	HierarchicalSoftmax  OptimizerType = "hs"
-	defaultOptimizerType               = NegativeSampling
+	NegativeSampling    OptimizerType = "ns"
+	HierarchicalSoftmax OptimizerType = "hs"
 )
-
-func (t *OptimizerType) String() string {
-	if *t == OptimizerType("") {
-		*t = defaultOptimizerType
-	}
-	return string(*t)
-}
-
-func (t *OptimizerType) Set(name string) error {
-	typ := OptimizerType(name)
-	if typ == NegativeSampling || typ == HierarchicalSoftmax {
-		*t = typ
-		return nil
-	}
-	return invalidOptimizerTypeError(typ)
-}
-
-func (t *OptimizerType) Type() string {
-	return t.String()
-}
 
 var (
 	defaultBatchSize          = 100000
@@ -95,12 +45,14 @@ var (
 	defaultMaxCount           = -1
 	defaultMaxDepth           = 100
 	defaultMinCount           = 5
+	defaultModelType          = Cbow
 	defaultNegativeSampleSize = 5
+	defaultOptimizerType      = NegativeSampling
 	defaultSubsampleThreshold = 1.0e-3
 	defaultTheta              = 1.0e-4
 	defaultToLower            = false
-	defaultWindow             = 5
 	defaultVerbose            = false
+	defaultWindow             = 5
 )
 
 type Options struct {
@@ -155,15 +107,14 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 	cmd.Flags().IntVar(&opts.MaxCount, "max-count", defaultMaxCount, "upper limit to filter words")
 	cmd.Flags().IntVar(&opts.MaxDepth, "max-depth", defaultMaxDepth, "times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
 	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter words")
-	cmd.Flags().Var(&opts.ModelType, "model", fmt.Sprintf("which model does it use? one of: %s|%s", Cbow, SkipGram))
+	cmd.Flags().StringVar(&opts.ModelType, "model", defaultModelType, fmt.Sprintf("which model does it use? one of: %s|%s", Cbow, SkipGram))
 	cmd.Flags().IntVar(&opts.NegativeSampleSize, "sample", defaultNegativeSampleSize, "negative sample size(for negative sampling only)")
-	cmd.Flags().Var(&opts.OptimizerType, "optimizer", fmt.Sprintf("which optimizer does it use? one of: %s|%s", HierarchicalSoftmax, NegativeSampling))
+	cmd.Flags().StringVar(&opts.OptimizerType, "optimizer", defaultOptimizerType, fmt.Sprintf("which optimizer does it use? one of: %s|%s", HierarchicalSoftmax, NegativeSampling))
 	cmd.Flags().Float64Var(&opts.SubsampleThreshold, "threshold", defaultSubsampleThreshold, "threshold for subsampling")
 	cmd.Flags().Float64Var(&opts.Theta, "theta", defaultTheta, "lower limit of learning rate (lr >= initlr * theta)")
 	cmd.Flags().BoolVar(&opts.ToLower, "to-lower", defaultToLower, "whether the words on corpus convert to lowercase or not")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", defaultVerbose, "verbose mode")
 	cmd.Flags().IntVarP(&opts.Window, "window", "w", defaultWindow, "context window size")
-
 }
 
 type ModelOption func(*Options)

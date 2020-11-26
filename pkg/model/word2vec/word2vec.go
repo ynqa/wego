@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
+	"github.com/pkg/errors"
 	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	"github.com/ynqa/wego/pkg/corpus/fs"
@@ -102,7 +103,7 @@ func (w *word2vec) preTrain(r io.Reader) error {
 	case Cbow:
 		w.mod = newCbow(w.opts)
 	default:
-		return invalidModelTypeError(w.opts.ModelType)
+		return errors.Errorf("invalid model: %s not in %s|%s", w.opts.ModelType, Cbow, SkipGram)
 	}
 
 	switch w.opts.OptimizerType {
@@ -117,7 +118,7 @@ func (w *word2vec) preTrain(r io.Reader) error {
 			w.opts,
 		)
 	default:
-		return invalidOptimizerTypeError(w.opts.OptimizerType)
+		return errors.Errorf("invalid optimizer: %s not in %s|%s", w.opts.OptimizerType, NegativeSampling, HierarchicalSoftmax)
 	}
 	return nil
 }

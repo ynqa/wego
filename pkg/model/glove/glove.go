@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
+	"github.com/pkg/errors"
 	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	"github.com/ynqa/wego/pkg/corpus/fs"
@@ -98,7 +99,7 @@ func (g *glove) preTrain(r io.Reader) error {
 	case AdaGrad:
 		g.solver = newAdaGrad(dic, g.opts)
 	default:
-		return invalidSolverTypeError(g.opts.SolverType)
+		return errors.Errorf("invalid solver: %s not in %s|%s", g.opts.SolverType, Stochastic, AdaGrad)
 	}
 	return nil
 }
