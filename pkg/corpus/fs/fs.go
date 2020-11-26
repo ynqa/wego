@@ -1,3 +1,17 @@
+// Copyright © 2020 wego authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package fs
 
 import (
@@ -11,7 +25,7 @@ import (
 )
 
 type Corpus struct {
-	doc io.Reader
+	doc io.ReadSeeker
 
 	dic        *dictionary.Dictionary
 	cooc       *co.Cooccurrence
@@ -22,7 +36,7 @@ type Corpus struct {
 	filters cpsutil.Filters
 }
 
-func New(r io.Reader, toLower bool, maxCount, minCount int) corpus.Corpus {
+func New(r io.ReadSeeker, toLower bool, maxCount, minCount int) corpus.Corpus {
 	return &Corpus{
 		doc:        r,
 		dic:        dictionary.New(),
@@ -42,7 +56,7 @@ func (c *Corpus) IndexedDoc() []int {
 
 func (c *Corpus) BatchWords(ch chan []int, batchSize int) error {
 	cursor, ids := 0, make([]int, batchSize)
-	err := cpsutil.ReadWord(c.doc, func(word string) error {
+	if err := cpsutil.ReadWord(c.doc, func(word string) error {
 		if c.toLower {
 			word = strings.ToLower(word)
 		}
@@ -54,18 +68,18 @@ func (c *Corpus) BatchWords(ch chan []int, batchSize int) error {
 
 		ids[cursor] = id
 		cursor++
-		if len(ids) == batchSize {
+		if cursor == batchSize {
 			ch <- ids
 			cursor, ids = 0, make([]int, batchSize)
 		}
 		return nil
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
 	// send left words
 	ch <- ids[:cursor]
+	close(ch)
 	return nil
 }
 
@@ -81,7 +95,7 @@ func (c *Corpus) Len() int {
 	return c.maxLen
 }
 
-func (c *Corpus) LoadForDictionary() error {
+func (c *Corpus) Load(with *corpus.WithCooccurrence) error {
 	if err := cpsutil.ReadWord(c.doc, func(word string) error {
 		if c.toLower {
 			word = strings.ToLower(word)
@@ -95,25 +109,25 @@ func (c *Corpus) LoadForDictionary() error {
 		return err
 	}
 
+	var err error
+	if with != nil {
+		c.cooc, err = co.New(with.CountType)
+		if err != nil {
+			return err
+		}
+
+		if err = cpsutil.ReadWordWithForwardContext(
+			c.doc, with.Window, func(w1, w2 string) error {
+				id1, _ := c.dic.ID(w1)
+				id2, _ := c.dic.ID(w2)
+				if err := c.cooc.Add(id1, id2); err != nil {
+					return err
+				}
+				return nil
+			}); err != nil {
+			return err
+		}
+	}
+
 	return nil
-}
-
-func (c *Corpus) LoadForCooccurrence(typ co.CountType, window int) (err error) {
-	c.cooc, err = co.New(typ)
-	if err != nil {
-		return
-	}
-
-	if err = cpsutil.ReadWordWithForwardContext(
-		c.doc, window, func(w1, w2 string) error {
-			id1, _ := c.dic.ID(w1)
-			id2, _ := c.dic.ID(w2)
-			if err := c.cooc.Add(id1, id2); err != nil {
-				return err
-			}
-			return nil
-		}); err != nil {
-		return
-	}
-	return
 }

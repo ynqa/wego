@@ -72,16 +72,16 @@ func NewForOptions(opts Options) (model.Model, error) {
 	}, nil
 }
 
-func (l *lexvec) preTrain(r io.Reader) error {
+func (l *lexvec) Train(r io.ReadSeeker) error {
 	if l.opts.DocInMemory {
 		l.corpus = memory.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
 	} else {
 		l.corpus = fs.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
 	}
-	if err := l.corpus.LoadForDictionary(); err != nil {
-		return err
-	}
-	if err := l.corpus.LoadForCooccurrence(co.Increment, l.opts.Window); err != nil {
+	if err := l.corpus.Load(&corpus.WithCooccurrence{
+		CountType: co.Increment,
+		Window:    l.opts.Window,
+	}); err != nil {
 		return err
 	}
 
@@ -98,18 +98,25 @@ func (l *lexvec) preTrain(r io.Reader) error {
 	)
 
 	l.subsampler = subsample.New(dic, l.opts.SubsampleThreshold)
+
+	if l.opts.DocInMemory {
+		if err := l.train(); err != nil {
+			return err
+		}
+	} else {
+		if err := l.batchTrain(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (l *lexvec) Train(r io.Reader) error {
-	if err := l.preTrain(r); err != nil {
-		return err
-	}
-
+func (l *lexvec) train() error {
 	items, err := l.makeItems(l.corpus.Cooccurrence())
 	if err != nil {
 		return err
 	}
+
 	doc := l.corpus.IndexedDoc()
 	indexPerThread := modelutil.IndexPerThread(
 		l.opts.Goroutines,
@@ -127,6 +134,32 @@ func (l *lexvec) Train(r io.Reader) error {
 			wg.Add(1)
 			s, e := indexPerThread[i], indexPerThread[i+1]
 			go l.trainPerThread(doc[s:e], items, trained, sem, wg)
+		}
+
+		wg.Wait()
+		close(trained)
+	}
+	return nil
+}
+
+func (l *lexvec) batchTrain() error {
+	items, err := l.makeItems(l.corpus.Cooccurrence())
+	if err != nil {
+		return err
+	}
+
+	for i := 1; i <= l.opts.Iter; i++ {
+		trained, clk := make(chan struct{}), clock.New()
+		go l.observe(trained, clk)
+
+		sem := semaphore.NewWeighted(int64(l.opts.Goroutines))
+		wg := &sync.WaitGroup{}
+
+		in := make(chan []int, l.opts.Goroutines)
+		go l.corpus.BatchWords(in, l.opts.BatchSize)
+		for doc := range in {
+			wg.Add(1)
+			go l.trainPerThread(doc, items, trained, sem, wg)
 		}
 
 		wg.Wait()

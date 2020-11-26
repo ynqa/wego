@@ -30,7 +30,7 @@ const (
 
 var (
 	defaultAlpha              = 0.75
-	defaultBatchSize          = 100000
+	defaultBatchSize          = 10000
 	defaultCountType          = co.Increment
 	defaultDim                = 10
 	defaultDocInMemory        = false

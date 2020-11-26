@@ -47,18 +47,31 @@ function get_corpus() {
 }
 
 function train_word2vec() {
-	echo "train: skipgram with ns"
-	./wego word2vec -i text8 -o word2vec_sg_ns.txt --in-memory \
-		--model skipgram --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
+		echo "train: skipgram with ns"
+	./wego word2vec -i text8 -o word2vec_sg_ns.txt \
+		--model skipgram --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 10000
 	echo "train: skipgram with hs"
-	./wego word2vec -i text8 -o word2vec_sg_hs.txt --in-memory \
-		--model skipgram --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_sg_hs.txt \
+		--model skipgram --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 10000
 	echo "train: cbow with ns"
-	./wego word2vec -i text8 -o word2vec_cbow_ns.txt --in-memory \
-		--model cbow --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_cbow_ns.txt \
+		--model cbow --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 10000
 	echo "train: cbow with hs"
-	./wego word2vec -i text8 -o word2vec_cbow_hs.txt --in-memory \
-		--model cbow --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
+	./wego word2vec -i text8 -o word2vec_cbow_hs.txt \
+		--model cbow --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 10000
+
+	# echo "train: skipgram with ns"
+	# ./wego word2vec -i text8 -o word2vec_sg_ns.txt --in-memory \
+	# 	--model skipgram --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
+	# echo "train: skipgram with hs"
+	# ./wego word2vec -i text8 -o word2vec_sg_hs.txt --in-memory \
+	# 	--model skipgram --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
+	# echo "train: cbow with ns"
+	# ./wego word2vec -i text8 -o word2vec_cbow_ns.txt --in-memory \
+	# 	--model cbow --optimizer ns -d 100 -w 5 --verbose --iter 3 --min-count 5 --save-type agg --goroutines 20 --batch 100000
+	# echo "train: cbow with hs"
+	# ./wego word2vec -i text8 -o word2vec_cbow_hs.txt --in-memory \
+	# 	--model cbow --optimizer hs -d 100 -w 5 --verbose --iter 3 --min-count 5 --goroutines 20 --batch 100000
 }
 
 function train_glove() {
@@ -72,8 +85,11 @@ function train_glove() {
 
 function train_lexvec() {
 	echo "train: lexvec"
-	./wego lexvec -d 50 -i text8 -o lexvec.txt --in-memory \
+	./wego lexvec -d 50 -i text8 -o lexvec.txt \
 		--iter 3 --goroutines 12 --initlr 0.05 --min-count 5 -w 5 --rel ppmi --save-type agg --verbose
+	# echo "train: lexvec"
+	# ./wego lexvec -d 50 -i text8 -o lexvec.txt --in-memory \
+	# 	--iter 3 --goroutines 12 --initlr 0.05 --min-count 5 -w 5 --rel ppmi --save-type agg --verbose
 }
 
 function search_word2vec() {

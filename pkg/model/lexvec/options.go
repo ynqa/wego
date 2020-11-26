@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	defaultBatchSize          = 100000
+	defaultBatchSize          = 10000
 	defaultDim                = 10
 	defaultDocInMemory        = false
 	defaultGoroutines         = runtime.NumCPU()

@@ -73,13 +73,13 @@ func NewForOptions(opts Options) (model.Model, error) {
 	}, nil
 }
 
-func (w *word2vec) preTrain(r io.Reader) error {
+func (w *word2vec) Train(r io.ReadSeeker) error {
 	if w.opts.DocInMemory {
 		w.corpus = memory.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
 	} else {
 		w.corpus = fs.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
 	}
-	if err := w.corpus.LoadForDictionary(); err != nil {
+	if err := w.corpus.Load(nil); err != nil {
 		return err
 	}
 
@@ -120,14 +120,20 @@ func (w *word2vec) preTrain(r io.Reader) error {
 	default:
 		return errors.Errorf("invalid optimizer: %s not in %s|%s", w.opts.OptimizerType, NegativeSampling, HierarchicalSoftmax)
 	}
+
+	if w.opts.DocInMemory {
+		if err := w.train(); err != nil {
+			return err
+		}
+	} else {
+		if err := w.batchTrain(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (w *word2vec) Train(r io.Reader) error {
-	if err := w.preTrain(r); err != nil {
-		return err
-	}
-
+func (w *word2vec) train() error {
 	doc := w.corpus.IndexedDoc()
 	indexPerThread := modelutil.IndexPerThread(
 		w.opts.Goroutines,
@@ -145,6 +151,27 @@ func (w *word2vec) Train(r io.Reader) error {
 			wg.Add(1)
 			s, e := indexPerThread[i], indexPerThread[i+1]
 			go w.trainPerThread(doc[s:e], trained, sem, wg)
+		}
+
+		wg.Wait()
+		close(trained)
+	}
+	return nil
+}
+
+func (w *word2vec) batchTrain() error {
+	for i := 1; i <= w.opts.Iter; i++ {
+		trained, clk := make(chan struct{}), clock.New()
+		go w.observe(trained, clk)
+
+		sem := semaphore.NewWeighted(int64(w.opts.Goroutines))
+		wg := &sync.WaitGroup{}
+
+		in := make(chan []int, w.opts.Goroutines)
+		go w.corpus.BatchWords(in, w.opts.BatchSize)
+		for doc := range in {
+			wg.Add(1)
+			go w.trainPerThread(doc, trained, sem, wg)
 		}
 
 		wg.Wait()

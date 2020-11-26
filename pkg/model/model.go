@@ -21,6 +21,6 @@ import (
 )
 
 type Model interface {
-	Train(io.Reader) error
+	Train(io.ReadSeeker) error
 	Save(io.Writer, save.VectorType) error
 }

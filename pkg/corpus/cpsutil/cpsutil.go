@@ -27,7 +27,8 @@ func scanner(r io.Reader) *bufio.Scanner {
 	return s
 }
 
-func ReadWord(r io.Reader, fn func(string) error) error {
+func ReadWord(r io.ReadSeeker, fn func(string) error) error {
+	r.Seek(0, 0)
 	scanner := scanner(r)
 	for scanner.Scan() {
 		if err := fn(scanner.Text()); err != nil {
@@ -42,7 +43,8 @@ func ReadWord(r io.Reader, fn func(string) error) error {
 	return nil
 }
 
-func ReadWordWithForwardContext(r io.Reader, n int, fn func(string, string) error) error {
+func ReadWordWithForwardContext(r io.ReadSeeker, n int, fn func(string, string) error) error {
+	r.Seek(0, 0)
 	scanner := scanner(r)
 	var (
 		axis string

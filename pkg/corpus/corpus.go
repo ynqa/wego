@@ -25,6 +25,10 @@ type Corpus interface {
 	Dictionary() *dictionary.Dictionary
 	Cooccurrence() *co.Cooccurrence
 	Len() int
-	LoadForDictionary() error
-	LoadForCooccurrence(co.CountType, int) error
+	Load(*WithCooccurrence) error
+}
+
+type WithCooccurrence struct {
+	CountType co.CountType
+	Window    int
 }

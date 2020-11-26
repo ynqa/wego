@@ -67,17 +67,17 @@ func NewForOptions(opts Options) (model.Model, error) {
 	}, nil
 }
 
-func (g *glove) preTrain(r io.Reader) error {
+func (g *glove) Train(r io.ReadSeeker) error {
 	if g.opts.DocInMemory {
 		g.corpus = memory.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
 	} else {
 		g.corpus = fs.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
 	}
 
-	if err := g.corpus.LoadForDictionary(); err != nil {
-		return err
-	}
-	if err := g.corpus.LoadForCooccurrence(g.opts.CountType, g.opts.Window); err != nil {
+	if err := g.corpus.Load(&corpus.WithCooccurrence{
+		CountType: g.opts.CountType,
+		Window:    g.opts.Window,
+	}); err != nil {
 		return err
 	}
 
@@ -100,13 +100,6 @@ func (g *glove) preTrain(r io.Reader) error {
 		g.solver = newAdaGrad(dic, g.opts)
 	default:
 		return errors.Errorf("invalid solver: %s not in %s|%s", g.opts.SolverType, Stochastic, AdaGrad)
-	}
-	return nil
-}
-
-func (g *glove) Train(r io.Reader) error {
-	if err := g.preTrain(r); err != nil {
-		return err
 	}
 
 	items := g.makeItems(g.corpus.Cooccurrence())
