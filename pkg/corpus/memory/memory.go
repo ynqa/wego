@@ -30,10 +30,10 @@ import (
 type Corpus struct {
 	doc io.ReadSeeker
 
-	dic        *dictionary.Dictionary
-	cooc       *co.Cooccurrence
-	maxLen     int
-	indexedDoc []int
+	dic    *dictionary.Dictionary
+	cooc   *co.Cooccurrence
+	maxLen int
+	idoc   []int
 
 	toLower bool
 	filters cpsutil.Filters
@@ -41,9 +41,9 @@ type Corpus struct {
 
 func New(doc io.ReadSeeker, toLower bool, maxCount, minCount int) corpus.Corpus {
 	return &Corpus{
-		doc:        doc,
-		dic:        dictionary.New(),
-		indexedDoc: make([]int, 0),
+		doc:  doc,
+		dic:  dictionary.New(),
+		idoc: make([]int, 0),
 
 		toLower: toLower,
 		filters: cpsutil.Filters{
@@ -55,7 +55,7 @@ func New(doc io.ReadSeeker, toLower bool, maxCount, minCount int) corpus.Corpus 
 
 func (c *Corpus) IndexedDoc() []int {
 	var res []int
-	for _, id := range c.indexedDoc {
+	for _, id := range c.idoc {
 		if c.filters.Any(id, c.dic) {
 			continue
 		}
@@ -90,7 +90,7 @@ func (c *Corpus) Load(verbose *verbose.Verbose, logBatch int, with *corpus.WithC
 		c.dic.Add(word)
 		id, _ := c.dic.ID(word)
 		c.maxLen++
-		c.indexedDoc = append(c.indexedDoc, id)
+		c.idoc = append(c.idoc, id)
 		verbose.Do(func() {
 			if c.maxLen%logBatch == 0 {
 				fmt.Printf("read %d words %v\r", c.maxLen, clk.AllElapsed())
@@ -116,9 +116,9 @@ func (c *Corpus) Load(verbose *verbose.Verbose, logBatch int, with *corpus.WithC
 			return err
 		}
 
-		for i := 0; i < len(c.indexedDoc); i++ {
-			for j := i + 1; j < len(c.indexedDoc) && j <= i+with.Window; j++ {
-				if err = c.cooc.Add(c.indexedDoc[i], c.indexedDoc[j]); err != nil {
+		for i := 0; i < len(c.idoc); i++ {
+			for j := i + 1; j < len(c.idoc) && j <= i+with.Window; j++ {
+				if err = c.cooc.Add(c.idoc[i], c.idoc[j]); err != nil {
 					return err
 				}
 				cursor++

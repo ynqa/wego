@@ -30,10 +30,9 @@ import (
 type Corpus struct {
 	doc io.ReadSeeker
 
-	dic        *dictionary.Dictionary
-	cooc       *co.Cooccurrence
-	maxLen     int
-	indexedDoc []int
+	dic    *dictionary.Dictionary
+	cooc   *co.Cooccurrence
+	maxLen int
 
 	toLower bool
 	filters cpsutil.Filters
@@ -41,9 +40,8 @@ type Corpus struct {
 
 func New(r io.ReadSeeker, toLower bool, maxCount, minCount int) corpus.Corpus {
 	return &Corpus{
-		doc:        r,
-		dic:        dictionary.New(),
-		indexedDoc: make([]int, 0),
+		doc: r,
+		dic: dictionary.New(),
 
 		toLower: toLower,
 		filters: cpsutil.Filters{
