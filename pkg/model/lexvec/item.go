@@ -19,9 +19,9 @@ import (
 	"math"
 
 	"github.com/pkg/errors"
-	"github.com/ynqa/wego/pkg/clock"
 	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
 	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
+	"github.com/ynqa/wego/pkg/util/clock"
 )
 
 func (l *lexvec) makeItems(cooc *co.Cooccurrence) (map[uint64]float64, error) {
@@ -42,7 +42,7 @@ func (l *lexvec) makeItems(cooc *co.Cooccurrence) (map[uint64]float64, error) {
 		res[enc] = v
 		idx++
 		l.verbose.Do(func() {
-			if idx%100000 == 0 {
+			if idx%l.opts.LogBatch == 0 {
 				fmt.Printf("build %d items %v\r", idx, clk.AllElapsed())
 			}
 		})

@@ -12,23 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package corpus
-
-import (
-	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
-	"github.com/ynqa/wego/pkg/corpus/dictionary"
-)
-
-type Corpus interface {
-	IndexedDoc() []int
-	BatchWords(chan []int, int) error
-	Dictionary() *dictionary.Dictionary
-	Cooccurrence() *co.Cooccurrence
-	Len() int
-	Load(func(int), *WithCooccurrence) error
-}
-
-type WithCooccurrence struct {
-	CountType co.CountType
-	Window    int
-}
+package format

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ynqa/wego/pkg/clock"
 	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
 	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
+	"github.com/ynqa/wego/pkg/util/clock"
 )
 
 type item struct {
@@ -47,7 +47,7 @@ func (g *glove) makeItems(cooc *co.Cooccurrence) []item {
 		}
 		idx++
 		g.verbose.Do(func() {
-			if idx%100000 == 0 {
+			if idx%g.opts.LogBatch == 0 {
 				fmt.Printf("build %d items %v\r", idx, clk.AllElapsed())
 			}
 		})

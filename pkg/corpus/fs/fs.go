@@ -95,7 +95,7 @@ func (c *Corpus) Len() int {
 	return c.maxLen
 }
 
-func (c *Corpus) Load(with *corpus.WithCooccurrence) error {
+func (c *Corpus) Load(fn func(int), with *corpus.WithCooccurrence) error {
 	if err := cpsutil.ReadWord(c.doc, func(word string) error {
 		if c.toLower {
 			word = strings.ToLower(word)
@@ -103,6 +103,7 @@ func (c *Corpus) Load(with *corpus.WithCooccurrence) error {
 
 		c.dic.Add(word)
 		c.maxLen++
+		fn(c.maxLen)
 
 		return nil
 	}); err != nil {

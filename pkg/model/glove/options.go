@@ -37,6 +37,7 @@ var (
 	defaultGoroutines         = runtime.NumCPU()
 	defaultInitlr             = 0.025
 	defaultIter               = 15
+	defaultLogBatch           = 100000
 	defaultMaxCount           = -1
 	defaultMinCount           = 5
 	defaultSolverType         = Stochastic
@@ -56,6 +57,7 @@ type Options struct {
 	Goroutines         int
 	Initlr             float64
 	Iter               int
+	LogBatch           int
 	MaxCount           int
 	MinCount           int
 	SolverType         SolverType
@@ -76,6 +78,7 @@ func DefaultOptions() Options {
 		Goroutines:         defaultGoroutines,
 		Initlr:             defaultInitlr,
 		Iter:               defaultIter,
+		LogBatch:           defaultLogBatch,
 		MaxCount:           defaultMaxCount,
 		MinCount:           defaultMinCount,
 		SolverType:         defaultSolverType,
@@ -96,6 +99,7 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 	cmd.Flags().BoolVar(&opts.DocInMemory, "in-memory", defaultDocInMemory, "whether to store the doc in memory")
 	cmd.Flags().Float64Var(&opts.Initlr, "initlr", defaultInitlr, "initial learning rate")
 	cmd.Flags().IntVar(&opts.Iter, "iter", defaultIter, "number of iteration")
+	cmd.Flags().IntVar(&opts.LogBatch, "log-batch", defaultLogBatch, "batch size to log for counting words")
 	cmd.Flags().IntVar(&opts.MaxCount, "max-count", defaultMaxCount, "upper limit to filter words")
 	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter words")
 	cmd.Flags().StringVar(&opts.SolverType, "solver", defaultSolverType, fmt.Sprintf("solver for GloVe objective. One of: %s|%s", Stochastic, AdaGrad))

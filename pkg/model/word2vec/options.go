@@ -42,15 +42,17 @@ var (
 	defaultGoroutines         = runtime.NumCPU()
 	defaultInitlr             = 0.025
 	defaultIter               = 15
+	defaultLogBatch           = 100000
 	defaultMaxCount           = -1
 	defaultMaxDepth           = 100
 	defaultMinCount           = 5
+	defaultMinLR              = defaultInitlr * 1.0e-4
 	defaultModelType          = Cbow
 	defaultNegativeSampleSize = 5
 	defaultOptimizerType      = NegativeSampling
 	defaultSubsampleThreshold = 1.0e-3
-	defaultTheta              = 1.0e-4
 	defaultToLower            = false
+	defaultUpdateLRBatch      = 100000
 	defaultVerbose            = false
 	defaultWindow             = 5
 )
@@ -62,15 +64,17 @@ type Options struct {
 	Goroutines         int
 	Initlr             float64
 	Iter               int
+	LogBatch           int
 	MaxCount           int
 	MaxDepth           int
 	MinCount           int
+	MinLR              float64
 	ModelType          ModelType
 	NegativeSampleSize int
 	OptimizerType      OptimizerType
 	SubsampleThreshold float64
-	Theta              float64
 	ToLower            bool
+	UpdateLRBatch      int
 	Verbose            bool
 	Window             int
 }
@@ -83,15 +87,17 @@ func DefaultOptions() Options {
 		Goroutines:         defaultGoroutines,
 		Initlr:             defaultInitlr,
 		Iter:               defaultIter,
+		LogBatch:           defaultLogBatch,
 		MaxCount:           defaultMaxCount,
 		MaxDepth:           defaultMaxDepth,
 		MinCount:           defaultMinCount,
+		MinLR:              defaultMinLR,
 		ModelType:          defaultModelType,
 		NegativeSampleSize: defaultNegativeSampleSize,
 		OptimizerType:      defaultOptimizerType,
 		SubsampleThreshold: defaultSubsampleThreshold,
-		Theta:              defaultTheta,
 		ToLower:            defaultToLower,
+		UpdateLRBatch:      defaultUpdateLRBatch,
 		Verbose:            defaultVerbose,
 		Window:             defaultWindow,
 	}
@@ -104,15 +110,17 @@ func LoadForCmd(cmd *cobra.Command, opts *Options) {
 	cmd.Flags().BoolVar(&opts.DocInMemory, "in-memory", defaultDocInMemory, "whether to store the doc in memory")
 	cmd.Flags().Float64Var(&opts.Initlr, "initlr", defaultInitlr, "initial learning rate")
 	cmd.Flags().IntVar(&opts.Iter, "iter", defaultIter, "number of iteration")
+	cmd.Flags().IntVar(&opts.LogBatch, "log-batch", defaultLogBatch, "batch size to log for counting words")
 	cmd.Flags().IntVar(&opts.MaxCount, "max-count", defaultMaxCount, "upper limit to filter words")
 	cmd.Flags().IntVar(&opts.MaxDepth, "max-depth", defaultMaxDepth, "times to track huffman tree, max-depth=0 means to track full path from root to word (for hierarchical softmax only)")
 	cmd.Flags().IntVar(&opts.MinCount, "min-count", defaultMinCount, "lower limit to filter words")
+	cmd.Flags().Float64Var(&opts.MinLR, "min-lr", defaultMinLR, "lower limit of learning rate")
 	cmd.Flags().StringVar(&opts.ModelType, "model", defaultModelType, fmt.Sprintf("which model does it use? one of: %s|%s", Cbow, SkipGram))
 	cmd.Flags().IntVar(&opts.NegativeSampleSize, "sample", defaultNegativeSampleSize, "negative sample size(for negative sampling only)")
 	cmd.Flags().StringVar(&opts.OptimizerType, "optimizer", defaultOptimizerType, fmt.Sprintf("which optimizer does it use? one of: %s|%s", HierarchicalSoftmax, NegativeSampling))
 	cmd.Flags().Float64Var(&opts.SubsampleThreshold, "threshold", defaultSubsampleThreshold, "threshold for subsampling")
-	cmd.Flags().Float64Var(&opts.Theta, "theta", defaultTheta, "lower limit of learning rate (lr >= initlr * theta)")
 	cmd.Flags().BoolVar(&opts.ToLower, "to-lower", defaultToLower, "whether the words on corpus convert to lowercase or not")
+	cmd.Flags().IntVar(&opts.UpdateLRBatch, "update-lr-batch", defaultUpdateLRBatch, "batch size to update learning rate")
 	cmd.Flags().BoolVar(&opts.Verbose, "verbose", defaultVerbose, "verbose mode")
 	cmd.Flags().IntVarP(&opts.Window, "window", "w", defaultWindow, "context window size")
 }
@@ -155,6 +163,12 @@ func Iter(v int) ModelOption {
 	})
 }
 
+func LogBatch(v int) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.LogBatch = v
+	})
+}
+
 func MaxCount(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.MaxCount = v
@@ -170,6 +184,12 @@ func MaxDepth(v int) ModelOption {
 func MinCount(v int) ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.MinCount = v
+	})
+}
+
+func MinLR(v float64) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.MinLR = v
 	})
 }
 
@@ -197,15 +217,15 @@ func SubsampleThreshold(v float64) ModelOption {
 	})
 }
 
-func Theta(v float64) ModelOption {
-	return ModelOption(func(opts *Options) {
-		opts.Theta = v
-	})
-}
-
 func ToLower() ModelOption {
 	return ModelOption(func(opts *Options) {
 		opts.ToLower = true
+	})
+}
+
+func UpdateLRBatch(v int) ModelOption {
+	return ModelOption(func(opts *Options) {
+		opts.UpdateLRBatch = v
 	})
 }
 

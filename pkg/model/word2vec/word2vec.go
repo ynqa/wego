@@ -26,7 +26,6 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	"github.com/pkg/errors"
-	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	"github.com/ynqa/wego/pkg/corpus/fs"
 	"github.com/ynqa/wego/pkg/corpus/memory"
@@ -35,7 +34,8 @@ import (
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
 	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
-	"github.com/ynqa/wego/pkg/verbose"
+	"github.com/ynqa/wego/pkg/util/clock"
+	"github.com/ynqa/wego/pkg/util/verbose"
 )
 
 type word2vec struct {
@@ -79,9 +79,21 @@ func (w *word2vec) Train(r io.ReadSeeker) error {
 	} else {
 		w.corpus = fs.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
 	}
-	if err := w.corpus.Load(nil); err != nil {
+
+	clk := clock.New()
+	if err := w.corpus.Load(
+		func(cursor int) {
+			w.verbose.Do(func() {
+				if cursor%w.opts.LogBatch == 0 {
+					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
+				}
+			})
+		}, nil); err != nil {
 		return err
 	}
+	w.verbose.Do(func() {
+		fmt.Printf("read %d words %v\r\n", w.corpus.Len(), clk.AllElapsed())
+	})
 
 	dic, dim := w.corpus.Dictionary(), w.opts.Dim
 
@@ -209,17 +221,18 @@ func (w *word2vec) observe(trained chan struct{}, clk *clock.Clock) {
 	var cnt int
 	for range trained {
 		cnt++
-		if cnt%w.opts.BatchSize == 0 {
-			lower := w.opts.Initlr * w.opts.Theta
-			if w.currentlr < lower {
-				w.currentlr = lower
+		if cnt%w.opts.UpdateLRBatch == 0 {
+			if w.currentlr < w.opts.MinLR {
+				w.currentlr = w.opts.MinLR
 			} else {
 				w.currentlr = w.opts.Initlr * (1.0 - float64(cnt)/float64(w.corpus.Len()))
 			}
-			w.verbose.Do(func() {
-				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
-			})
 		}
+		w.verbose.Do(func() {
+			if cnt%w.opts.LogBatch == 0 {
+				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
+			}
+		})
 	}
 	w.verbose.Do(func() {
 		fmt.Printf("trained %d words %v\r\n", cnt, clk.AllElapsed())
@@ -256,12 +269,14 @@ func (w *word2vec) Save(f io.Writer, typ save.VectorType) error {
 		}
 		fmt.Fprintln(&buf)
 		w.verbose.Do(func() {
-			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+			if i%w.opts.LogBatch == 0 {
+				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
+			}
 		})
 	}
 	writer.WriteString(fmt.Sprintf("%v", buf.String()))
 	w.verbose.Do(func() {
-		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
 	})
 	return nil
 }

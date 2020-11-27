@@ -25,7 +25,6 @@ import (
 
 	"golang.org/x/sync/semaphore"
 
-	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
 	"github.com/ynqa/wego/pkg/corpus/cooccurrence/encode"
@@ -36,7 +35,8 @@ import (
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
 	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
-	"github.com/ynqa/wego/pkg/verbose"
+	"github.com/ynqa/wego/pkg/util/clock"
+	"github.com/ynqa/wego/pkg/util/verbose"
 )
 
 type lexvec struct {
@@ -78,12 +78,26 @@ func (l *lexvec) Train(r io.ReadSeeker) error {
 	} else {
 		l.corpus = fs.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
 	}
-	if err := l.corpus.Load(&corpus.WithCooccurrence{
-		CountType: co.Increment,
-		Window:    l.opts.Window,
-	}); err != nil {
+
+	clk := clock.New()
+	if err := l.corpus.Load(
+		func(cursor int) {
+			l.verbose.Do(func() {
+				if cursor%l.opts.LogBatch == 0 {
+					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
+				}
+			})
+		},
+		&corpus.WithCooccurrence{
+			CountType: co.Increment,
+			Window:    l.opts.Window,
+		},
+	); err != nil {
 		return err
 	}
+	l.verbose.Do(func() {
+		fmt.Printf("read %d words %v\r\n", l.corpus.Len(), clk.AllElapsed())
+	})
 
 	dic, dim := l.corpus.Dictionary(), l.opts.Dim
 
@@ -233,17 +247,18 @@ func (l *lexvec) observe(trained chan struct{}, clk *clock.Clock) {
 	var cnt int
 	for range trained {
 		cnt++
-		if cnt%l.opts.BatchSize == 0 {
-			lower := l.opts.Initlr * l.opts.Theta
-			if l.currentlr < lower {
-				l.currentlr = lower
+		if cnt%l.opts.UpdateLRBatch == 0 {
+			if l.currentlr < l.opts.MinLR {
+				l.currentlr = l.opts.MinLR
 			} else {
 				l.currentlr = l.opts.Initlr * (1.0 - float64(cnt)/float64(l.corpus.Len()))
 			}
-			l.verbose.Do(func() {
-				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
-			})
 		}
+		l.verbose.Do(func() {
+			if cnt%l.opts.LogBatch == 0 {
+				fmt.Printf("trained %d words %v\r", cnt, clk.AllElapsed())
+			}
+		})
 	}
 	l.verbose.Do(func() {
 		fmt.Printf("trained %d words %v\r\n", cnt, clk.AllElapsed())
@@ -275,12 +290,14 @@ func (l *lexvec) Save(f io.Writer, typ save.VectorType) error {
 		}
 		fmt.Fprintln(&buf)
 		l.verbose.Do(func() {
-			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+			if i%l.opts.LogBatch == 0 {
+				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
+			}
 		})
 	}
 	writer.WriteString(fmt.Sprintf("%v", buf.String()))
 	l.verbose.Do(func() {
-		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
 	})
 	return nil
 }

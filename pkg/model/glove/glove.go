@@ -26,7 +26,6 @@ import (
 	"golang.org/x/sync/semaphore"
 
 	"github.com/pkg/errors"
-	"github.com/ynqa/wego/pkg/clock"
 	"github.com/ynqa/wego/pkg/corpus"
 	"github.com/ynqa/wego/pkg/corpus/fs"
 	"github.com/ynqa/wego/pkg/corpus/memory"
@@ -34,7 +33,8 @@ import (
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
 	"github.com/ynqa/wego/pkg/model/modelutil/save"
-	"github.com/ynqa/wego/pkg/verbose"
+	"github.com/ynqa/wego/pkg/util/clock"
+	"github.com/ynqa/wego/pkg/util/verbose"
 )
 
 type glove struct {
@@ -74,12 +74,25 @@ func (g *glove) Train(r io.ReadSeeker) error {
 		g.corpus = fs.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
 	}
 
-	if err := g.corpus.Load(&corpus.WithCooccurrence{
-		CountType: g.opts.CountType,
-		Window:    g.opts.Window,
-	}); err != nil {
+	clk := clock.New()
+	if err := g.corpus.Load(
+		func(cursor int) {
+			g.verbose.Do(func() {
+				if cursor%g.opts.LogBatch == 0 {
+					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
+				}
+			})
+		},
+		&corpus.WithCooccurrence{
+			CountType: g.opts.CountType,
+			Window:    g.opts.Window,
+		},
+	); err != nil {
 		return err
 	}
+	g.verbose.Do(func() {
+		fmt.Printf("read %d words %v\r\n", g.corpus.Len(), clk.AllElapsed())
+	})
 
 	dic, dim := g.corpus.Dictionary(), g.opts.Dim
 
@@ -102,6 +115,10 @@ func (g *glove) Train(r io.ReadSeeker) error {
 		return errors.Errorf("invalid solver: %s not in %s|%s", g.opts.SolverType, Stochastic, AdaGrad)
 	}
 
+	return g.train()
+}
+
+func (g *glove) train() error {
 	items := g.makeItems(g.corpus.Cooccurrence())
 	itemSize := len(items)
 	indexPerThread := modelutil.IndexPerThread(
@@ -158,7 +175,7 @@ func (g *glove) observe(trained chan struct{}, clk *clock.Clock) {
 	for range trained {
 		g.verbose.Do(func() {
 			cnt++
-			if cnt%g.opts.BatchSize == 0 {
+			if cnt%g.opts.LogBatch == 0 {
 				fmt.Printf("trained %d items %v\r", cnt, clk.AllElapsed())
 			}
 		})
@@ -193,12 +210,14 @@ func (g *glove) Save(f io.Writer, typ save.VectorType) error {
 		}
 		fmt.Fprintln(&buf)
 		g.verbose.Do(func() {
-			fmt.Printf("save %d words %v\r", i, clk.AllElapsed())
+			if i%g.opts.LogBatch == 0 {
+				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
+			}
 		})
 	}
 	writer.WriteString(fmt.Sprintf("%v", buf.String()))
 	g.verbose.Do(func() {
-		fmt.Printf("save %d words %v\r\n", dic.Len(), clk.AllElapsed())
+		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
 	})
 	return nil
 }
