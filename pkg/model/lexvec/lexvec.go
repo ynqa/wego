@@ -79,15 +79,8 @@ func (l *lexvec) Train(r io.ReadSeeker) error {
 		l.corpus = fs.New(r, l.opts.ToLower, l.opts.MaxCount, l.opts.MinCount)
 	}
 
-	clk := clock.New()
 	if err := l.corpus.Load(
-		func(cursor int) {
-			l.verbose.Do(func() {
-				if cursor%l.opts.LogBatch == 0 {
-					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
-				}
-			})
-		},
+		l.verbose, l.opts.BatchSize,
 		&corpus.WithCooccurrence{
 			CountType: co.Increment,
 			Window:    l.opts.Window,
@@ -95,9 +88,6 @@ func (l *lexvec) Train(r io.ReadSeeker) error {
 	); err != nil {
 		return err
 	}
-	l.verbose.Do(func() {
-		fmt.Printf("read %d words %v\r\n", l.corpus.Len(), clk.AllElapsed())
-	})
 
 	dic, dim := l.corpus.Dictionary(), l.opts.Dim
 

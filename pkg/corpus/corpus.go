@@ -17,6 +17,7 @@ package corpus
 import (
 	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
 	"github.com/ynqa/wego/pkg/corpus/dictionary"
+	"github.com/ynqa/wego/pkg/util/verbose"
 )
 
 type Corpus interface {
@@ -25,7 +26,7 @@ type Corpus interface {
 	Dictionary() *dictionary.Dictionary
 	Cooccurrence() *co.Cooccurrence
 	Len() int
-	Load(func(int), *WithCooccurrence) error
+	Load(*verbose.Verbose, int, *WithCooccurrence) error
 }
 
 type WithCooccurrence struct {

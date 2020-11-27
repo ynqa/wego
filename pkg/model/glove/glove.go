@@ -74,15 +74,8 @@ func (g *glove) Train(r io.ReadSeeker) error {
 		g.corpus = fs.New(r, g.opts.ToLower, g.opts.MaxCount, g.opts.MinCount)
 	}
 
-	clk := clock.New()
 	if err := g.corpus.Load(
-		func(cursor int) {
-			g.verbose.Do(func() {
-				if cursor%g.opts.LogBatch == 0 {
-					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
-				}
-			})
-		},
+		g.verbose, g.opts.LogBatch,
 		&corpus.WithCooccurrence{
 			CountType: g.opts.CountType,
 			Window:    g.opts.Window,
@@ -90,9 +83,6 @@ func (g *glove) Train(r io.ReadSeeker) error {
 	); err != nil {
 		return err
 	}
-	g.verbose.Do(func() {
-		fmt.Printf("read %d words %v\r\n", g.corpus.Len(), clk.AllElapsed())
-	})
 
 	dic, dim := g.corpus.Dictionary(), g.opts.Dim
 

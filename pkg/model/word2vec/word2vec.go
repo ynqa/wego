@@ -80,20 +80,9 @@ func (w *word2vec) Train(r io.ReadSeeker) error {
 		w.corpus = fs.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
 	}
 
-	clk := clock.New()
-	if err := w.corpus.Load(
-		func(cursor int) {
-			w.verbose.Do(func() {
-				if cursor%w.opts.LogBatch == 0 {
-					fmt.Printf("read %d words %v\r", cursor, clk.AllElapsed())
-				}
-			})
-		}, nil); err != nil {
+	if err := w.corpus.Load(w.verbose, w.opts.LogBatch, nil); err != nil {
 		return err
 	}
-	w.verbose.Do(func() {
-		fmt.Printf("read %d words %v\r\n", w.corpus.Len(), clk.AllElapsed())
-	})
 
 	dic, dim := w.corpus.Dictionary(), w.opts.Dim
 

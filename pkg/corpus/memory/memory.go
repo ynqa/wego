@@ -15,6 +15,7 @@
 package memory
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
@@ -22,6 +23,8 @@ import (
 	co "github.com/ynqa/wego/pkg/corpus/cooccurrence"
 	"github.com/ynqa/wego/pkg/corpus/cpsutil"
 	"github.com/ynqa/wego/pkg/corpus/dictionary"
+	"github.com/ynqa/wego/pkg/util/clock"
+	"github.com/ynqa/wego/pkg/util/verbose"
 )
 
 type Corpus struct {
@@ -77,7 +80,8 @@ func (c *Corpus) Len() int {
 	return c.maxLen
 }
 
-func (c *Corpus) Load(fn func(int), with *corpus.WithCooccurrence) error {
+func (c *Corpus) Load(verbose *verbose.Verbose, logBatch int, with *corpus.WithCooccurrence) error {
+	clk := clock.New()
 	if err := cpsutil.ReadWord(c.doc, func(word string) error {
 		if c.toLower {
 			word = strings.ToLower(word)
@@ -87,14 +91,25 @@ func (c *Corpus) Load(fn func(int), with *corpus.WithCooccurrence) error {
 		id, _ := c.dic.ID(word)
 		c.maxLen++
 		c.indexedDoc = append(c.indexedDoc, id)
-		fn(c.maxLen)
+		verbose.Do(func() {
+			if c.maxLen%logBatch == 0 {
+				fmt.Printf("read %d words %v\r", c.maxLen, clk.AllElapsed())
+			}
+		})
 
 		return nil
 	}); err != nil {
 		return err
 	}
+	verbose.Do(func() {
+		fmt.Printf("read %d words %v\r\n", c.maxLen, clk.AllElapsed())
+	})
 
-	var err error
+	clk = clock.New()
+	var (
+		err    error
+		cursor int
+	)
 	if with != nil {
 		c.cooc, err = co.New(with.CountType)
 		if err != nil {
@@ -106,8 +121,17 @@ func (c *Corpus) Load(fn func(int), with *corpus.WithCooccurrence) error {
 				if err = c.cooc.Add(c.indexedDoc[i], c.indexedDoc[j]); err != nil {
 					return err
 				}
+				cursor++
+				verbose.Do(func() {
+					if cursor%logBatch == 0 {
+						fmt.Printf("read %d tuples %v\r", cursor, clk.AllElapsed())
+					}
+				})
 			}
 		}
+		verbose.Do(func() {
+			fmt.Printf("read %d tuples %v\r\n", cursor, clk.AllElapsed())
+		})
 	}
 
 	return nil
