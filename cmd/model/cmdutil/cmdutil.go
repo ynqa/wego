@@ -19,13 +19,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 )
 
 const (
 	defaultInputFile  = "example/input.txt"
 	defaultOutputFile = "example/word_vectors.txt"
 	defaultProf       = false
+	defaultVectorType = vector.Single
 )
 
 func AddInputFlags(cmd *cobra.Command, input *string) {
@@ -40,6 +41,6 @@ func AddProfFlags(cmd *cobra.Command, prof *bool) {
 	cmd.Flags().BoolVar(prof, "prof", defaultProf, "profiling mode to check the performances")
 }
 
-func AddSaveVectorTypeFlags(cmd *cobra.Command, typ *save.VectorType) {
-	cmd.Flags().Var(typ, "save-type", fmt.Sprintf("save vector type. One of: %s|%s", save.Single, save.Aggregated))
+func AddVectorTypeFlags(cmd *cobra.Command, typ *vector.Type) {
+	cmd.Flags().StringVar(typ, "vec-type", defaultVectorType, fmt.Sprintf("word vector type. One of: %s|%s", vector.Single, vector.Agg))
 }

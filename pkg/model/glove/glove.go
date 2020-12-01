@@ -15,8 +15,6 @@
 package glove
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -32,7 +30,7 @@ import (
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 	"github.com/ynqa/wego/pkg/util/clock"
 	"github.com/ynqa/wego/pkg/util/verbose"
 )
@@ -75,21 +73,22 @@ func (g *glove) Train(r io.ReadSeeker) error {
 	}
 
 	if err := g.corpus.Load(
-		g.verbose, g.opts.LogBatch,
 		&corpus.WithCooccurrence{
 			CountType: g.opts.CountType,
 			Window:    g.opts.Window,
 		},
+		g.verbose, g.opts.LogBatch,
 	); err != nil {
 		return err
 	}
 
 	dic, dim := g.corpus.Dictionary(), g.opts.Dim
 
+	dimAndBias := dim + 1
 	g.param = matrix.New(
 		dic.Len()*2,
-		(dim + 1),
-		func(vec []float64) {
+		dimAndBias,
+		func(_ int, vec []float64) {
 			for i := 0; i < dim+1; i++ {
 				vec[i] = rand.Float64() / float64(dim)
 			}
@@ -175,39 +174,29 @@ func (g *glove) observe(trained chan struct{}, clk *clock.Clock) {
 	})
 }
 
-func (g *glove) Save(f io.Writer, typ save.VectorType) error {
-	writer := bufio.NewWriter(f)
-	defer writer.Flush()
+func (g *glove) Save(f io.Writer, typ vector.Type) error {
+	return vector.Save(f, g.corpus.Dictionary(), g.WordVector(typ), g.verbose, g.opts.LogBatch)
+}
 
+func (g *glove) WordVector(typ vector.Type) *matrix.Matrix {
+	var mat *matrix.Matrix
 	dic := g.corpus.Dictionary()
-
-	var buf bytes.Buffer
-	clk := clock.New()
-	for i := 0; i < dic.Len(); i++ {
-		word, _ := dic.Word(i)
-		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < g.opts.Dim; j++ {
-			var v float64
-			switch {
-			case typ == save.Aggregated:
-				v = g.param.Slice(i)[j] + g.param.Slice(i + dic.Len())[j]
-			case typ == save.Single:
-				v = g.param.Slice(i)[j]
-			default:
-				return save.InvalidVectorTypeError(typ)
-			}
-			fmt.Fprintf(&buf, "%f ", v)
-		}
-		fmt.Fprintln(&buf)
-		g.verbose.Do(func() {
-			if i%g.opts.LogBatch == 0 {
-				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
-			}
-		})
+	if typ == vector.Agg {
+		mat = matrix.New(dic.Len(), g.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < g.opts.Dim; i++ {
+					vec[i] = g.param.Slice(row)[i]
+				}
+			},
+		)
+	} else {
+		mat = matrix.New(dic.Len(), g.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < g.opts.Dim; i++ {
+					vec[i] = g.param.Slice(row)[i] + g.param.Slice(row + dic.Len())[i]
+				}
+			},
+		)
 	}
-	writer.WriteString(fmt.Sprintf("%v", buf.String()))
-	g.verbose.Do(func() {
-		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
-	})
-	return nil
+	return mat
 }

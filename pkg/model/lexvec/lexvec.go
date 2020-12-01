@@ -15,8 +15,6 @@
 package lexvec
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -33,8 +31,8 @@ import (
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
 	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 	"github.com/ynqa/wego/pkg/util/clock"
 	"github.com/ynqa/wego/pkg/util/verbose"
 )
@@ -80,11 +78,11 @@ func (l *lexvec) Train(r io.ReadSeeker) error {
 	}
 
 	if err := l.corpus.Load(
-		l.verbose, l.opts.BatchSize,
 		&corpus.WithCooccurrence{
 			CountType: co.Increment,
 			Window:    l.opts.Window,
 		},
+		l.verbose, l.opts.BatchSize,
 	); err != nil {
 		return err
 	}
@@ -94,7 +92,7 @@ func (l *lexvec) Train(r io.ReadSeeker) error {
 	l.param = matrix.New(
 		dic.Len()*2,
 		dim,
-		func(vec []float64) {
+		func(_ int, vec []float64) {
 			for i := 0; i < dim; i++ {
 				vec[i] = (rand.Float64() - 0.5) / float64(dim)
 			}
@@ -255,39 +253,30 @@ func (l *lexvec) observe(trained chan struct{}, clk *clock.Clock) {
 	})
 }
 
-func (l *lexvec) Save(f io.Writer, typ save.VectorType) error {
-	writer := bufio.NewWriter(f)
-	defer writer.Flush()
+func (l *lexvec) Save(f io.Writer, typ vector.Type) error {
+	return vector.Save(f, l.corpus.Dictionary(), l.WordVector(typ), l.verbose, l.opts.LogBatch)
+}
 
+func (l *lexvec) WordVector(typ vector.Type) *matrix.Matrix {
+	var mat *matrix.Matrix
 	dic := l.corpus.Dictionary()
-
-	var buf bytes.Buffer
-	clk := clock.New()
-	for i := 0; i < dic.Len(); i++ {
-		word, _ := dic.Word(i)
-		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < l.opts.Dim; j++ {
-			var v float64
-			switch {
-			case typ == save.Aggregated:
-				v = l.param.Slice(i)[j] + l.param.Slice(i)[j]
-			case typ == save.Single:
-				v = l.param.Slice(i)[j]
-			default:
-				return save.InvalidVectorTypeError(typ)
-			}
-			fmt.Fprintf(&buf, "%f ", v)
-		}
-		fmt.Fprintln(&buf)
-		l.verbose.Do(func() {
-			if i%l.opts.LogBatch == 0 {
-				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
-			}
-		})
+	if typ == vector.Agg {
+		mat = matrix.New(dic.Len(), l.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < l.opts.Dim; i++ {
+					vec[i] = l.param.Slice(row)[i]
+				}
+			},
+		)
+	} else {
+		dic := l.corpus.Dictionary()
+		mat = matrix.New(dic.Len(), l.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < l.opts.Dim; i++ {
+					vec[i] = l.param.Slice(row)[i] + l.param.Slice(row + dic.Len())[i]
+				}
+			},
+		)
 	}
-	writer.WriteString(fmt.Sprintf("%v", buf.String()))
-	l.verbose.Do(func() {
-		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
-	})
-	return nil
+	return mat
 }

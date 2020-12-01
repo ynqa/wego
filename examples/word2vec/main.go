@@ -17,7 +17,7 @@ package main
 import (
 	"os"
 
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 	"github.com/ynqa/wego/pkg/model/word2vec"
 )
 
@@ -39,5 +39,5 @@ func main() {
 	}
 
 	// write word vector.
-	model.Save(os.Stdin, save.Aggregated)
+	model.Save(os.Stdin, vector.Agg)
 }

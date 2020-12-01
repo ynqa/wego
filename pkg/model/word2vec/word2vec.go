@@ -15,8 +15,6 @@
 package word2vec
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -32,8 +30,8 @@ import (
 	"github.com/ynqa/wego/pkg/model"
 	"github.com/ynqa/wego/pkg/model/modelutil"
 	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
 	"github.com/ynqa/wego/pkg/model/modelutil/subsample"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 	"github.com/ynqa/wego/pkg/util/clock"
 	"github.com/ynqa/wego/pkg/util/verbose"
 )
@@ -80,7 +78,7 @@ func (w *word2vec) Train(r io.ReadSeeker) error {
 		w.corpus = fs.New(r, w.opts.ToLower, w.opts.MaxCount, w.opts.MinCount)
 	}
 
-	if err := w.corpus.Load(w.verbose, w.opts.LogBatch, nil); err != nil {
+	if err := w.corpus.Load(nil, w.verbose, w.opts.LogBatch); err != nil {
 		return err
 	}
 
@@ -89,7 +87,7 @@ func (w *word2vec) Train(r io.ReadSeeker) error {
 	w.param = matrix.New(
 		dic.Len(),
 		dim,
-		func(vec []float64) {
+		func(_ int, vec []float64) {
 			for i := 0; i < dim; i++ {
 				vec[i] = (rand.Float64() - 0.5) / float64(dim)
 			}
@@ -228,44 +226,30 @@ func (w *word2vec) observe(trained chan struct{}, clk *clock.Clock) {
 	})
 }
 
-func (w *word2vec) Save(f io.Writer, typ save.VectorType) error {
-	writer := bufio.NewWriter(f)
-	defer writer.Flush()
+func (w *word2vec) Save(f io.Writer, typ vector.Type) error {
+	return vector.Save(f, w.corpus.Dictionary(), w.WordVector(typ), w.verbose, w.opts.LogBatch)
+}
 
+func (w *word2vec) WordVector(typ vector.Type) *matrix.Matrix {
+	var mat *matrix.Matrix
 	dic := w.corpus.Dictionary()
-	var ctx *matrix.Matrix
 	ng, ok := w.optimizer.(*negativeSampling)
-	if ok {
-		ctx = ng.ctx
+	if typ == vector.Agg && ok {
+		mat = matrix.New(dic.Len(), w.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < w.opts.Dim; i++ {
+					vec[i] = w.param.Slice(row)[i] + ng.ctx.Slice(row)[i]
+				}
+			},
+		)
+	} else {
+		mat = matrix.New(dic.Len(), w.opts.Dim,
+			func(row int, vec []float64) {
+				for i := 0; i < w.opts.Dim; i++ {
+					vec[i] = w.param.Slice(row)[i]
+				}
+			},
+		)
 	}
-
-	var buf bytes.Buffer
-	clk := clock.New()
-	for i := 0; i < dic.Len(); i++ {
-		word, _ := dic.Word(i)
-		fmt.Fprintf(&buf, "%v ", word)
-		for j := 0; j < w.opts.Dim; j++ {
-			var v float64
-			switch {
-			case typ == save.Aggregated && ctx.Row() > i:
-				v = w.param.Slice(i)[j] + ctx.Slice(i)[j]
-			case typ == save.Single:
-				v = w.param.Slice(i)[j]
-			default:
-				return save.InvalidVectorTypeError(typ)
-			}
-			fmt.Fprintf(&buf, "%f ", v)
-		}
-		fmt.Fprintln(&buf)
-		w.verbose.Do(func() {
-			if i%w.opts.LogBatch == 0 {
-				fmt.Printf("saved %d words %v\r", i, clk.AllElapsed())
-			}
-		})
-	}
-	writer.WriteString(fmt.Sprintf("%v", buf.String()))
-	w.verbose.Do(func() {
-		fmt.Printf("saved %d words %v\r\n", dic.Len(), clk.AllElapsed())
-	})
-	return nil
+	return mat
 }

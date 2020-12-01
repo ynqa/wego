@@ -17,10 +17,12 @@ package model
 import (
 	"io"
 
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/modelutil/matrix"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 )
 
 type Model interface {
 	Train(io.ReadSeeker) error
-	Save(io.Writer, save.VectorType) error
+	Save(io.Writer, vector.Type) error
+	WordVector(vector.Type) *matrix.Matrix
 }

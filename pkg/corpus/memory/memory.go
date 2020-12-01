@@ -80,7 +80,7 @@ func (c *Corpus) Len() int {
 	return c.maxLen
 }
 
-func (c *Corpus) Load(verbose *verbose.Verbose, logBatch int, with *corpus.WithCooccurrence) error {
+func (c *Corpus) Load(with *corpus.WithCooccurrence, verbose *verbose.Verbose, logBatch int) error {
 	clk := clock.New()
 	if err := cpsutil.ReadWord(c.doc, func(word string) error {
 		if c.toLower {

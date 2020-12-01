@@ -26,7 +26,7 @@ type Corpus interface {
 	Dictionary() *dictionary.Dictionary
 	Cooccurrence() *co.Cooccurrence
 	Len() int
-	Load(*verbose.Verbose, int, *WithCooccurrence) error
+	Load(*WithCooccurrence, *verbose.Verbose, int) error
 }
 
 type WithCooccurrence struct {

@@ -64,7 +64,7 @@ func newAdaGrad(dic *dictionary.Dictionary, opts Options) solver {
 		gradsq: matrix.New(
 			dic.Len()*2,
 			dimAndBias,
-			func(vec []float64) {
+			func(_ int, vec []float64) {
 				for i := 0; i < dimAndBias; i++ {
 					vec[i] = 1.
 				}

@@ -24,14 +24,14 @@ import (
 
 	"github.com/ynqa/wego/cmd/model/cmdutil"
 	"github.com/ynqa/wego/pkg/model/glove"
-	"github.com/ynqa/wego/pkg/model/modelutil/save"
+	"github.com/ynqa/wego/pkg/model/modelutil/vector"
 )
 
 var (
-	prof           bool
-	inputFile      string
-	outputFile     string
-	saveVectorType save.VectorType
+	prof       bool
+	inputFile  string
+	outputFile string
+	vectorType vector.Type
 )
 
 func New() *cobra.Command {
@@ -47,7 +47,7 @@ func New() *cobra.Command {
 	cmdutil.AddInputFlags(cmd, &inputFile)
 	cmdutil.AddOutputFlags(cmd, &outputFile)
 	cmdutil.AddProfFlags(cmd, &prof)
-	cmdutil.AddSaveVectorTypeFlags(cmd, &saveVectorType)
+	cmdutil.AddVectorTypeFlags(cmd, &vectorType)
 	glove.LoadForCmd(cmd, &opts)
 	return cmd
 }
@@ -91,5 +91,5 @@ func execute(opts glove.Options) error {
 	if err := mod.Train(input); err != nil {
 		return err
 	}
-	return mod.Save(output, saveVectorType)
+	return mod.Save(output, vectorType)
 }

@@ -38,7 +38,7 @@ func newNegativeSampling(dic *dictionary.Dictionary, opts Options) optimizer {
 		ctx: matrix.New(
 			dic.Len(),
 			opts.Dim,
-			func(vec []float64) {
+			func(_ int, vec []float64) {
 				for i := 0; i < opts.Dim; i++ {
 					vec[i] = (rand.Float64() - 0.5) / float64(opts.Dim)
 				}

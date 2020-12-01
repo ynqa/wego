@@ -20,14 +20,14 @@ type Matrix struct {
 	col   int
 }
 
-func New(row, col int, fn func([]float64)) *Matrix {
+func New(row, col int, fn func(int, []float64)) *Matrix {
 	mat := &Matrix{
 		array: make([]float64, row*col),
 		row:   row,
 		col:   col,
 	}
 	for i := 0; i < row; i++ {
-		fn(mat.Slice(i))
+		fn(i, mat.Slice(i))
 	}
 	return mat
 }
