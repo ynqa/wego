@@ -15,30 +15,30 @@
 package main
 
 import (
+	"log"
 	"os"
 
-	"github.com/ynqa/wego/pkg/model/modelutil/vector"
-	"github.com/ynqa/wego/pkg/model/word2vec"
+	"github.com/ynqa/wego/pkg/embedding"
+	"github.com/ynqa/wego/pkg/search"
 )
 
 func main() {
-	model, err := word2vec.New(
-		word2vec.Window(5),
-		word2vec.Model(word2vec.Cbow),
-		word2vec.Optimizer(word2vec.NegativeSampling),
-		word2vec.NegativeSampleSize(5),
-		word2vec.Verbose(),
-	)
+	input, err := os.Open("word_vector.txt")
 	if err != nil {
-		// failed to create word2vec.
+		log.Fatal(err)
 	}
-
-	input, _ := os.Open("text8")
 	defer input.Close()
-	if err = model.Train(input); err != nil {
-		// failed to train.
+	embs, err := embedding.Load(input)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	// write word vector.
-	model.Save(os.Stdin, vector.Agg)
+	searcher, err := search.New(embs...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	neighbors, err := searcher.SearchInternal("given_word", 10)
+	if err != nil {
+		log.Fatal(err)
+	}
+	neighbors.Describe()
 }
