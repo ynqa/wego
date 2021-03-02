@@ -17,7 +17,6 @@ package search
 import (
 	"fmt"
 	"os"
-	"sort"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
@@ -93,28 +92,45 @@ func (s *Searcher) SearchVector(query []float64, k int) (Neighbors, error) {
 }
 
 func (s *Searcher) Search(query embedding.Embedding, k int, ignoreWord ...string) (Neighbors, error) {
-	neighbors := make(Neighbors, len(s.Items))
-	for i, item := range s.Items {
-		var ignore bool
-		for _, w := range ignoreWord {
-			ignore = ignore || item.Word == w
+	neighbors := make(Neighbors, k)
+
+	// Map to quickly check if a word is to be ignored.
+	ignoreWords := make(map[string]int, len(ignoreWord))
+	for _, word := range ignoreWord {
+		ignoreWords[word] = 0
+	}
+
+	// Keep track of lowest similarity score.
+	low := .0
+	for _, item := range s.Items {
+		// Drop iteration if the word is to be ignored.
+		_, ok := ignoreWords[item.Word]
+		if ok {
+			continue
 		}
-		if !ignore {
-			neighbors[i] = Neighbor{
-				Word:       item.Word,
-				Similarity: searchutil.Cosine(query.Vector, item.Vector, query.Norm, item.Norm),
+
+		score := searchutil.Cosine(query.Vector, item.Vector, query.Norm, item.Norm)
+		// ignore current word if it's similarity is below the lowest score.
+		if score > low {
+			temp := Neighbor{Word: item.Word, Similarity: score}
+			// Bubble up the best match.
+			for i := 0; i < len(neighbors); i++ {
+				if temp.Similarity > neighbors[i].Similarity {
+					temp, neighbors[i] = neighbors[i], temp
+					neighbors[i].Rank = uint(i) + 1
+				}
 			}
+			// # neighbors is aways sorted.
+			low = neighbors[len(neighbors)-1].Similarity
 		}
 	}
 
-	sort.SliceStable(neighbors, func(i, j int) bool {
-		return neighbors[i].Similarity > neighbors[j].Similarity
-	})
-	for i := range neighbors {
-		neighbors[i].Rank = uint(i) + 1
+	// Guard too few items in model.
+	for i := 0; i < len(neighbors); i++ {
+		if neighbors[i].Word == "" {
+			k = i
+		}
 	}
-	if k > len(s.Items) {
-		k = len(s.Items)
-	}
+
 	return neighbors[:k], nil
 }
