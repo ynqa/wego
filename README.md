@@ -1,6 +1,6 @@
 # Word Embeddings in Go
 
-[![Build Status](https://travis-ci.com/ynqa/wego.svg?branch=master)](https://travis-ci.com/ynqa/wego)
+[![Go](https://github.com/ynqa/wego/actions/workflows/go.yml/badge.svg)](https://github.com/ynqa/wego/actions/workflows/go.yml)
 [![GoDoc](https://godoc.org/github.com/ynqa/wego?status.svg)](https://godoc.org/github.com/ynqa/wego)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ynqa/wego)](https://goreportcard.com/report/github.com/ynqa/wego)
 
